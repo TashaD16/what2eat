@@ -1,0 +1,166 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: ЧтоЕсть
+      - button "Планировщик" [ref=e7] [cursor=pointer]:
+        - img [ref=e9]
+        - text: Планировщик
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - button "Назад" [ref=e14] [cursor=pointer]:
+        - img [ref=e16]
+        - text: Назад
+      - paragraph [ref=e18]: 11 блюд осталось
+      - button "Сначала" [ref=e19] [cursor=pointer]: Сначала
+    - generic [ref=e20]:
+      - generic [ref=e24]:
+        - img "Рис с курицей" [ref=e25]
+        - generic [ref=e27]:
+          - heading "Рис с курицей" [level=4] [ref=e28]
+          - generic [ref=e29]:
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - generic [ref=e34]: 35 мин
+            - generic [ref=e36]: Легко
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - generic [ref=e40]: $8
+      - generic [ref=e44]:
+        - img "Рис с курицей и овощами" [ref=e45]
+        - generic [ref=e47]:
+          - heading "Рис с курицей и овощами" [level=4] [ref=e48]
+          - generic [ref=e49]:
+            - generic [ref=e50]:
+              - img [ref=e51]
+              - generic [ref=e54]: 40 мин
+            - generic [ref=e56]: Легко
+            - generic [ref=e57]:
+              - img [ref=e58]
+              - generic [ref=e60]: $9
+      - generic [ref=e64]:
+        - img "Картофель с курицей" [ref=e65]
+        - generic [ref=e67]:
+          - heading "Картофель с курицей" [level=4] [ref=e68]
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - img [ref=e71]
+              - generic [ref=e74]: 45 мин
+            - generic [ref=e76]: Легко
+            - generic [ref=e77]:
+              - img [ref=e78]
+              - generic [ref=e80]: $9
+      - generic [ref=e84]:
+        - img "Картофель с курицей и овощами" [ref=e85]
+        - generic [ref=e87]:
+          - heading "Картофель с курицей и овощами" [level=4] [ref=e88]
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - img [ref=e91]
+              - generic [ref=e94]: 50 мин
+            - generic [ref=e96]: Средне
+            - generic [ref=e97]:
+              - img [ref=e98]
+              - generic [ref=e100]: $10
+      - generic [ref=e104]:
+        - img "Макароны с вареными яйцами" [ref=e105]
+        - generic [ref=e107]:
+          - heading "Макароны с вареными яйцами" [level=4] [ref=e108]
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - img [ref=e111]
+              - generic [ref=e114]: 20 мин
+            - generic [ref=e116]: Легко
+            - generic [ref=e117]:
+              - img [ref=e118]
+              - generic [ref=e120]: $3
+            - generic [ref=e122]: Вегетар.
+      - generic [ref=e126]:
+        - img "Макароны с овощами" [ref=e127]
+        - generic [ref=e129]:
+          - heading "Макароны с овощами" [level=4] [ref=e130]
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - img [ref=e133]
+              - generic [ref=e136]: 25 мин
+            - generic [ref=e138]: Легко
+            - generic [ref=e139]:
+              - img [ref=e140]
+              - generic [ref=e142]: $5
+            - generic [ref=e144]: Веган
+      - generic [ref=e148]:
+        - img "Макароны с сыром" [ref=e149]
+        - generic [ref=e151]:
+          - heading "Макароны с сыром" [level=4] [ref=e152]
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - img [ref=e155]
+              - generic [ref=e158]: 20 мин
+            - generic [ref=e160]: Легко
+            - generic [ref=e161]:
+              - img [ref=e162]
+              - generic [ref=e164]: $5
+            - generic [ref=e166]: Вегетар.
+      - generic [ref=e170]:
+        - img "Макароны с яичницей" [ref=e171]
+        - generic [ref=e173]:
+          - heading "Макароны с яичницей" [level=4] [ref=e174]
+          - generic [ref=e175]:
+            - generic [ref=e176]:
+              - img [ref=e177]
+              - generic [ref=e180]: 20 мин
+            - generic [ref=e182]: Легко
+            - generic [ref=e183]:
+              - img [ref=e184]
+              - generic [ref=e186]: $4
+            - generic [ref=e188]: Вегетар.
+      - generic [ref=e192]:
+        - img "Рис с вареными яйцами" [ref=e193]
+        - generic [ref=e195]:
+          - heading "Рис с вареными яйцами" [level=4] [ref=e196]
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - img [ref=e199]
+              - generic [ref=e202]: 30 мин
+            - generic [ref=e204]: Легко
+            - generic [ref=e205]:
+              - img [ref=e206]
+              - generic [ref=e208]: $3
+            - generic [ref=e210]: Вегетар.
+      - generic [ref=e214]:
+        - img "Рис с овощами" [ref=e215]
+        - generic [ref=e217]:
+          - heading "Рис с овощами" [level=4] [ref=e218]
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - img [ref=e221]
+              - generic [ref=e224]: 30 мин
+            - generic [ref=e226]: Легко
+            - generic [ref=e227]:
+              - img [ref=e228]
+              - generic [ref=e230]: $4
+            - generic [ref=e232]: Веган
+      - generic [ref=e236]:
+        - img "Рис с яичницей" [ref=e237]
+        - generic [ref=e239]:
+          - heading "Рис с яичницей" [level=4] [ref=e240]
+          - generic [ref=e241]:
+            - generic [ref=e242]:
+              - img [ref=e243]
+              - generic [ref=e246]: 25 мин
+            - generic [ref=e248]: Легко
+            - generic [ref=e249]:
+              - img [ref=e250]
+              - generic [ref=e252]: $4
+            - generic [ref=e254]: Вегетар.
+        - paragraph [ref=e256]: ДА!
+    - generic [ref=e257]:
+      - button [ref=e259] [cursor=pointer]:
+        - img [ref=e260]
+      - button [ref=e263] [cursor=pointer]:
+        - img [ref=e264]
+      - button [ref=e267] [cursor=pointer]:
+        - img [ref=e268]
+```
