@@ -12,10 +12,12 @@ import {
   FormControl,
   InputLabel,
   Alert,
+  Chip,
+  Snackbar,
 } from '@mui/material'
-import { ArrowBack, ShoppingCart, CalendarMonth, Refresh } from '@mui/icons-material'
+import { ArrowBack, ShoppingCart, CalendarMonth, Refresh, FavoriteBorder } from '@mui/icons-material'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
-import { resetSwipe } from '../../store/slices/swipeSlice'
+import { resetSwipe, unlikeDish } from '../../store/slices/swipeSlice'
 import { assignDishToDay, DayOfWeek } from '../../store/slices/weeklyPlannerSlice'
 import DishCard from '../DishList/DishCard'
 
@@ -45,6 +47,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
     dishId: null,
   })
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('mon')
+  const [removedSnack, setRemovedSnack] = useState(false)
 
   const likedDishes = useMemo(
     () => dishes.filter((d) => likedDishIds.includes(d.id)),
@@ -54,6 +57,11 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
   const handleRepeat = () => {
     dispatch(resetSwipe())
     onRepeat()
+  }
+
+  const handleRemove = (dishId: number) => {
+    dispatch(unlikeDish(dishId))
+    setRemovedSnack(true)
   }
 
   const openPlanDialog = (dishId: number) => {
@@ -69,11 +77,24 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
 
   return (
     <Box>
+      {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />}>
           Назад
         </Button>
-        <Typography variant="h5">Понравившиеся блюда</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FavoriteBorder sx={{ color: '#FF4D4D', fontSize: 22 }} />
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            Понравившиеся блюда
+          </Typography>
+          {likedDishes.length > 0 && (
+            <Chip
+              label={likedDishes.length}
+              size="small"
+              sx={{ bgcolor: '#FF4D4D', color: 'white', fontWeight: 700, height: 22, fontSize: '0.78rem' }}
+            />
+          )}
+        </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
@@ -90,21 +111,39 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
         </Box>
       </Box>
 
+      {/* Content */}
       {likedDishes.length === 0 ? (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Вы не выбрали ни одного блюда. Попробуйте ещё раз!
-        </Alert>
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 8,
+            px: 2,
+            borderRadius: 4,
+            border: '1px dashed rgba(255,255,255,0.12)',
+          }}
+        >
+          <FavoriteBorder sx={{ fontSize: 52, color: 'rgba(255,255,255,0.15)', mb: 2 }} />
+          <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.4)', mb: 1 }}>
+            Нет понравившихся блюд
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.25)', mb: 3 }}>
+            Свайпайте вправо, чтобы сохранить блюдо
+          </Typography>
+          <Button variant="contained" onClick={handleRepeat} startIcon={<Refresh />}>
+            Начать поиск
+          </Button>
+        </Box>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={2.5}>
           {likedDishes.map((dish) => (
             <Grid item xs={12} sm={6} md={4} key={dish.id}>
-              <Box sx={{ position: 'relative' }}>
-                <DishCard dish={dish} onSelect={onDishSelect} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+                <DishCard dish={dish} onSelect={onDishSelect} onRemove={handleRemove} />
                 <Button
                   size="small"
                   startIcon={<CalendarMonth />}
                   onClick={() => openPlanDialog(dish.id)}
-                  sx={{ mt: 1, width: '100%' }}
+                  sx={{ width: '100%' }}
                   variant="outlined"
                   color="secondary"
                 >
@@ -116,6 +155,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
         </Grid>
       )}
 
+      {/* Planner dialog */}
       <Dialog open={planDialog.open} onClose={() => setPlanDialog({ open: false, dishId: null })}>
         <DialogTitle>Добавить в планировщик</DialogTitle>
         <DialogContent sx={{ minWidth: 280, pt: 2 }}>
@@ -138,6 +178,15 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Undo snackbar */}
+      <Snackbar
+        open={removedSnack}
+        autoHideDuration={2500}
+        onClose={() => setRemovedSnack(false)}
+        message="Блюдо удалено из избранного"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   )
 }

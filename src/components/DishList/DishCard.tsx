@@ -6,8 +6,10 @@ import {
   Box,
   Chip,
   Button,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
-import { AccessTime, People, AttachMoney, ShoppingCart } from '@mui/icons-material'
+import { AccessTime, People, AttachMoney, ShoppingCart, DeleteOutline } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { Dish, Difficulty } from '../../types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '../../utils/constants'
@@ -16,14 +18,16 @@ import { getDishImageUrl } from '../../utils/imageUtils'
 interface DishCardProps {
   dish: Dish
   onSelect: (dishId: number) => void
+  onRemove?: (dishId: number) => void
 }
 
-export default function DishCard({ dish, onSelect }: DishCardProps) {
+export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
   const getDifficultyColor = (difficulty: Difficulty) => {
     return DIFFICULTY_COLORS[difficulty] || DIFFICULTY_COLORS.easy
   }
 
   const imageUrl = getDishImageUrl(dish.name, dish.image_url)
+  const fallbackUrl = `https://source.unsplash.com/featured/600x400/?food,cooking`
 
   return (
     <motion.div
@@ -31,11 +35,34 @@ export default function DishCard({ dish, onSelect }: DishCardProps) {
       whileTap={{ scale: 0.98 }}
       style={{ height: '100%' }}
     >
-      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {onRemove && (
+          <Tooltip title="Убрать из списка" placement="top">
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onRemove(dish.id) }}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 2,
+                bgcolor: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(4px)',
+                color: 'rgba(255,255,255,0.8)',
+                '&:hover': { bgcolor: 'rgba(220,50,50,0.8)', color: 'white' },
+              }}
+            >
+              <DeleteOutline fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         <CardMedia
           component="img"
           image={imageUrl}
           alt={dish.name}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = fallbackUrl
+          }}
           sx={{ height: 200, objectFit: 'cover' }}
         />
         <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
