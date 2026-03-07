@@ -6,8 +6,15 @@ interface CardAPI {
   swipe(dir?: string): Promise<void>
   restoreCard(): Promise<void>
 }
-import { Box, Typography, IconButton, Button, Chip, Collapse } from '@mui/material'
-import { Close, Favorite, ArrowBack, Info, Restaurant, ExpandMore, ExpandLess, OpenInNew, AccessTime } from '@mui/icons-material'
+import {
+  Box, Typography, IconButton, Button, Chip, Collapse,
+  Dialog, DialogContent, DialogTitle, List, ListItem,
+} from '@mui/material'
+import {
+  Close, Favorite, ArrowBack, Info, Restaurant,
+  ExpandMore, ExpandLess, OpenInNew, AccessTime, People,
+  FiberManualRecord, MenuBook,
+} from '@mui/icons-material'
 import { Dish } from '../../types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe } from '../../store/slices/swipeSlice'
@@ -28,6 +35,7 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
   const [popularExpanded, setPopularExpanded] = useState(false)
+  const [infoDish, setInfoDish] = useState<typeof dishes[0] | null>(null)
 
   const selectedNamesKey = ingredients
     .filter((i) => selectedIngredients.includes(i.id))
@@ -77,7 +85,7 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
 
   const handleInfoClick = () => {
     if (topDishIndex >= 0 && topDishIndex < dishes.length) {
-      onDishSelect(dishes[topDishIndex].id)
+      setInfoDish(dishes[topDishIndex])
     }
   }
 
@@ -264,6 +272,107 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
           </motion.div>
         </Box>
       )}
+
+      {/* Dish info dialog */}
+      <Dialog
+        open={infoDish !== null}
+        onClose={() => setInfoDish(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { bgcolor: '#141414', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden' } }}
+      >
+        {infoDish && (
+          <>
+            <Box sx={{ position: 'relative', height: 220 }}>
+              <Box
+                component="img"
+                src={infoDish.image_url ?? undefined}
+                alt={infoDish.name}
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+              <Box sx={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(to top, rgba(20,20,20,1) 0%, rgba(20,20,20,0.3) 60%, transparent 100%)',
+              }} />
+              <IconButton
+                onClick={() => setInfoDish(null)}
+                size="small"
+                sx={{ position: 'absolute', top: 10, right: 10, bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' } }}
+              >
+                <Close fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <DialogTitle sx={{ pb: 0.5, pt: 1.5, px: 2.5 }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: 'white', lineHeight: 1.2 }}>
+                {infoDish.name}
+              </Typography>
+            </DialogTitle>
+
+            <DialogContent sx={{ px: 2.5, pt: 1, pb: 2 }}>
+              {infoDish.description && (
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mb: 2, lineHeight: 1.6 }}>
+                  {infoDish.description}
+                </Typography>
+              )}
+
+              {/* Info chips */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
+                <Chip
+                  icon={<AccessTime sx={{ fontSize: '13px !important', color: 'rgba(255,255,255,0.5) !important' }} />}
+                  label={`${infoDish.cooking_time} мин`}
+                  size="small"
+                  sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+                <Chip
+                  icon={<People sx={{ fontSize: '13px !important', color: 'rgba(255,255,255,0.5) !important' }} />}
+                  label={`${infoDish.servings} порц.`}
+                  size="small"
+                  sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+                {infoDish.is_vegan && (
+                  <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }} />
+                )}
+                {!infoDish.is_vegan && infoDish.is_vegetarian && (
+                  <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }} />
+                )}
+              </Box>
+
+              {/* Ingredients */}
+              {infoDish.ingredients && infoDish.ingredients.length > 0 && (
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, display: 'block', mb: 1 }}>
+                    Основные ингредиенты
+                  </Typography>
+                  <List dense disablePadding>
+                    {infoDish.ingredients.slice(0, 6).map((ing) => (
+                      <ListItem key={ing.id} sx={{ px: 0, py: 0.4 }}>
+                        <FiberManualRecord sx={{ fontSize: 6, color: '#FF9500', mr: 1, flexShrink: 0 }} />
+                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>{ing.name}</Typography>
+                      </ListItem>
+                    ))}
+                    {infoDish.ingredients.length > 6 && (
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', pl: 2.5 }}>
+                        и ещё {infoDish.ingredients.length - 6}...
+                      </Typography>
+                    )}
+                  </List>
+                </Box>
+              )}
+
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<MenuBook />}
+                onClick={() => { setInfoDish(null); onDishSelect(infoDish.id) }}
+                sx={{ mt: 2.5, py: 1.25, fontWeight: 700 }}
+              >
+                Открыть полный рецепт
+              </Button>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
 
       {/* Popular internet recipes section */}
       {popularSuggestions.length > 0 && (
