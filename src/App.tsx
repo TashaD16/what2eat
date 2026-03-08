@@ -32,7 +32,7 @@ function App() {
   const [dbError, setDbError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
-  const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes } = useAppSelector((state) => state.dishes)
+  const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
@@ -243,6 +243,20 @@ function App() {
                   : 'Первое блюдо появится через несколько секунд'}
               </Typography>
             </Box>
+          </Box>
+        ) : dishesError && visibleDishes.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
+            <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>{dishesError}</Alert>
+            <Button
+              variant="contained"
+              onClick={handleRandomize}
+              sx={{ mr: 2 }}
+            >
+              Попробовать снова
+            </Button>
+            <Button variant="outlined" onClick={() => setView('ingredients')}>
+              На главную
+            </Button>
           </Box>
         ) : (
           <SwipeDeck

@@ -4,6 +4,7 @@ import * as dishesService from '../../services/dishes'
 import { FindDishesOptions } from '../../services/dishes'
 import { suggestDishesByIngredients, fetchPopularDishes, PopularDishSuggestion } from '../../services/openai'
 import { fetchRecipesFromWeb, generateDishPhoto, AIRecipe } from '../../services/aiRecipes'
+import { loadAIRecipesFromCache, saveAIRecipesToCache, isCacheStale } from '../../services/aiRecipesCache'
 
 // Max dishes shown to free users in both randomizer and ingredient search
 export const FREE_TIER_LIMIT = 5
@@ -185,40 +186,94 @@ export default dishesSlice.reducer
 // ─── Progressive AI randomizer thunk (defined after slice so it can use actions) ──
 
 /**
- * Progressive AI randomizer:
- * 1. Web search for all FREE_TIER_LIMIT recipes (one call)
- * 2. DALL-E photos generated in parallel — each ready dish appears immediately
- * 3. SwipeDeck opens after the very first dish is ready
+ * Generates photos for a list of recipe texts (from cache or internet).
+ * Dispatches addAIDish as each photo completes.
+ * Returns the count of successfully loaded dishes.
  */
-export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
-  dispatch(startAIRandom())
-
-  let recipes: AIRecipe[]
-  try {
-    recipes = await fetchRecipesFromWeb(FREE_TIER_LIMIT)
-  } catch (e) {
-    dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка поиска рецептов в интернете'))
-    return
-  }
-
-  // Switch loading message from "searching" to "creating photos"
-  dispatch(setLoadingStep('photos'))
-  dispatch(setLoadingMore(true))
-
+async function generatePhotosForRecipes(
+  recipes: AIRecipe[],
+  dispatch: (action: unknown) => void,
+  indexOffset = 0
+): Promise<{ successCount: number; successful: AIRecipe[] }> {
   let successCount = 0
+  const successful: AIRecipe[] = []
+
   await Promise.allSettled(
-    recipes.map(async (recipe, index) => {
+    recipes.map(async (recipe, i) => {
       try {
-        recipe.image_url = await generateDishPhoto(recipe.name)
-        dispatch(addAIDish({ recipe, index }))
+        const clone = { ...recipe }
+        clone.image_url = await generateDishPhoto(clone.name)
+        dispatch(addAIDish({ recipe: clone, index: indexOffset + i }))
         successCount++
+        successful.push(clone)
       } catch {
         // Skip dish if DALL-E fails — never show without photo
       }
     })
   )
 
-  dispatch(
-    finishAIRandom(successCount === 0 ? 'Не удалось создать фото ни для одного блюда' : null)
-  )
+  return { successCount, successful }
+}
+
+/**
+ * Progressive AI randomizer with localStorage cache:
+ *
+ * Scenario A — cache exists and fresh:
+ *   1. Immediately generate DALL-E photos for cached recipe texts (no web search)
+ *   2. SwipeDeck opens after first photo is ready (~5-8s)
+ *
+ * Scenario B — cache empty or stale:
+ *   1. Web search for FREE_TIER_LIMIT recipes
+ *   2. Generate DALL-E photos progressively
+ *   3. Save recipe texts to cache for next session
+ *
+ * Scenario C — cache stale (>3 days):
+ *   Same as A, but also refresh cache in background after dishes are shown.
+ */
+export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
+  dispatch(startAIRandom())
+
+  const cached = loadAIRecipesFromCache()
+  const stale = isCacheStale()
+
+  if (cached.length > 0) {
+    // ── Scenario A / C: serve from cache ──────────────────────────────────────
+    dispatch(setLoadingStep('photos'))
+    dispatch(setLoadingMore(false))
+
+    const { successCount } = await generatePhotosForRecipes(cached, dispatch)
+
+    dispatch(finishAIRandom(successCount === 0 ? 'Не удалось создать фото. Проверьте интернет-соединение.' : null))
+
+    // If cache is stale, silently refresh in background (don't show loading)
+    if (stale) {
+      fetchRecipesFromWeb(FREE_TIER_LIMIT)
+        .then((fresh) => {
+          saveAIRecipesToCache(fresh)
+        })
+        .catch(() => {/* ignore background refresh errors */})
+    }
+  } else {
+    // ── Scenario B: no cache — fetch from internet ────────────────────────────
+    let recipes: AIRecipe[]
+    try {
+      dispatch(setLoadingStep('search'))
+      recipes = await fetchRecipesFromWeb(FREE_TIER_LIMIT)
+    } catch (e) {
+      dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка поиска рецептов в интернете'))
+      return
+    }
+
+    dispatch(setLoadingStep('photos'))
+    dispatch(setLoadingMore(true))
+
+    const { successCount, successful } = await generatePhotosForRecipes(recipes, dispatch)
+
+    // Save recipe texts to cache for next sessions
+    if (successful.length > 0) {
+      saveAIRecipesToCache(successful)
+    }
+
+    dispatch(finishAIRandom(successCount === 0 ? 'Не удалось создать фото ни для одного блюда' : null))
+  }
 }

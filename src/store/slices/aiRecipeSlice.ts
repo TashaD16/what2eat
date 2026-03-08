@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { generateRecipeByIngredients, saveAIRecipe, AIRecipe } from '../../services/aiRecipes'
+import { loadAIRecipesFromCache, saveAIRecipesToCache } from '../../services/aiRecipesCache'
 
 interface AIRecipeState {
   generatedRecipe: AIRecipe | null
@@ -60,6 +61,12 @@ const aiRecipeSlice = createSlice({
       .addCase(generateAIRecipe.fulfilled, (state, action) => {
         state.loading = false
         state.generatedRecipe = action.payload
+        // Add this recipe to the randomizer cache so it's available next time
+        const existing = loadAIRecipesFromCache()
+        const alreadyCached = existing.some((r) => r.name === action.payload.name)
+        if (!alreadyCached) {
+          saveAIRecipesToCache([...existing, action.payload].slice(-5))
+        }
       })
       .addCase(generateAIRecipe.rejected, (state, action) => {
         state.loading = false
