@@ -3,10 +3,10 @@ import { Dish } from '../../types'
 import * as dishesService from '../../services/dishes'
 import { FindDishesOptions } from '../../services/dishes'
 import { suggestDishesByIngredients, fetchPopularDishes, PopularDishSuggestion } from '../../services/openai'
-import { fetchRecipesFromWeb, generateDishPhoto, AIRecipe } from '../../services/aiRecipes'
-import { loadAIRecipesFromCache, saveAIRecipesToCache, isCacheStale } from '../../services/aiRecipesCache'
+import { fetchRecipesFromWeb, fetchRecipesProgressively, generateDishPhoto, AIRecipe } from '../../services/aiRecipes'
+import { loadSeedFromCache, saveSeedToCache, SEED_COUNT } from '../../services/seedRecipes'
 
-// Max dishes shown to free users in both randomizer and ingredient search
+// Max dishes shown in ingredient search results
 export const FREE_TIER_LIMIT = 5
 
 export type LoadingStep = 'search' | 'photos' | null
@@ -14,8 +14,9 @@ export type LoadingStep = 'search' | 'photos' | null
 interface DishesState {
   dishes: Dish[]
   aiDishRecipes: Record<number, AIRecipe>
-  loadingStep: LoadingStep    // which phase of AI loading we're in
-  loadingMore: boolean        // background photo loading after first dish appears
+  aiRandomMode: boolean      // true while in randomizer mode (enables auto-load-more)
+  loadingStep: LoadingStep   // which phase of AI loading we're in
+  loadingMore: boolean       // background loading after first dish appears
   suggestedDishNames: string[]
   popularSuggestions: PopularDishSuggestion[]
   loading: boolean
@@ -25,6 +26,7 @@ interface DishesState {
 const initialState: DishesState = {
   dishes: [],
   aiDishRecipes: {},
+  aiRandomMode: false,
   loadingStep: null,
   loadingMore: false,
   suggestedDishNames: [],
@@ -73,6 +75,7 @@ const dishesSlice = createSlice({
     clearDishes: (state) => {
       state.dishes = []
       state.aiDishRecipes = {}
+      state.aiRandomMode = false
       state.suggestedDishNames = []
       state.popularSuggestions = []
       state.loadingStep = null
@@ -85,16 +88,17 @@ const dishesSlice = createSlice({
       state.error = null
       state.dishes = []
       state.aiDishRecipes = {}
+      state.aiRandomMode = true
       state.loadingStep = 'search'
       state.loadingMore = false
     },
 
-    // Called when web search finishes and DALL-E starts
+    // Called when web search finishes and photo phase starts
     setLoadingStep: (state, action: PayloadAction<LoadingStep>) => {
       state.loadingStep = action.payload
     },
 
-    // Called as each dish+photo becomes ready — shows SwipeDeck after the first one
+    // Called as each dish becomes ready — shows SwipeDeck after the first one
     addAIDish: (state, action: PayloadAction<{ recipe: AIRecipe; index: number }>) => {
       const { recipe, index } = action.payload
       const id = -(index + 1)
@@ -120,7 +124,7 @@ const dishesSlice = createSlice({
       state.loadingMore = action.payload
     },
 
-    // Called when all photos are done (or failed)
+    // Called when all loading is done (or failed)
     finishAIRandom: (state, action: PayloadAction<string | null>) => {
       state.loading = false
       state.loadingMore = false
@@ -133,6 +137,7 @@ const dishesSlice = createSlice({
       .addCase(findDishes.pending, (state) => {
         state.loading = true
         state.error = null
+        state.aiRandomMode = false
         state.suggestedDishNames = []
         state.aiDishRecipes = {}
         state.loadingStep = null
@@ -149,6 +154,7 @@ const dishesSlice = createSlice({
       .addCase(randomizeMeatDishes.pending, (state) => {
         state.loading = true
         state.error = null
+        state.aiRandomMode = false
         state.aiDishRecipes = {}
         state.loadingStep = null
         state.loadingMore = false
@@ -183,13 +189,8 @@ export const { clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAI
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer
 
-// ─── Progressive AI randomizer thunk (defined after slice so it can use actions) ──
+// ─── Helper: generate photos and dispatch addAIDish progressively ──────────────
 
-/**
- * Generates photos for a list of recipe texts (from cache or internet).
- * Dispatches addAIDish as each photo completes.
- * Returns the count of successfully loaded dishes.
- */
 async function generatePhotosForRecipes(
   recipes: AIRecipe[],
   dispatch: (action: unknown) => void,
@@ -202,12 +203,16 @@ async function generatePhotosForRecipes(
     recipes.map(async (recipe, i) => {
       try {
         const clone = { ...recipe }
-        clone.image_url = await generateDishPhoto(clone.name)
+        // If recipe already has a photo (TheMealDB), use it directly
+        if (!clone.image_url) {
+          clone.image_url = await generateDishPhoto(clone.name)
+        }
+        if (!clone.image_url) return // never show without photo
         dispatch(addAIDish({ recipe: clone, index: indexOffset + i }))
         successCount++
         successful.push(clone)
       } catch {
-        // Skip dish if DALL-E fails — never show without photo
+        // Skip on error
       }
     })
   )
@@ -215,65 +220,76 @@ async function generatePhotosForRecipes(
   return { successCount, successful }
 }
 
+// ─── Progressive AI randomizer thunk ──────────────────────────────────────────
+
 /**
- * Progressive AI randomizer with localStorage cache:
+ * Randomizer with 20-recipe seed cache:
  *
- * Scenario A — cache exists and fresh:
- *   1. Immediately generate DALL-E photos for cached recipe texts (no web search)
- *   2. SwipeDeck opens after first photo is ready (~5-8s)
+ * Scenario A — seed cache exists and fresh (30-day TTL):
+ *   Dispatch all 20 cached recipes immediately — SwipeDeck opens instantly.
  *
- * Scenario B — cache empty or stale:
- *   1. Web search for FREE_TIER_LIMIT recipes
- *   2. Generate DALL-E photos progressively
- *   3. Save recipe texts to cache for next session
+ * Scenario B — no seed cache (first run):
+ *   1. Fetch SEED_COUNT random meals from TheMealDB in parallel.
+ *   2. Translate each with GPT-4o-mini progressively — first card appears in ~3s.
+ *   3. Save all translated recipes to seed cache for next sessions.
  *
- * Scenario C — cache stale (>3 days):
- *   Same as A, but also refresh cache in background after dishes are shown.
+ * After user swipes through to ≤3 remaining, SwipeDeck dispatches loadMoreWebDishes.
  */
 export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
   dispatch(startAIRandom())
 
-  const cached = loadAIRecipesFromCache()
-  const stale = isCacheStale()
+  const cached = loadSeedFromCache()
 
   if (cached.length > 0) {
-    // ── Scenario A / C: serve from cache ──────────────────────────────────────
+    // ── Scenario A: serve all cached recipes instantly ──────────────────────
     dispatch(setLoadingStep('photos'))
-    dispatch(setLoadingMore(false))
-
-    const { successCount } = await generatePhotosForRecipes(cached, dispatch)
-
-    dispatch(finishAIRandom(successCount === 0 ? 'Не удалось создать фото. Проверьте интернет-соединение.' : null))
-
-    // If cache is stale, silently refresh in background (don't show loading)
-    if (stale) {
-      fetchRecipesFromWeb(FREE_TIER_LIMIT)
-        .then((fresh) => {
-          saveAIRecipesToCache(fresh)
-        })
-        .catch(() => {/* ignore background refresh errors */})
-    }
+    cached.forEach((recipe, i) => {
+      dispatch(addAIDish({ recipe, index: i }))
+    })
+    dispatch(finishAIRandom(null))
   } else {
-    // ── Scenario B: no cache — fetch from internet ────────────────────────────
-    let recipes: AIRecipe[]
+    // ── Scenario B: first run — fetch progressively from TheMealDB + GPT ───
+    let successful: AIRecipe[] = []
     try {
-      dispatch(setLoadingStep('search'))
-      recipes = await fetchRecipesFromWeb(FREE_TIER_LIMIT)
+      dispatch(setLoadingMore(true))
+      successful = await fetchRecipesProgressively(SEED_COUNT, (recipe, i) => {
+        dispatch(addAIDish({ recipe, index: i }))
+      })
     } catch (e) {
-      dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка поиска рецептов в интернете'))
+      dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
       return
     }
 
-    dispatch(setLoadingStep('photos'))
-    dispatch(setLoadingMore(true))
-
-    const { successCount, successful } = await generatePhotosForRecipes(recipes, dispatch)
-
-    // Save recipe texts to cache for next sessions
     if (successful.length > 0) {
-      saveAIRecipesToCache(successful)
+      saveSeedToCache(successful)
     }
 
-    dispatch(finishAIRandom(successCount === 0 ? 'Не удалось создать фото ни для одного блюда' : null))
+    dispatch(finishAIRandom(
+      successful.length === 0 ? 'Не удалось загрузить рецепты. Проверьте интернет-соединение.' : null
+    ))
   }
+}
+
+// ─── Load-more thunk: called by SwipeDeck when nearing the end ────────────────
+
+/**
+ * Fetches 5 more recipes from TheMealDB and appends them to the current deck.
+ * Uses the current dish count as the ID offset so IDs don't collide.
+ * Called automatically when the user has ≤3 cards remaining.
+ */
+export const loadMoreWebDishes = () => async (
+  dispatch: (action: unknown) => void,
+  getState: () => { dishes: DishesState }
+) => {
+  const currentCount = getState().dishes.dishes.length
+  dispatch(setLoadingMore(true))
+
+  try {
+    const recipes = await fetchRecipesFromWeb(5)
+    await generatePhotosForRecipes(recipes, dispatch, currentCount)
+  } catch {
+    // Silently fail — user still has existing cards to swipe
+  }
+
+  dispatch(setLoadingMore(false))
 }

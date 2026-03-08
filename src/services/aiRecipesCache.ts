@@ -10,13 +10,12 @@ interface CacheEntry {
 }
 
 /**
- * Saves AI recipe metadata to localStorage (no images — DALL-E URLs expire).
- * Images are regenerated from DALL-E on each session using the cached text.
+ * Saves AI recipe metadata to localStorage.
+ * TheMealDB image URLs are permanent — stored in cache so next session loads instantly.
  */
 export function saveAIRecipesToCache(recipes: AIRecipe[]): void {
   try {
-    const toSave: AIRecipe[] = recipes.map(({ image_url: _img, ...rest }) => rest)
-    const entry: CacheEntry = { recipes: toSave, savedAt: Date.now() }
+    const entry: CacheEntry = { recipes, savedAt: Date.now() }
     localStorage.setItem(CACHE_KEY, JSON.stringify(entry))
   } catch {
     // localStorage may be unavailable or full — silently ignore

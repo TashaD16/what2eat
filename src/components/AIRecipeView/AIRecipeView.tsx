@@ -33,7 +33,7 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
         <CircularProgress size={48} />
         <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-          Ищем рецепт в интернете<br />и создаём фото блюда...
+          Ищем рецепт в открытых источниках<br />и переводим на русский...
         </Typography>
       </Box>
     )
@@ -84,7 +84,7 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <AutoAwesome sx={{ color: '#FF9500', fontSize: 16 }} />
               <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                AI-рецепт из интернета
+                Рецепт из открытых источников
               </Typography>
             </Box>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 800, lineHeight: 1.15, textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>

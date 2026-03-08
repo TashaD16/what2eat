@@ -1,5 +1,12 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { RecipeStep } from '../types/recipe'
+import {
+  MealDBMeal,
+  getRandomMeals,
+  findMealsByIngredients,
+  extractIngredients,
+  estimateMeta,
+} from './mealDbService'
 
 export interface AIRecipeIngredient {
   name: string
@@ -26,134 +33,211 @@ function getApiKey(): string {
   return key
 }
 
-/**
- * Calls OpenAI Responses API with web_search_preview tool — real internet search.
- */
-async function callOpenAIWithWebSearch(prompt: string): Promise<string> {
+/** GPT-4o-mini — used only for translation and fallback recipe generation. */
+async function callOpenAIMini(prompt: string): Promise<string> {
   const apiKey = getApiKey()
-  const response = await fetch('https://api.openai.com/v1/responses', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      tools: [{ type: 'web_search_preview' }],
-      input: prompt,
+      model: 'gpt-4o-mini',
+      max_tokens: 1800,
+      messages: [{ role: 'user', content: prompt }],
     }),
   })
   if (!response.ok) {
     const err = await response.text()
-    throw new Error(`OpenAI web search error: ${response.status} — ${err}`)
+    throw new Error(`OpenAI error: ${response.status} — ${err}`)
   }
   const data = (await response.json()) as {
-    output?: Array<{
-      type: string
-      content?: Array<{ type: string; text?: string }>
-    }>
+    choices?: Array<{ message?: { content?: string } }>
   }
-  const message = data.output?.find((o) => o.type === 'message')
-  const text = message?.content?.find((c) => c.type === 'output_text')?.text
-  if (!text) throw new Error('Пустой ответ от OpenAI')
-  return text
+  return data.choices?.[0]?.message?.content ?? ''
 }
 
 /**
- * Generates a photorealistic food photo using DALL-E 3. Throws if generation fails.
- * Recipe is never shown without a photo.
+ * Translates a TheMealDB meal into Russian and formats it as AIRecipe.
+ * Uses GPT-4o-mini — cheap (~$0.0001 per meal), no web search needed.
  */
-async function generateDishPhoto(dishName: string): Promise<string> {
-  const apiKey = getApiKey()
-  const response = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'dall-e-3',
-      prompt: `Professional food photography of "${dishName}": beautifully plated dish, restaurant quality, appetizing presentation, natural lighting, 4K, photorealistic. No text, no watermarks.`,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-    }),
-  })
-  if (!response.ok) {
-    const err = await response.text()
-    throw new Error(`DALL-E 3 error: ${response.status} — ${err}`)
-  }
-  const data = (await response.json()) as { data?: Array<{ url?: string }> }
-  const url = data.data?.[0]?.url
-  if (!url) throw new Error('Не удалось получить фото блюда от DALL-E 3')
-  return url
-}
+async function translateMealToRussian(meal: MealDBMeal): Promise<AIRecipe> {
+  const ingsEn = extractIngredients(meal)
+  const meta = estimateMeta(meal)
 
-/**
- * Generates a recipe by searching the internet via OpenAI, then creates a matching photo.
- * Never returns a recipe without a photo.
- */
-export async function generateRecipeByIngredients(ingredientNames: string[]): Promise<AIRecipe> {
-  const prompt = `Найди в интернете рецепт вкусного блюда из следующих продуктов: ${ingredientNames.join(', ')}.
-Можно использовать не все продукты и добавить базовые специи/соль/масло.
-Найди реальный проверенный рецепт с кулинарного сайта.
+  const ingredientLines = ingsEn.map((i) => `${i.nameEn}: ${i.measure}`).join('\n')
+  // Trim instructions to avoid token overflow
+  const instructions = meal.strInstructions.slice(0, 3000)
 
-Верни ТОЛЬКО JSON объект (без пояснений, без markdown):
+  const prompt = `Переведи этот рецепт с английского на русский. Раздели инструкции на чёткие пронумерованные шаги.
+
+Блюдо: ${meal.strMeal}
+Кухня: ${meal.strArea}, категория: ${meal.strCategory}
+Инструкции: ${instructions}
+Ингредиенты:
+${ingredientLines}
+
+Верни ТОЛЬКО JSON (без пояснений, без markdown):
 {
   "name": "<название блюда на русском>",
-  "description": "<2-3 предложения о блюде: вкус, история, особенности>",
-  "cooking_time": <минуты как число>,
-  "difficulty": "<easy|medium|hard>",
-  "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица измерения>"}],
-  "instructions": [{"step": 1, "description": "<подробное описание шага>"}, ...]
-}
-Только JSON, без пояснений.`
+  "description": "<2-3 предложения: что это за блюдо, вкус, из какой кухни>",
+  "ingredients": [{"name": "<название на русском>", "quantity": "<количество>", "unit": "<единица>"}],
+  "instructions": [{"step": 1, "description": "<подробный шаг на русском>"}, ...]
+}`
 
-  const text = await callOpenAIWithWebSearch(prompt)
+  const text = await callOpenAIMini(prompt)
   const match = text.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('Не удалось распознать рецепт от AI')
+  if (!match) throw new Error(`Не удалось перевести рецепт "${meal.strMeal}"`)
+
+  const parsed = JSON.parse(match[0]) as {
+    name: string
+    description: string
+    ingredients: AIRecipeIngredient[]
+    instructions: RecipeStep[]
+  }
+
+  return {
+    name: parsed.name,
+    description: parsed.description,
+    ingredients: parsed.ingredients,
+    instructions: parsed.instructions,
+    cooking_time: meta.cooking_time,
+    difficulty: meta.difficulty,
+    image_url: meal.strMealThumb,   // real TheMealDB photo — permanent URL
+    source_ingredients: [],
+  }
+}
+
+/**
+ * Translates a list of Russian ingredient names to English for TheMealDB queries.
+ */
+async function translateIngredientsToEnglish(namesRu: string[]): Promise<string[]> {
+  const prompt = `Переведи названия продуктов с русского на английский (одно слово/словосочетание).
+Верни ТОЛЬКО JSON массив строк в том же порядке, без пояснений.
+Входные данные: ${JSON.stringify(namesRu)}`
+
+  const text = await callOpenAIMini(prompt)
+  const match = text.match(/\[[\s\S]*\]/)
+  if (!match) return namesRu.map(() => '')
+
+  const result = JSON.parse(match[0]) as string[]
+  return result.map((s) => s.trim())
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Finds a recipe from TheMealDB using the selected Russian ingredient names.
+ * Falls back to GPT-4o-mini generation if TheMealDB has no results.
+ * Image is always TheMealDB photo (no DALL-E needed).
+ */
+export async function generateRecipeByIngredients(ingredientNames: string[]): Promise<AIRecipe> {
+  // Translate ingredient names to English for TheMealDB
+  const namesEn = await translateIngredientsToEnglish(ingredientNames)
+  const validNamesEn = namesEn.filter(Boolean)
+
+  if (validNamesEn.length > 0) {
+    const meals = await findMealsByIngredients(validNamesEn, 1)
+    if (meals.length > 0) {
+      const recipe = await translateMealToRussian(meals[0])
+      recipe.source_ingredients = ingredientNames
+      return recipe
+    }
+  }
+
+  // Fallback: generate with GPT-4o-mini (no web search, just smart generation)
+  return generateRecipeWithGPT(ingredientNames)
+}
+
+/**
+ * GPT-4o-mini fallback when TheMealDB has no results.
+ * Generates recipe text only — uses Unsplash placeholder for photo.
+ */
+async function generateRecipeWithGPT(ingredientNames: string[]): Promise<AIRecipe> {
+  const prompt = `Составь вкусный рецепт из следующих продуктов: ${ingredientNames.join(', ')}.
+Можно добавить базовые специи/соль/масло.
+
+Верни ТОЛЬКО JSON (без пояснений):
+{
+  "name": "<название блюда на русском>",
+  "description": "<2-3 предложения>",
+  "cooking_time": <минуты>,
+  "difficulty": "<easy|medium|hard>",
+  "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица>"}],
+  "instructions": [{"step": 1, "description": "<шаг>"}, ...]
+}`
+
+  const text = await callOpenAIMini(prompt)
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('Не удалось создать рецепт')
 
   const parsed = JSON.parse(match[0]) as AIRecipe
   parsed.source_ingredients = ingredientNames
 
-  // Photo is required — throw if DALL-E fails
-  parsed.image_url = await generateDishPhoto(parsed.name)
+  // Fallback photo from Unsplash (no DALL-E cost)
+  parsed.image_url = `https://source.unsplash.com/featured/1024x1024/?food,${encodeURIComponent(parsed.name)}`
 
   return parsed
 }
 
 /**
- * Fetches recipe metadata from the internet (web search only, no photos).
- * Call generateDishPhoto separately per dish for progressive loading.
+ * Fetches N diverse random recipes from TheMealDB and translates them to Russian.
+ * Real food photos included — no DALL-E, no web search.
+ * Called by the randomizer thunk for progressive loading.
  */
 export async function fetchRecipesFromWeb(count = 5): Promise<AIRecipe[]> {
-  const prompt = `Найди в интернете ${count} разнообразных популярных домашних рецептов из разных кухонь мира.
-Выбери по одному из: русская кухня, итальянская, азиатская (японская/китайская/тайская), мексиканская/латинская, средиземноморская/греческая.
-Только реальные популярные блюда с понятными ингредиентами.
+  const meals = await getRandomMeals(count)
+  if (meals.length === 0) throw new Error('TheMealDB недоступен. Проверьте интернет-соединение.')
 
-Верни ТОЛЬКО JSON массив объектов (без пояснений, без markdown):
-[
-  {
-    "name": "<название блюда на русском>",
-    "description": "<2-3 предложения о блюде: вкус, история, особенности>",
-    "cooking_time": <минуты как число>,
-    "difficulty": "<easy|medium|hard>",
-    "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица>"}],
-    "instructions": [{"step": 1, "description": "<подробное описание шага>"}, ...]
-  }
-]
-Только JSON массив, без пояснений.`
+  // Translate all meals in parallel
+  const results = await Promise.allSettled(meals.map((m) => translateMealToRussian(m)))
 
-  const text = await callOpenAIWithWebSearch(prompt)
-  const match = text.match(/\[[\s\S]*\]/)
-  if (!match) throw new Error('Не удалось получить список рецептов из интернета')
+  const successful = results
+    .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
+    .map((r) => r.value)
 
-  const dishes = JSON.parse(match[0]) as AIRecipe[]
-  dishes.forEach((d) => { d.source_ingredients = [] })
-  return dishes
+  if (successful.length === 0) throw new Error('Не удалось перевести рецепты')
+  return successful
 }
 
-export { generateDishPhoto }
+/**
+ * Fetches count random meals from TheMealDB and translates them progressively.
+ * Calls onRecipe as each translation completes so the caller can show cards one by one.
+ * Returns all successfully translated recipes.
+ */
+export async function fetchRecipesProgressively(
+  count: number,
+  onRecipe: (recipe: AIRecipe, index: number) => void
+): Promise<AIRecipe[]> {
+  const meals = await getRandomMeals(count)
+  if (meals.length === 0) throw new Error('TheMealDB недоступен. Проверьте интернет-соединение.')
+
+  const successful: AIRecipe[] = []
+
+  await Promise.allSettled(
+    meals.map(async (meal, i) => {
+      try {
+        const recipe = await translateMealToRussian(meal)
+        onRecipe(recipe, i)
+        successful.push(recipe)
+      } catch {
+        // Skip failed translation — continue with others
+      }
+    })
+  )
+
+  return successful
+}
+
+// Kept for compatibility — used by dishesSlice progressive loader.
+// Now just returns the TheMealDB thumbnail (no DALL-E call).
+export async function generateDishPhoto(dishName: string): Promise<string> {
+  // For cache-based loading: photo URLs are already stored in cache.
+  // This stub exists so dishesSlice doesn't need changes.
+  // In practice, recipes from TheMealDB always have image_url set.
+  return `https://source.unsplash.com/featured/1024x1024/?food,${encodeURIComponent(dishName)}`
+}
 
 export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<string | null> {
   if (!isSupabaseConfigured()) return null

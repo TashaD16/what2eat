@@ -235,11 +235,11 @@ function App() {
             <CircularProgress size={56} sx={{ color: '#FF9500' }} />
             <Box sx={{ textAlign: 'center' }}>
               <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, mb: 0.5 }}>
-                {loadingStep === 'search' ? 'Ищем рецепты в интернете...' : 'Создаём фото блюд...'}
+                {loadingStep === 'search' ? 'Загружаем рецепты...' : 'Переводим и готовим блюда...'}
               </Typography>
               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
                 {loadingStep === 'search'
-                  ? 'Анализируем кулинарные сайты'
+                  ? 'Получаем рецепты из открытых источников'
                   : 'Первое блюдо появится через несколько секунд'}
               </Typography>
             </Box>

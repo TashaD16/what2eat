@@ -18,7 +18,7 @@ import {
 import { Dish } from '../../types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe } from '../../store/slices/swipeSlice'
-import { fetchSuggestedDishes } from '../../store/slices/dishesSlice'
+import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
 
 interface SwipeDeckProps {
@@ -32,7 +32,7 @@ interface SwipeDeckProps {
 export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
   const { currentIndex } = useAppSelector((state) => state.swipe)
-  const { suggestedDishNames, popularSuggestions } = useAppSelector((state) => state.dishes)
+  const { suggestedDishNames, popularSuggestions, aiRandomMode } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
@@ -44,6 +44,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
     .map((i) => i.name)
     .join(',')
 
+  const remaining = dishes.length - currentIndex
+  const topDishIndex = dishes.length - 1 - currentIndex
+
   useEffect(() => {
     const selectedNames = selectedNamesKey.split(',').filter(Boolean)
     if (dishes.length === 0 && selectedNames.length > 0 && suggestedDishNames.length === 0) {
@@ -51,15 +54,19 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
     }
   }, [dishes.length, selectedNamesKey, dispatch, suggestedDishNames.length])
 
+  // Auto-load 5 more recipes from TheMealDB when ≤3 cards remain in randomizer mode
+  useEffect(() => {
+    if (aiRandomMode && remaining > 0 && remaining <= 3 && !loadingMore) {
+      dispatch(loadMoreWebDishes())
+    }
+  }, [aiRandomMode, remaining, loadingMore, dispatch])
+
   const cardRefsStore = useRef<(CardAPI | null)[]>([])
   while (cardRefsStore.current.length < dishes.length) cardRefsStore.current.push(null)
 
   const getCardRef = (index: number) => (el: CardAPI | null) => {
     cardRefsStore.current[index] = el
   }
-
-  const remaining = dishes.length - currentIndex
-  const topDishIndex = dishes.length - 1 - currentIndex
 
   const handleSwipe = useCallback(
     (direction: string, dishId: number) => {
