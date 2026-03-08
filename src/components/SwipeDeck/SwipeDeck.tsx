@@ -33,6 +33,7 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
+  const userId = useAppSelector((state) => state.auth.user?.id)
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
   const [popularExpanded, setPopularExpanded] = useState(false)
   const [infoDish, setInfoDish] = useState<typeof dishes[0] | null>(null)
@@ -62,10 +63,10 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
   const handleSwipe = useCallback(
     (direction: string, dishId: number) => {
       const dir = direction === 'right' ? 'right' : 'left'
-      dispatch(swipeDish({ dishId, direction: dir }))
+      dispatch(swipeDish({ dishId, direction: dir, userId }))
       setSwipeDirection(prev => ({ ...prev, [dishId]: dir }))
     },
-    [dispatch]
+    [dispatch, userId]
   )
 
   const handleCardLeft = useCallback(

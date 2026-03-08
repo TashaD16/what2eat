@@ -6,6 +6,8 @@ import filtersReducer from './slices/filtersSlice'
 import swipeReducer from './slices/swipeSlice'
 import weeklyPlannerReducer from './slices/weeklyPlannerSlice'
 import photoReducer from './slices/photoSlice'
+import authReducer from './slices/authSlice'
+import aiRecipeReducer from './slices/aiRecipeSlice'
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +18,8 @@ export const store = configureStore({
     swipe: swipeReducer,
     weeklyPlanner: weeklyPlannerReducer,
     photo: photoReducer,
+    auth: authReducer,
+    aiRecipe: aiRecipeReducer,
   },
 })
 

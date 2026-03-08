@@ -41,6 +41,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
   const dispatch = useAppDispatch()
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { dishes } = useAppSelector((state) => state.dishes)
+  const userId = useAppSelector((state) => state.auth.user?.id)
   const [planDialog, setPlanDialog] = useState<{ open: boolean; dishId: number | null }>({
     open: false,
     dishId: null,
@@ -59,7 +60,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
   }
 
   const handleRemove = (dishId: number) => {
-    dispatch(unlikeDish(dishId))
+    dispatch(unlikeDish({ dishId, userId }))
     setRemovedSnack(true)
   }
 

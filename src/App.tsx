@@ -1,12 +1,15 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Box, Button, CircularProgress, Alert } from '@mui/material'
-import { Casino, CameraAlt } from '@mui/icons-material'
+import { Casino, CameraAlt, AutoAwesome } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients } from './store/slices/ingredientsSlice'
 import { findDishes, randomizeMeatDishes, fetchPopularDishSuggestions } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
-import { resetSwipe } from './store/slices/swipeSlice'
+import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
+import { initAuth, signOut } from './store/slices/authSlice'
+import { generateAIRecipe } from './store/slices/aiRecipeSlice'
 import { initDatabase } from './services/database'
+import { supabase } from './services/supabase'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
 import RecipeView from './components/RecipeView'
@@ -16,8 +19,10 @@ import SwipeResults from './components/SwipeResults'
 import ShoppingList from './components/ShoppingList'
 import WeeklyPlanner from './components/WeeklyPlanner'
 import PhotoUpload from './components/PhotoUpload'
+import AuthModal from './components/Auth'
+import AIRecipeView from './components/AIRecipeView'
 
-type View = 'ingredients' | 'photo' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner'
+type View = 'ingredients' | 'photo' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -25,10 +30,12 @@ function App() {
   const [prevView, setPrevView] = useState<View>('swipe_results')
   const [dbInitialized, setDbInitialized] = useState(false)
   const [dbError, setDbError] = useState<string | null>(null)
-  const { selectedIngredients } = useAppSelector((state) => state.ingredients)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
+  const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
     let cancelled = false
@@ -38,6 +45,7 @@ function App() {
         if (!cancelled) {
           setDbInitialized(true)
           dispatch(fetchIngredients())
+          dispatch(initAuth())
         }
       } catch (error) {
         if (!cancelled) {
@@ -48,6 +56,35 @@ function App() {
     initializeApp()
     return () => { cancelled = true }
   }, [dispatch])
+
+  // Listen to auth state changes from Supabase
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Migrate local favorites then sync from Supabase
+        const localIds = likedDishIds
+        if (localIds.length > 0) {
+          dispatch(migrateLocalFavorites({ userId: session.user.id, localIds }))
+        }
+        dispatch(syncFavoritesFromSupabase(session.user.id))
+      }
+    })
+    return () => subscription.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch])
+
+  const handleSignOut = () => {
+    dispatch(signOut())
+  }
+
+  const handleGenerateAIRecipe = () => {
+    const selectedNames = ingredients
+      .filter((i) => selectedIngredients.includes(i.id))
+      .map((i) => i.name)
+    if (selectedNames.length === 0) return
+    dispatch(generateAIRecipe(selectedNames))
+    setView('ai_recipe')
+  }
 
   // Применяем бюджетный фильтр поверх найденных блюд
   const visibleDishes = useMemo(() => {
@@ -125,6 +162,9 @@ function App() {
       onPlannerClick={() => setView('weekly_planner')}
       likedCount={likedDishIds.length}
       onFavoritesClick={() => setView('swipe_results')}
+      user={user}
+      onAuthClick={() => setAuthModalOpen(true)}
+      onSignOut={handleSignOut}
     >
       {view === 'ingredients' && (
         <Box>
@@ -157,6 +197,16 @@ function App() {
               sx={{ px: 3, py: 1.5, borderColor: 'rgba(168,85,247,0.4)', color: '#A855F7', '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' } }}
             >
               Загрузить фото
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={handleGenerateAIRecipe}
+              disabled={selectedIngredients.length === 0}
+              startIcon={<AutoAwesome />}
+              sx={{ px: 3, py: 1.5, borderColor: 'rgba(255,149,0,0.4)', color: '#FF9500', '&:hover': { borderColor: '#FF9500', bgcolor: 'rgba(255,149,0,0.08)' } }}
+            >
+              AI-рецепт
             </Button>
           </Box>
         </Box>
@@ -201,6 +251,12 @@ function App() {
           onBack={() => setView('ingredients')}
         />
       )}
+
+      {view === 'ai_recipe' && (
+        <AIRecipeView onBack={() => setView('ingredients')} />
+      )}
+
+      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </Layout>
   )
 }

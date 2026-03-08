@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { addFavoriteLocalDish, removeFavoriteLocalDish, getUserFavoriteDishIds, migrateLocalFavoritesToSupabase } from '../../services/favorites'
 
 const STORAGE_KEY = 'w2e_liked_dish_ids'
 
@@ -33,16 +34,35 @@ const initialState: SwipeState = {
   sessionComplete: false,
 }
 
+// Sync favorites from Supabase after login
+export const syncFavoritesFromSupabase = createAsyncThunk(
+  'swipe/syncFromSupabase',
+  async (userId: string) => {
+    const ids = await getUserFavoriteDishIds(userId)
+    return ids
+  }
+)
+
+// Migrate localStorage favorites to Supabase after first login
+export const migrateLocalFavorites = createAsyncThunk(
+  'swipe/migrateLocal',
+  async ({ userId, localIds }: { userId: string; localIds: number[] }) => {
+    await migrateLocalFavoritesToSupabase(userId, localIds)
+    return localIds
+  }
+)
+
 const swipeSlice = createSlice({
   name: 'swipe',
   initialState,
   reducers: {
-    swipeDish: (state, action: PayloadAction<{ dishId: number; direction: 'left' | 'right' }>) => {
-      const { dishId, direction } = action.payload
+    swipeDish: (state, action: PayloadAction<{ dishId: number; direction: 'left' | 'right'; userId?: string }>) => {
+      const { dishId, direction, userId } = action.payload
       if (direction === 'right') {
         if (!state.likedDishIds.includes(dishId)) {
           state.likedDishIds.push(dishId)
           saveLikedIds(state.likedDishIds)
+          if (userId) addFavoriteLocalDish(userId, dishId)
         }
       } else {
         if (!state.dislikedDishIds.includes(dishId)) {
@@ -51,9 +71,11 @@ const swipeSlice = createSlice({
       }
       state.currentIndex += 1
     },
-    unlikeDish: (state, action: PayloadAction<number>) => {
-      state.likedDishIds = state.likedDishIds.filter((id) => id !== action.payload)
+    unlikeDish: (state, action: PayloadAction<{ dishId: number; userId?: string }>) => {
+      const { dishId, userId } = action.payload
+      state.likedDishIds = state.likedDishIds.filter((id) => id !== dishId)
       saveLikedIds(state.likedDishIds)
+      if (userId) removeFavoriteLocalDish(userId, dishId)
     },
     markSessionComplete: (state) => {
       state.sessionComplete = true
@@ -65,6 +87,15 @@ const swipeSlice = createSlice({
       state.sessionComplete = false
       saveLikedIds([])
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(syncFavoritesFromSupabase.fulfilled, (state, action) => {
+        // Merge Supabase favorites with local, deduplicate
+        const merged = Array.from(new Set([...state.likedDishIds, ...action.payload]))
+        state.likedDishIds = merged
+        saveLikedIds(merged)
+      })
   },
 })
 
