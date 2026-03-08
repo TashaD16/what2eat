@@ -8,7 +8,7 @@ interface CardAPI {
 }
 import {
   Box, Typography, IconButton, Button, Chip, Collapse,
-  Dialog, DialogContent, DialogTitle, List, ListItem,
+  Dialog, DialogContent, DialogTitle, List, ListItem, CircularProgress,
 } from '@mui/material'
 import {
   Close, Favorite, ArrowBack, Info, Restaurant,
@@ -23,12 +23,13 @@ import SwipeCard from './SwipeCard'
 
 interface SwipeDeckProps {
   dishes: Dish[]
+  loadingMore?: boolean
   onDishSelect: (dishId: number) => void
   onComplete: () => void
   onBack: () => void
 }
 
-export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
+export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions } = useAppSelector((state) => state.dishes)
@@ -126,18 +127,28 @@ export default function SwipeDeck({ dishes, onDishSelect, onComplete, onBack }: 
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />} size="small">
           Назад
         </Button>
-        <Typography
-          variant="body2"
-          sx={{
-            color: remaining > 0 ? 'rgba(255,255,255,0.5)' : '#22C55E',
-            fontWeight: 600,
-            fontSize: '0.8rem',
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {remaining > 0 ? `${remaining} блюд осталось` : 'Все просмотрены'}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: remaining > 0 ? 'rgba(255,255,255,0.5)' : '#22C55E',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {remaining > 0 ? `${remaining} блюд осталось` : 'Все просмотрены'}
+          </Typography>
+          {loadingMore && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <CircularProgress size={12} sx={{ color: '#FF9500' }} />
+              <Typography variant="caption" sx={{ color: '#FF9500', fontSize: '0.65rem' }}>
+                +ещё
+              </Typography>
+            </Box>
+          )}
+        </Box>
         <Button variant="text" onClick={handleReset} size="small" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
           Сначала
         </Button>

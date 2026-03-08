@@ -32,7 +32,7 @@ function App() {
   const [dbError, setDbError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
-  const { dishes, loading: dishesLoading, aiDishRecipes } = useAppSelector((state) => state.dishes)
+  const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
@@ -233,13 +233,21 @@ function App() {
         dishesLoading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
             <CircularProgress size={56} sx={{ color: '#FF9500' }} />
-            <Typography sx={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.8 }}>
-              Ищем рецепты в интернете<br />и создаём фото блюд...
-            </Typography>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, mb: 0.5 }}>
+                {loadingStep === 'search' ? 'Ищем рецепты в интернете...' : 'Создаём фото блюд...'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
+                {loadingStep === 'search'
+                  ? 'Анализируем кулинарные сайты'
+                  : 'Первое блюдо появится через несколько секунд'}
+              </Typography>
+            </Box>
           </Box>
         ) : (
           <SwipeDeck
             dishes={visibleDishes}
+            loadingMore={loadingMore}
             onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
             onComplete={() => setView('swipe_results')}
             onBack={() => setView('ingredients')}

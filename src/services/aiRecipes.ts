@@ -123,10 +123,10 @@ export async function generateRecipeByIngredients(ingredientNames: string[]): Pr
 }
 
 /**
- * Generates random diverse dishes from internet search + DALL-E 3 photos.
- * Dishes without photos are filtered out.
+ * Fetches recipe metadata from the internet (web search only, no photos).
+ * Call generateDishPhoto separately per dish for progressive loading.
  */
-export async function generateRandomAIDishes(count = 5): Promise<AIRecipe[]> {
+export async function fetchRecipesFromWeb(count = 5): Promise<AIRecipe[]> {
   const prompt = `Найди в интернете ${count} разнообразных популярных домашних рецептов из разных кухонь мира.
 Выбери по одному из: русская кухня, итальянская, азиатская (японская/китайская/тайская), мексиканская/латинская, средиземноморская/греческая.
 Только реальные популярные блюда с понятными ингредиентами.
@@ -146,29 +146,14 @@ export async function generateRandomAIDishes(count = 5): Promise<AIRecipe[]> {
 
   const text = await callOpenAIWithWebSearch(prompt)
   const match = text.match(/\[[\s\S]*\]/)
-  if (!match) throw new Error('Не удалось получить список рецептов')
+  if (!match) throw new Error('Не удалось получить список рецептов из интернета')
 
   const dishes = JSON.parse(match[0]) as AIRecipe[]
-
-  // Generate photos in parallel — filter out any failures
-  const results = await Promise.allSettled(
-    dishes.map(async (dish) => {
-      dish.image_url = await generateDishPhoto(dish.name)
-      dish.source_ingredients = []
-      return dish
-    })
-  )
-
-  const successful = results
-    .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
-    .map((r) => r.value)
-
-  if (successful.length === 0) {
-    throw new Error('Не удалось сгенерировать фото ни для одного блюда')
-  }
-
-  return successful
+  dishes.forEach((d) => { d.source_ingredients = [] })
+  return dishes
 }
+
+export { generateDishPhoto }
 
 export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<string | null> {
   if (!isSupabaseConfigured()) return null
