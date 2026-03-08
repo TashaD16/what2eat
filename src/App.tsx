@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Box, Button, CircularProgress, Alert } from '@mui/material'
+import { Box, Button, CircularProgress, Alert, Typography } from '@mui/material'
 import { Casino, CameraAlt, AutoAwesome } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients } from './store/slices/ingredientsSlice'
-import { findDishes, randomizeMeatDishes, fetchPopularDishSuggestions } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
-import { generateAIRecipe } from './store/slices/aiRecipeSlice'
+import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { initDatabase } from './services/database'
 import { supabase } from './services/supabase'
 import Layout from './components/Layout'
@@ -32,7 +32,7 @@ function App() {
   const [dbError, setDbError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
-  const { dishes } = useAppSelector((state) => state.dishes)
+  const { dishes, loading: dishesLoading, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
@@ -83,6 +83,7 @@ function App() {
       .map((i) => i.name)
     if (selectedNames.length === 0) return
     dispatch(generateAIRecipe(selectedNames))
+    setPrevView('ingredients')
     setView('ai_recipe')
   }
 
@@ -117,16 +118,25 @@ function App() {
 
   const handleRandomize = () => {
     dispatch(resetSwipe())
-    dispatch(randomizeMeatDishes())
-    dispatch(fetchPopularDishSuggestions())
+    dispatch(generateAIRandomDishes())
     setView('dishes')
   }
 
   const handleDishSelect = useCallback((dishId: number, from: View = 'swipe_results') => {
-    dispatch(fetchRecipe(dishId))
-    setPrevView(from)
-    setView('recipe')
-  }, [dispatch])
+    if (dishId < 0) {
+      // AI-generated dish from randomizer — show AI recipe view
+      const aiRecipe = aiDishRecipes[dishId]
+      if (aiRecipe) {
+        dispatch(setGeneratedRecipe(aiRecipe))
+        setPrevView(from)
+        setView('ai_recipe')
+      }
+    } else {
+      dispatch(fetchRecipe(dishId))
+      setPrevView(from)
+      setView('recipe')
+    }
+  }, [dispatch, aiDishRecipes])
 
   const handlePhotoIngredientsConfirmed = (ids: number[]) => {
     dispatch(resetSwipe())
@@ -220,12 +230,21 @@ function App() {
       )}
 
       {view === 'dishes' && (
-        <SwipeDeck
-          dishes={visibleDishes}
-          onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
-          onComplete={() => setView('swipe_results')}
-          onBack={() => setView('ingredients')}
-        />
+        dishesLoading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
+            <CircularProgress size={56} sx={{ color: '#FF9500' }} />
+            <Typography sx={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.8 }}>
+              Ищем рецепты в интернете<br />и создаём фото блюд...
+            </Typography>
+          </Box>
+        ) : (
+          <SwipeDeck
+            dishes={visibleDishes}
+            onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
+            onComplete={() => setView('swipe_results')}
+            onBack={() => setView('ingredients')}
+          />
+        )
       )}
 
       {view === 'swipe_results' && (
@@ -253,7 +272,7 @@ function App() {
       )}
 
       {view === 'ai_recipe' && (
-        <AIRecipeView onBack={() => setView('ingredients')} />
+        <AIRecipeView onBack={() => setView(prevView)} />
       )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />

@@ -32,7 +32,9 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
         <CircularProgress size={48} />
-        <Typography color="text.secondary">AI генерирует рецепт...</Typography>
+        <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
+          Ищем рецепт в интернете<br />и создаём фото блюда...
+        </Typography>
       </Box>
     )
   }
@@ -54,7 +56,45 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      {/* Hero photo */}
+      {recipe.image_url && (
+        <Box
+          sx={{
+            position: 'relative',
+            height: 300,
+            borderRadius: 4,
+            overflow: 'hidden',
+            mb: 3,
+          }}
+        >
+          <Box
+            component="img"
+            src={recipe.image_url}
+            alt={recipe.name}
+            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to top, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.2) 55%, transparent 100%)',
+            }}
+          />
+          <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <AutoAwesome sx={{ color: '#FF9500', fontSize: 16 }} />
+              <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                AI-рецепт из интернета
+              </Typography>
+            </Box>
+            <Typography variant="h4" sx={{ color: 'white', fontWeight: 800, lineHeight: 1.15, textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
+              {recipe.name}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: recipe.image_url ? 2 : 3 }}>
         <Button onClick={handleBack} startIcon={<ArrowBack />}>
           Назад
         </Button>
@@ -68,17 +108,23 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
         )}
       </Box>
 
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <AutoAwesome sx={{ color: '#FF9500', fontSize: 20 }} />
-          <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase' }}>
-            AI-рецепт
+      {/* Header (when no photo) */}
+      {!recipe.image_url && (
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <AutoAwesome sx={{ color: '#FF9500', fontSize: 20 }} />
+            <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase' }}>
+              AI-рецепт
+            </Typography>
+          </Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+            {recipe.name}
           </Typography>
         </Box>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
-          {recipe.name}
-        </Typography>
+      )}
+
+      {/* Description + chips */}
+      <Box sx={{ mb: 3 }}>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
           {recipe.description}
         </Typography>

@@ -3,9 +3,11 @@ import { Dish } from '../../types'
 import * as dishesService from '../../services/dishes'
 import { FindDishesOptions } from '../../services/dishes'
 import { suggestDishesByIngredients, fetchPopularDishes, PopularDishSuggestion } from '../../services/openai'
+import { generateRandomAIDishes, AIRecipe } from '../../services/aiRecipes'
 
 interface DishesState {
   dishes: Dish[]
+  aiDishRecipes: Record<number, AIRecipe>
   suggestedDishNames: string[]
   popularSuggestions: PopularDishSuggestion[]
   loading: boolean
@@ -14,6 +16,7 @@ interface DishesState {
 
 const initialState: DishesState = {
   dishes: [],
+  aiDishRecipes: {},
   suggestedDishNames: [],
   popularSuggestions: [],
   loading: false,
@@ -32,6 +35,13 @@ export const randomizeMeatDishes = createAsyncThunk(
   async () => {
     const allDishes = await dishesService.getAllDishes()
     return dishesService.randomizeDishes(allDishes)
+  }
+)
+
+export const generateAIRandomDishes = createAsyncThunk(
+  'dishes/generateAIRandom',
+  async () => {
+    return await generateRandomAIDishes(5)
   }
 )
 
@@ -55,6 +65,7 @@ const dishesSlice = createSlice({
   reducers: {
     clearDishes: (state) => {
       state.dishes = []
+      state.aiDishRecipes = {}
       state.suggestedDishNames = []
       state.popularSuggestions = []
     },
@@ -65,6 +76,7 @@ const dishesSlice = createSlice({
         state.loading = true
         state.error = null
         state.suggestedDishNames = []
+        state.aiDishRecipes = {}
       })
       .addCase(findDishes.fulfilled, (state, action) => {
         state.loading = false
@@ -77,6 +89,7 @@ const dishesSlice = createSlice({
       .addCase(randomizeMeatDishes.pending, (state) => {
         state.loading = true
         state.error = null
+        state.aiDishRecipes = {}
       })
       .addCase(randomizeMeatDishes.fulfilled, (state, action) => {
         state.loading = false
@@ -85,6 +98,39 @@ const dishesSlice = createSlice({
       .addCase(randomizeMeatDishes.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Failed to randomize dishes'
+      })
+      .addCase(generateAIRandomDishes.pending, (state) => {
+        state.loading = true
+        state.error = null
+        state.dishes = []
+        state.aiDishRecipes = {}
+      })
+      .addCase(generateAIRandomDishes.fulfilled, (state, action) => {
+        state.loading = false
+        const mapped: Dish[] = []
+        const recipeMap: Record<number, AIRecipe> = {}
+        action.payload.forEach((recipe, index) => {
+          const id = -(index + 1)
+          mapped.push({
+            id,
+            name: recipe.name,
+            description: recipe.description,
+            image_url: recipe.image_url ?? null,
+            cooking_time: recipe.cooking_time,
+            difficulty: recipe.difficulty,
+            servings: 2,
+            estimated_cost: null,
+            is_vegetarian: false,
+            is_vegan: false,
+          })
+          recipeMap[id] = recipe
+        })
+        state.dishes = mapped
+        state.aiDishRecipes = recipeMap
+      })
+      .addCase(generateAIRandomDishes.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Не удалось получить рецепты из интернета'
       })
       .addCase(fetchSuggestedDishes.fulfilled, (state, action) => {
         state.suggestedDishNames = action.payload
@@ -107,4 +153,3 @@ const dishesSlice = createSlice({
 export const { clearDishes } = dishesSlice.actions
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer
-

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { generateRecipeByIngredients, saveAIRecipe, AIRecipe } from '../../services/aiRecipes'
 
 interface AIRecipeState {
@@ -44,6 +44,11 @@ const aiRecipeSlice = createSlice({
       state.generatedRecipe = null
       state.error = null
     },
+    setGeneratedRecipe: (state, action: PayloadAction<AIRecipe>) => {
+      state.generatedRecipe = action.payload
+      state.error = null
+      state.loading = false
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -68,5 +73,5 @@ const aiRecipeSlice = createSlice({
   },
 })
 
-export const { clearAIRecipe } = aiRecipeSlice.actions
+export const { clearAIRecipe, setGeneratedRecipe } = aiRecipeSlice.actions
 export default aiRecipeSlice.reducer

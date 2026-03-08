@@ -16,66 +16,158 @@ export interface AIRecipe {
   cooking_time: number
   difficulty: 'easy' | 'medium' | 'hard'
   source_ingredients: string[]
+  image_url?: string
   created_at?: string
 }
 
-const OPENAI_PROXY_URL = import.meta.env.VITE_SUPABASE_URL
-  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy`
-  : null
-
-async function callOpenAI(messages: object[], model = 'gpt-4o-mini', max_tokens = 1500): Promise<string> {
-  // Use Edge Function proxy if configured, otherwise fall back to direct call with client key
-  if (OPENAI_PROXY_URL) {
-    const session = await supabase.auth.getSession()
-    const token = session.data.session?.access_token
-    const response = await fetch(OPENAI_PROXY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ messages, model, max_tokens }),
-    })
-    if (!response.ok) throw new Error(`Proxy error: ${response.status}`)
-    const data = await response.json()
-    return (data.choices?.[0]?.message?.content as string) ?? ''
-  }
-
-  // Fallback: direct OpenAI call (dev only, key exposed)
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-  if (!apiKey) throw new Error('OpenAI API key not configured')
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, max_tokens, messages }),
-  })
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`)
-  const data = await response.json()
-  return (data.choices?.[0]?.message?.content as string) ?? ''
+function getApiKey(): string {
+  const key = import.meta.env.VITE_OPENAI_API_KEY
+  if (!key) throw new Error('Задайте VITE_OPENAI_API_KEY в .env для работы AI-функций')
+  return key
 }
 
-export async function generateRecipeByIngredients(ingredientNames: string[]): Promise<AIRecipe> {
-  const prompt = `Ты опытный повар. Придумай вкусный рецепт из следующих продуктов: ${ingredientNames.join(', ')}.
-Можно использовать не все продукты и добавить базовые специи/соль/масло.
+/**
+ * Calls OpenAI Responses API with web_search_preview tool — real internet search.
+ */
+async function callOpenAIWithWebSearch(prompt: string): Promise<string> {
+  const apiKey = getApiKey()
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      tools: [{ type: 'web_search_preview' }],
+      input: prompt,
+    }),
+  })
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`OpenAI web search error: ${response.status} — ${err}`)
+  }
+  const data = (await response.json()) as {
+    output?: Array<{
+      type: string
+      content?: Array<{ type: string; text?: string }>
+    }>
+  }
+  const message = data.output?.find((o) => o.type === 'message')
+  const text = message?.content?.find((c) => c.type === 'output_text')?.text
+  if (!text) throw new Error('Пустой ответ от OpenAI')
+  return text
+}
 
-Верни ТОЛЬКО JSON объект в точном формате:
+/**
+ * Generates a photorealistic food photo using DALL-E 3. Throws if generation fails.
+ * Recipe is never shown without a photo.
+ */
+async function generateDishPhoto(dishName: string): Promise<string> {
+  const apiKey = getApiKey()
+  const response = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'dall-e-3',
+      prompt: `Professional food photography of "${dishName}": beautifully plated dish, restaurant quality, appetizing presentation, natural lighting, 4K, photorealistic. No text, no watermarks.`,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard',
+    }),
+  })
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`DALL-E 3 error: ${response.status} — ${err}`)
+  }
+  const data = (await response.json()) as { data?: Array<{ url?: string }> }
+  const url = data.data?.[0]?.url
+  if (!url) throw new Error('Не удалось получить фото блюда от DALL-E 3')
+  return url
+}
+
+/**
+ * Generates a recipe by searching the internet via OpenAI, then creates a matching photo.
+ * Never returns a recipe without a photo.
+ */
+export async function generateRecipeByIngredients(ingredientNames: string[]): Promise<AIRecipe> {
+  const prompt = `Найди в интернете рецепт вкусного блюда из следующих продуктов: ${ingredientNames.join(', ')}.
+Можно использовать не все продукты и добавить базовые специи/соль/масло.
+Найди реальный проверенный рецепт с кулинарного сайта.
+
+Верни ТОЛЬКО JSON объект (без пояснений, без markdown):
 {
   "name": "<название блюда на русском>",
-  "description": "<2-3 предложения о блюде>",
+  "description": "<2-3 предложения о блюде: вкус, история, особенности>",
   "cooking_time": <минуты как число>,
   "difficulty": "<easy|medium|hard>",
-  "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица>"}],
-  "instructions": [{"step": 1, "description": "<описание шага>"}, ...]
+  "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица измерения>"}],
+  "instructions": [{"step": 1, "description": "<подробное описание шага>"}, ...]
 }
-Без пояснений, только JSON.`
+Только JSON, без пояснений.`
 
-  const text = await callOpenAI([{ role: 'user', content: prompt }], 'gpt-4o-mini', 1200)
+  const text = await callOpenAIWithWebSearch(prompt)
   const match = text.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('Не удалось получить рецепт от AI')
+  if (!match) throw new Error('Не удалось распознать рецепт от AI')
 
   const parsed = JSON.parse(match[0]) as AIRecipe
   parsed.source_ingredients = ingredientNames
+
+  // Photo is required — throw if DALL-E fails
+  parsed.image_url = await generateDishPhoto(parsed.name)
+
   return parsed
+}
+
+/**
+ * Generates random diverse dishes from internet search + DALL-E 3 photos.
+ * Dishes without photos are filtered out.
+ */
+export async function generateRandomAIDishes(count = 5): Promise<AIRecipe[]> {
+  const prompt = `Найди в интернете ${count} разнообразных популярных домашних рецептов из разных кухонь мира.
+Выбери по одному из: русская кухня, итальянская, азиатская (японская/китайская/тайская), мексиканская/латинская, средиземноморская/греческая.
+Только реальные популярные блюда с понятными ингредиентами.
+
+Верни ТОЛЬКО JSON массив объектов (без пояснений, без markdown):
+[
+  {
+    "name": "<название блюда на русском>",
+    "description": "<2-3 предложения о блюде: вкус, история, особенности>",
+    "cooking_time": <минуты как число>,
+    "difficulty": "<easy|medium|hard>",
+    "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица>"}],
+    "instructions": [{"step": 1, "description": "<подробное описание шага>"}, ...]
+  }
+]
+Только JSON массив, без пояснений.`
+
+  const text = await callOpenAIWithWebSearch(prompt)
+  const match = text.match(/\[[\s\S]*\]/)
+  if (!match) throw new Error('Не удалось получить список рецептов')
+
+  const dishes = JSON.parse(match[0]) as AIRecipe[]
+
+  // Generate photos in parallel — filter out any failures
+  const results = await Promise.allSettled(
+    dishes.map(async (dish) => {
+      dish.image_url = await generateDishPhoto(dish.name)
+      dish.source_ingredients = []
+      return dish
+    })
+  )
+
+  const successful = results
+    .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
+    .map((r) => r.value)
+
+  if (successful.length === 0) {
+    throw new Error('Не удалось сгенерировать фото ни для одного блюда')
+  }
+
+  return successful
 }
 
 export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<string | null> {
