@@ -71,6 +71,15 @@ const swipeSlice = createSlice({
       }
       state.currentIndex += 1
     },
+    /** Add a dish to favorites without advancing the swipe index. Used from recipe views. */
+    likeDish: (state, action: PayloadAction<{ dishId: number; userId?: string }>) => {
+      const { dishId, userId } = action.payload
+      if (!state.likedDishIds.includes(dishId)) {
+        state.likedDishIds.push(dishId)
+        saveLikedIds(state.likedDishIds)
+        if (userId) addFavoriteLocalDish(userId, dishId)
+      }
+    },
     unlikeDish: (state, action: PayloadAction<{ dishId: number; userId?: string }>) => {
       const { dishId, userId } = action.payload
       state.likedDishIds = state.likedDishIds.filter((id) => id !== dishId)
@@ -99,5 +108,5 @@ const swipeSlice = createSlice({
   },
 })
 
-export const { swipeDish, unlikeDish, markSessionComplete, resetSwipe } = swipeSlice.actions
+export const { swipeDish, likeDish, unlikeDish, markSessionComplete, resetSwipe } = swipeSlice.actions
 export default swipeSlice.reducer

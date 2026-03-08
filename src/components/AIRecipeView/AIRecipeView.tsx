@@ -1,21 +1,28 @@
-import { Box, Typography, Button, Chip, CircularProgress, Alert, Divider, List, ListItem, ListItemText } from '@mui/material'
-import { ArrowBack, AutoAwesome, Save, AccessTime, Restaurant } from '@mui/icons-material'
+import { Box, Typography, Button, Chip, CircularProgress, Alert, Divider, List, ListItem, ListItemText, IconButton } from '@mui/material'
+import { ArrowBack, AutoAwesome, Save, AccessTime, Restaurant, Favorite, Close } from '@mui/icons-material'
+import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearAIRecipe, saveGeneratedRecipe } from '../../store/slices/aiRecipeSlice'
+import { likeDish, unlikeDish } from '../../store/slices/swipeSlice'
 import { useState } from 'react'
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
 const DIFFICULTY_COLORS = { easy: '#4CAF50', medium: '#FF9800', hard: '#f44336' } as const
 
 interface AIRecipeViewProps {
+  dishId: number | null
   onBack: () => void
 }
 
-export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
+export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   const dispatch = useAppDispatch()
   const { generatedRecipe, loading, error } = useAppSelector((state) => state.aiRecipe)
+  const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
+  const userId = user?.id
   const [saved, setSaved] = useState(false)
+
+  const isLiked = dishId !== null && likedDishIds.includes(dishId)
 
   const handleBack = () => {
     dispatch(clearAIRecipe())
@@ -26,6 +33,22 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
     if (!generatedRecipe || !user) return
     await dispatch(saveGeneratedRecipe({ userId: user.id, recipe: generatedRecipe }))
     setSaved(true)
+  }
+
+  const handleLike = () => {
+    if (dishId === null) return
+    if (isLiked) {
+      dispatch(unlikeDish({ dishId, userId }))
+    } else {
+      dispatch(likeDish({ dishId, userId }))
+    }
+  }
+
+  const handleDislike = () => {
+    if (dishId === null) return
+    if (isLiked) {
+      dispatch(unlikeDish({ dishId, userId }))
+    }
   }
 
   if (loading) {
@@ -91,6 +114,54 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
               {recipe.name}
             </Typography>
           </Box>
+
+          {/* Like / Dislike buttons on photo */}
+          {dishId !== null && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                right: 16,
+                display: 'flex',
+                gap: 1.5,
+              }}
+            >
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}>
+                <IconButton
+                  onClick={handleDislike}
+                  sx={{
+                    width: 52,
+                    height: 52,
+                    background: 'rgba(255,77,77,0.18)',
+                    border: `2px solid ${isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                    backdropFilter: 'blur(10px)',
+                    color: '#FF4D4D',
+                    '&:hover': { background: 'rgba(255,77,77,0.32)' },
+                  }}
+                >
+                  <Close sx={{ fontSize: 24 }} />
+                </IconButton>
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}>
+                <IconButton
+                  onClick={handleLike}
+                  sx={{
+                    width: 52,
+                    height: 52,
+                    background: isLiked ? 'rgba(34,197,94,0.35)' : 'rgba(34,197,94,0.18)',
+                    border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.4)'}`,
+                    backdropFilter: 'blur(10px)',
+                    color: '#22C55E',
+                    boxShadow: isLiked ? '0 0 16px rgba(34,197,94,0.4)' : 'none',
+                    '&:hover': { background: 'rgba(34,197,94,0.32)' },
+                  }}
+                >
+                  <Favorite sx={{ fontSize: 24 }} />
+                </IconButton>
+              </motion.div>
+            </Box>
+          )}
         </Box>
       )}
 
@@ -174,29 +245,37 @@ export default function AIRecipeView({ onBack }: AIRecipeViewProps) {
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {recipe.instructions.map((step) => (
-            <Box key={step.step} sx={{ display: 'flex', gap: 2 }}>
-              <Box
-                sx={{
-                  minWidth: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  bgcolor: '#FF9500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  flexShrink: 0,
-                  mt: 0.25,
-                }}
-              >
-                {step.step}
+            <motion.div
+              key={step.step}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: step.step * 0.05, duration: 0.3 }}
+            >
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box
+                  sx={{
+                    minWidth: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #FF4D4D 0%, #FF9500 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    flexShrink: 0,
+                    mt: 0.25,
+                    boxShadow: '0 2px 10px rgba(255,77,77,0.3)',
+                  }}
+                >
+                  {step.step}
+                </Box>
+                <Typography variant="body2" sx={{ pt: 0.5, lineHeight: 1.6 }}>
+                  {step.description}
+                </Typography>
               </Box>
-              <Typography variant="body2" sx={{ pt: 0.5, lineHeight: 1.6 }}>
-                {step.description}
-              </Typography>
-            </Box>
+            </motion.div>
           ))}
         </Box>
       </Box>

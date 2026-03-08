@@ -10,11 +10,13 @@ import {
   CircularProgress,
   Alert,
   Grid,
+  IconButton,
 } from '@mui/material'
-import { ArrowBack, AccessTime, People, FiberManualRecord } from '@mui/icons-material'
+import { ArrowBack, AccessTime, People, FiberManualRecord, Favorite, Close } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearRecipe } from '../../store/slices/recipeSlice'
+import { likeDish, unlikeDish } from '../../store/slices/swipeSlice'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '../../utils/constants'
 import { Difficulty } from '../../types'
 import { getDishImageUrl } from '../../utils/imageUtils'
@@ -26,6 +28,8 @@ interface RecipeViewProps {
 export default function RecipeView({ onBack }: RecipeViewProps) {
   const dispatch = useAppDispatch()
   const { currentRecipe, loading, error } = useAppSelector((state) => state.recipe)
+  const { likedDishIds } = useAppSelector((state) => state.swipe)
+  const userId = useAppSelector((state) => state.auth.user?.id)
 
   const handleBack = () => {
     dispatch(clearRecipe())
@@ -67,6 +71,22 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   }
 
   const imageUrl = getDishImageUrl(currentRecipe.dish_name, currentRecipe.image_url)
+  const dishId = currentRecipe.dish_id
+  const isLiked = likedDishIds.includes(dishId)
+
+  const handleLike = () => {
+    if (isLiked) {
+      dispatch(unlikeDish({ dishId, userId }))
+    } else {
+      dispatch(likeDish({ dishId, userId }))
+    }
+  }
+
+  const handleDislike = () => {
+    if (isLiked) {
+      dispatch(unlikeDish({ dishId, userId }))
+    }
+  }
 
   return (
     <Box>
@@ -129,6 +149,52 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               {currentRecipe.description}
             </Typography>
           )}
+        </Box>
+
+        {/* Like / Dislike buttons on photo */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            display: 'flex',
+            gap: 1.5,
+          }}
+        >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}>
+            <IconButton
+              onClick={handleDislike}
+              sx={{
+                width: 52,
+                height: 52,
+                background: 'rgba(255,77,77,0.18)',
+                border: `2px solid ${isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                backdropFilter: 'blur(10px)',
+                color: '#FF4D4D',
+                '&:hover': { background: 'rgba(255,77,77,0.32)' },
+              }}
+            >
+              <Close sx={{ fontSize: 24 }} />
+            </IconButton>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}>
+            <IconButton
+              onClick={handleLike}
+              sx={{
+                width: 52,
+                height: 52,
+                background: isLiked ? 'rgba(34,197,94,0.35)' : 'rgba(34,197,94,0.18)',
+                border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.4)'}`,
+                backdropFilter: 'blur(10px)',
+                color: '#22C55E',
+                boxShadow: isLiked ? '0 0 16px rgba(34,197,94,0.4)' : 'none',
+                '&:hover': { background: 'rgba(34,197,94,0.32)' },
+              }}
+            >
+              <Favorite sx={{ fontSize: 24 }} />
+            </IconButton>
+          </motion.div>
         </Box>
       </Box>
 

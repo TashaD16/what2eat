@@ -31,6 +31,7 @@ function App() {
   const [dbInitialized, setDbInitialized] = useState(false)
   const [dbError, setDbError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [currentAiDishId, setCurrentAiDishId] = useState<number | null>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
@@ -128,6 +129,7 @@ function App() {
       const aiRecipe = aiDishRecipes[dishId]
       if (aiRecipe) {
         dispatch(setGeneratedRecipe(aiRecipe))
+        setCurrentAiDishId(dishId)
         setPrevView(from)
         setView('ai_recipe')
       }
@@ -294,7 +296,7 @@ function App() {
       )}
 
       {view === 'ai_recipe' && (
-        <AIRecipeView onBack={() => setView(prevView)} />
+        <AIRecipeView dishId={currentAiDishId} onBack={() => setView(prevView)} />
       )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
