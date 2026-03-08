@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Box, Typography, Chip } from '@mui/material'
 import { AccessTime, AttachMoney, ShoppingCart } from '@mui/icons-material'
 import { Dish } from '../../types'
@@ -12,6 +13,7 @@ interface SwipeCardProps {
 export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
   const imageUrl = getDishImageUrl(dish.name, dish.image_url)
   const fallbackUrl = getDishImageUrl(dish.name, null)
+  const [imgLoaded, setImgLoaded] = useState(false)
 
   return (
     <Box
@@ -23,6 +25,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         overflow: 'hidden',
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         cursor: 'grab',
+        bgcolor: '#111',
         '&:active': { cursor: 'grabbing' },
       }}
     >
@@ -31,14 +34,18 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         component="img"
         src={imageUrl}
         alt={dish.name}
+        onLoad={() => setImgLoaded(true)}
         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
           e.currentTarget.src = fallbackUrl
+          setImgLoaded(true)
         }}
         sx={{
           width: '100%',
           height: '100%',
           objectFit: 'cover',
           display: 'block',
+          opacity: imgLoaded ? 1 : 0,
+          transition: 'opacity 0.25s ease',
         }}
       />
 

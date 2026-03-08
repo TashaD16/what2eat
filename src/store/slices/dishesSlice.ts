@@ -189,35 +189,54 @@ export const { clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAI
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer
 
-// ─── Helper: generate photos and dispatch addAIDish progressively ──────────────
+// ─── Image preloader ───────────────────────────────────────────────────────────
+
+/** Preloads an image URL into the browser cache. Resolves even on error. */
+function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = () => resolve()
+    img.src = url
+  })
+}
+
+// ─── Helper: preload image then dispatch addAIDish ─────────────────────────────
+
+async function dispatchWithPreload(
+  recipe: AIRecipe,
+  index: number,
+  dispatch: (action: unknown) => void,
+  skipPreload = false
+): Promise<boolean> {
+  try {
+    const clone = { ...recipe }
+    if (!clone.image_url) {
+      clone.image_url = await generateDishPhoto(clone.name)
+    }
+    if (!clone.image_url) return false
+    if (!skipPreload) await preloadImage(clone.image_url)
+    dispatch(addAIDish({ recipe: clone, index }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+// ─── Load-more helper (used by generatePhotosForRecipes) ──────────────────────
 
 async function generatePhotosForRecipes(
   recipes: AIRecipe[],
   dispatch: (action: unknown) => void,
   indexOffset = 0
-): Promise<{ successCount: number; successful: AIRecipe[] }> {
-  let successCount = 0
-  const successful: AIRecipe[] = []
-
-  await Promise.allSettled(
-    recipes.map(async (recipe, i) => {
-      try {
-        const clone = { ...recipe }
-        // If recipe already has a photo (TheMealDB), use it directly
-        if (!clone.image_url) {
-          clone.image_url = await generateDishPhoto(clone.name)
-        }
-        if (!clone.image_url) return // never show without photo
-        dispatch(addAIDish({ recipe: clone, index: indexOffset + i }))
-        successCount++
-        successful.push(clone)
-      } catch {
-        // Skip on error
-      }
-    })
+): Promise<{ successCount: number }> {
+  const results = await Promise.allSettled(
+    recipes.map((recipe, i) => dispatchWithPreload(recipe, indexOffset + i, dispatch))
   )
-
-  return { successCount, successful }
+  const successCount = results.filter(
+    (r) => r.status === 'fulfilled' && r.value
+  ).length
+  return { successCount }
 }
 
 // ─── Progressive AI randomizer thunk ──────────────────────────────────────────
@@ -225,15 +244,17 @@ async function generatePhotosForRecipes(
 /**
  * Randomizer with 20-recipe seed cache:
  *
- * Scenario A — seed cache exists and fresh (30-day TTL):
- *   Dispatch all 20 cached recipes immediately — SwipeDeck opens instantly.
+ * Scenario A — seed cache exists:
+ *   - First card dispatched immediately (no preload — it's on top, loads fast).
+ *   - Remaining 19 preloaded in background, appear without flickering.
  *
- * Scenario B — no seed cache (first run):
- *   1. Fetch SEED_COUNT random meals from TheMealDB in parallel.
- *   2. Translate each with GPT-4o-mini progressively — first card appears in ~3s.
- *   3. Save all translated recipes to seed cache for next sessions.
+ * Scenario B — first run (no cache):
+ *   - Fetch + translate SEED_COUNT meals from TheMealDB progressively.
+ *   - First translated recipe → shown immediately.
+ *   - Each subsequent → preloaded then added to deck without flickering.
+ *   - All saved to seed cache on completion.
  *
- * After user swipes through to ≤3 remaining, SwipeDeck dispatches loadMoreWebDishes.
+ * When ≤3 cards remain, SwipeDeck auto-dispatches loadMoreWebDishes.
  */
 export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
   dispatch(startAIRandom())
@@ -241,19 +262,46 @@ export const generateAIRandomDishes = () => async (dispatch: (action: unknown) =
   const cached = loadSeedFromCache()
 
   if (cached.length > 0) {
-    // ── Scenario A: serve all cached recipes instantly ──────────────────────
+    // ── Scenario A: cache hit ──────────────────────────────────────────────
     dispatch(setLoadingStep('photos'))
-    cached.forEach((recipe, i) => {
-      dispatch(addAIDish({ recipe, index: i }))
-    })
+
+    if (cached.length === 0) {
+      dispatch(finishAIRandom('Кэш пуст'))
+      return
+    }
+
+    // First card: skip preload so SwipeDeck opens immediately
+    await dispatchWithPreload(cached[0], 0, dispatch, true)
+
+    // Remaining cards: preload image before adding so they appear without flicker
+    if (cached.length > 1) {
+      dispatch(setLoadingMore(true))
+      await Promise.allSettled(
+        cached.slice(1).map((recipe, i) =>
+          dispatchWithPreload(recipe, i + 1, dispatch)
+        )
+      )
+      dispatch(setLoadingMore(false))
+    }
+
     dispatch(finishAIRandom(null))
   } else {
-    // ── Scenario B: first run — fetch progressively from TheMealDB + GPT ───
+    // ── Scenario B: first run — fetch from TheMealDB + GPT ────────────────
     let successful: AIRecipe[] = []
+    let firstDispatched = false
+
     try {
       dispatch(setLoadingMore(true))
+
       successful = await fetchRecipesProgressively(SEED_COUNT, (recipe, i) => {
-        dispatch(addAIDish({ recipe, index: i }))
+        if (!firstDispatched) {
+          // Show first card immediately — no preload needed (it's the top card)
+          firstDispatched = true
+          dispatchWithPreload(recipe, i, dispatch, true)
+        } else {
+          // Preload then add — fire-and-forget so other translations continue in parallel
+          dispatchWithPreload(recipe, i, dispatch, false)
+        }
       })
     } catch (e) {
       dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
@@ -265,7 +313,9 @@ export const generateAIRandomDishes = () => async (dispatch: (action: unknown) =
     }
 
     dispatch(finishAIRandom(
-      successful.length === 0 ? 'Не удалось загрузить рецепты. Проверьте интернет-соединение.' : null
+      successful.length === 0
+        ? 'Не удалось загрузить рецепты. Проверьте интернет-соединение.'
+        : null
     ))
   }
 }
@@ -273,9 +323,8 @@ export const generateAIRandomDishes = () => async (dispatch: (action: unknown) =
 // ─── Load-more thunk: called by SwipeDeck when nearing the end ────────────────
 
 /**
- * Fetches 5 more recipes from TheMealDB and appends them to the current deck.
- * Uses the current dish count as the ID offset so IDs don't collide.
- * Called automatically when the user has ≤3 cards remaining.
+ * Fetches 5 more recipes from TheMealDB, preloads their images, then appends to deck.
+ * Cards appear without flickering — image is in browser cache before the card renders.
  */
 export const loadMoreWebDishes = () => async (
   dispatch: (action: unknown) => void,
