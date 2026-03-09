@@ -30,23 +30,23 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#0A0A0A',
-      paper: 'rgba(255,255,255,0.05)',
+      default: '#0a0a0a',
+      paper: 'rgba(23,23,23,0.85)',
     },
     primary: {
-      main: '#FF4D4D',
-      light: '#FF7070',
-      dark: '#E03535',
+      main: '#31983d',
+      light: '#4caf50',
+      dark: '#1e7a26',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#FF9500',
-      contrastText: '#ffffff',
+      main: '#fcbb00',
+      contrastText: '#0a0a0a',
     },
     success: { main: '#22C55E' },
     warning: { main: '#FBBF24' },
     info: { main: '#A855F7' },
-    error: { main: '#FF4D4D' },
+    error: { main: '#ff6568' },
     text: {
       primary: '#FFFFFF',
       secondary: '#9CA3AF',
@@ -112,11 +112,11 @@ const theme = createTheme({
           fontWeight: 600,
         },
         contained: {
-          background: 'linear-gradient(135deg, #FF4D4D 0%, #FF9500 100%)',
-          boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+          background: 'linear-gradient(135deg, #1e7a26 0%, #31983d 100%)',
+          boxShadow: '0 4px 20px rgba(49,152,61,0.3)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #FF3333 0%, #E68600 100%)',
-            boxShadow: '0 6px 28px rgba(255,77,77,0.45)',
+            background: 'linear-gradient(135deg, #166320 0%, #278030 100%)',
+            boxShadow: '0 6px 28px rgba(49,152,61,0.45)',
           },
           '&.Mui-disabled': {
             background: 'rgba(255,255,255,0.08)',
@@ -159,7 +159,7 @@ const theme = createTheme({
           '& .MuiOutlinedInput-root': {
             '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
             '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-            '&.Mui-focused fieldset': { borderColor: '#FF4D4D' },
+            '&.Mui-focused fieldset': { borderColor: '#31983d' },
           },
         },
       },
@@ -167,16 +167,16 @@ const theme = createTheme({
     MuiSwitch: {
       styleOverrides: {
         root: {
-          '& .MuiSwitch-switchBase.Mui-checked': { color: '#FF4D4D' },
+          '& .MuiSwitch-switchBase.Mui-checked': { color: '#31983d' },
           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: '#FF4D4D',
+            backgroundColor: '#31983d',
           },
         },
       },
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: { backgroundColor: '#FF4D4D' },
+        indicator: { backgroundColor: '#31983d' },
       },
     },
     MuiTab: {
@@ -184,7 +184,7 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           fontWeight: 500,
-          '&.Mui-selected': { color: '#FF4D4D' },
+          '&.Mui-selected': { color: '#31983d' },
         },
       },
     },

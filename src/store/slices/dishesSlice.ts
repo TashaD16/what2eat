@@ -5,6 +5,12 @@ import { FindDishesOptions } from '../../services/dishes'
 import { suggestDishesByIngredients, fetchPopularDishes, PopularDishSuggestion } from '../../services/openai'
 import { fetchRecipesFromWeb, fetchRecipesProgressively, generateDishPhoto, AIRecipe } from '../../services/aiRecipes'
 import { loadSeedFromCache, saveSeedToCache, SEED_COUNT } from '../../services/seedRecipes'
+import { isSupabaseConfigured } from '../../services/supabase'
+import {
+  getShuffledGlobalRecipeIds,
+  getGlobalRecipesByIds,
+  saveGlobalRecipe,
+} from '../../services/globalRecipes'
 
 // Max dishes shown in ingredient search results
 export const FREE_TIER_LIMIT = 5
@@ -21,6 +27,8 @@ interface DishesState {
   popularSuggestions: PopularDishSuggestion[]
   loading: boolean
   error: string | null
+  globalRecipeQueue: string[]      // shuffled UUIDs not yet shown
+  globalRecipesExhausted: boolean  // true when queue is empty
 }
 
 const initialState: DishesState = {
@@ -33,6 +41,8 @@ const initialState: DishesState = {
   popularSuggestions: [],
   loading: false,
   error: null,
+  globalRecipeQueue: [],
+  globalRecipesExhausted: false,
 }
 
 // ─── Simple thunks (defined before slice so they can go in extraReducers) ─────
@@ -80,6 +90,8 @@ const dishesSlice = createSlice({
       state.popularSuggestions = []
       state.loadingStep = null
       state.loadingMore = false
+      state.globalRecipeQueue = []
+      state.globalRecipesExhausted = false
     },
 
     // Called at the start of AI randomizer to reset and show loading
@@ -91,6 +103,8 @@ const dishesSlice = createSlice({
       state.aiRandomMode = true
       state.loadingStep = 'search'
       state.loadingMore = false
+      state.globalRecipeQueue = []
+      state.globalRecipesExhausted = false
     },
 
     // Called when web search finishes and photo phase starts
@@ -130,6 +144,16 @@ const dishesSlice = createSlice({
       state.loadingMore = false
       state.loadingStep = null
       if (action.payload) state.error = action.payload
+    },
+
+    setGlobalRecipeQueue: (state, action: PayloadAction<string[]>) => {
+      state.globalRecipeQueue = action.payload
+      state.globalRecipesExhausted = action.payload.length === 0
+    },
+
+    consumeFromGlobalQueue: (state, action: PayloadAction<number>) => {
+      state.globalRecipeQueue = state.globalRecipeQueue.slice(action.payload)
+      if (state.globalRecipeQueue.length === 0) state.globalRecipesExhausted = true
     },
   },
   extraReducers: (builder) => {
@@ -185,7 +209,10 @@ const dishesSlice = createSlice({
   },
 })
 
-export const { clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAIDish, finishAIRandom } = dishesSlice.actions
+export const {
+  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAIDish, finishAIRandom,
+  setGlobalRecipeQueue, consumeFromGlobalQueue,
+} = dishesSlice.actions
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer
 
@@ -242,100 +269,127 @@ async function generatePhotosForRecipes(
 // ─── Progressive AI randomizer thunk ──────────────────────────────────────────
 
 /**
- * Randomizer with 20-recipe seed cache:
+ * Randomizer:
  *
- * Scenario A — seed cache exists:
- *   - First card dispatched immediately (no preload — it's on top, loads fast).
- *   - Remaining 19 preloaded in background, appear without flickering.
+ * Scenario A (Supabase configured) — loads from global_recipes pool (no OpenAI cost):
+ *   - Fetches all shuffled IDs → stores queue in Redux.
+ *   - Loads first 10 records, shows first card immediately.
+ *   - Remaining 9 preloaded in background.
  *
- * Scenario B — first run (no cache):
- *   - Fetch + translate SEED_COUNT meals from TheMealDB progressively.
- *   - First translated recipe → shown immediately.
- *   - Each subsequent → preloaded then added to deck without flickering.
- *   - All saved to seed cache on completion.
+ * Scenario B (no Supabase) — legacy localStorage + TheMealDB + GPT fallback:
+ *   - Cache hit: dispatch all cached recipes.
+ *   - First run: fetch + translate SEED_COUNT meals progressively.
  *
  * When ≤3 cards remain, SwipeDeck auto-dispatches loadMoreWebDishes.
  */
 export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
   dispatch(startAIRandom())
 
-  const cached = loadSeedFromCache()
+  if (isSupabaseConfigured()) {
+    // ── Scenario A: Supabase global_recipes (no OpenAI cost) ───────────────
+    const ids = await getShuffledGlobalRecipeIds()
+    dispatch(setGlobalRecipeQueue(ids))
 
-  if (cached.length > 0) {
-    // ── Scenario A: cache hit ──────────────────────────────────────────────
-    dispatch(setLoadingStep('photos'))
+    if (ids.length === 0) {
+      dispatch(finishAIRandom('База рецептов пуста. Запустите seed-global-recipes.'))
+      return
+    }
 
-    if (cached.length === 0) {
-      dispatch(finishAIRandom('Кэш пуст'))
+    const firstBatch = ids.slice(0, 10)
+    dispatch(consumeFromGlobalQueue(10))
+    const recipes = await getGlobalRecipesByIds(firstBatch)
+
+    if (recipes.length === 0) {
+      dispatch(finishAIRandom('Не удалось загрузить рецепты из базы.'))
       return
     }
 
     // First card: skip preload so SwipeDeck opens immediately
-    await dispatchWithPreload(cached[0], 0, dispatch, true)
+    await dispatchWithPreload(recipes[0], 0, dispatch, true)
 
-    // Remaining cards: preload image before adding so they appear without flicker
-    if (cached.length > 1) {
+    // Remaining: preload in background
+    if (recipes.length > 1) {
       dispatch(setLoadingMore(true))
       await Promise.allSettled(
-        cached.slice(1).map((recipe, i) =>
-          dispatchWithPreload(recipe, i + 1, dispatch)
-        )
+        recipes.slice(1).map((recipe, i) => dispatchWithPreload(recipe, i + 1, dispatch))
       )
       dispatch(setLoadingMore(false))
     }
 
     dispatch(finishAIRandom(null))
   } else {
-    // ── Scenario B: first run — fetch from TheMealDB + GPT ────────────────
-    let successful: AIRecipe[] = []
-    let firstDispatched = false
+    // ── Scenario B: no Supabase — localStorage cache + TheMealDB + GPT ────
+    const cached = loadSeedFromCache()
 
-    try {
-      dispatch(setLoadingMore(true))
-
-      successful = await fetchRecipesProgressively(SEED_COUNT, (recipe, i) => {
-        if (!firstDispatched) {
-          // Show first card immediately — no preload needed (it's the top card)
-          firstDispatched = true
-          dispatchWithPreload(recipe, i, dispatch, true)
-        } else {
-          // Preload then add — fire-and-forget so other translations continue in parallel
-          dispatchWithPreload(recipe, i, dispatch, false)
-        }
-      })
-    } catch (e) {
-      dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
-      return
+    if (cached.length > 0) {
+      dispatch(setLoadingStep('photos'))
+      await dispatchWithPreload(cached[0], 0, dispatch, true)
+      if (cached.length > 1) {
+        dispatch(setLoadingMore(true))
+        await Promise.allSettled(
+          cached.slice(1).map((recipe, i) => dispatchWithPreload(recipe, i + 1, dispatch))
+        )
+        dispatch(setLoadingMore(false))
+      }
+      dispatch(finishAIRandom(null))
+    } else {
+      let successful: AIRecipe[] = []
+      let firstDispatched = false
+      try {
+        dispatch(setLoadingMore(true))
+        successful = await fetchRecipesProgressively(SEED_COUNT, (recipe, i) => {
+          if (!firstDispatched) {
+            firstDispatched = true
+            dispatchWithPreload(recipe, i, dispatch, true)
+          } else {
+            dispatchWithPreload(recipe, i, dispatch, false)
+          }
+        })
+      } catch (e) {
+        dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
+        return
+      }
+      if (successful.length > 0) saveSeedToCache(successful)
+      dispatch(finishAIRandom(
+        successful.length === 0
+          ? 'Не удалось загрузить рецепты. Проверьте интернет-соединение.'
+          : null
+      ))
     }
-
-    if (successful.length > 0) {
-      saveSeedToCache(successful)
-    }
-
-    dispatch(finishAIRandom(
-      successful.length === 0
-        ? 'Не удалось загрузить рецепты. Проверьте интернет-соединение.'
-        : null
-    ))
   }
 }
 
 // ─── Load-more thunk: called by SwipeDeck when nearing the end ────────────────
 
 /**
- * Fetches 5 more recipes from TheMealDB, preloads their images, then appends to deck.
- * Cards appear without flickering — image is in browser cache before the card renders.
+ * Loads 5 more recipes and appends to the swipe deck without flickering.
+ *
+ * Priority order:
+ *   1. Supabase global_recipes queue (no OpenAI cost)
+ *   2. TheMealDB + GPT fallback (when queue exhausted or no Supabase)
+ *      → new recipes are also saved back to global_recipes to grow the pool
  */
 export const loadMoreWebDishes = () => async (
   dispatch: (action: unknown) => void,
   getState: () => { dishes: DishesState }
 ) => {
+  const { globalRecipeQueue, globalRecipesExhausted } = getState().dishes
   const currentCount = getState().dishes.dishes.length
   dispatch(setLoadingMore(true))
 
   try {
-    const recipes = await fetchRecipesFromWeb(5)
-    await generatePhotosForRecipes(recipes, dispatch, currentCount)
+    if (globalRecipeQueue.length > 0) {
+      // ── Next 5 from Supabase (no OpenAI) ───────────────────────────────
+      const nextIds = globalRecipeQueue.slice(0, 5)
+      dispatch(consumeFromGlobalQueue(5))
+      const recipes = await getGlobalRecipesByIds(nextIds)
+      await generatePhotosForRecipes(recipes, dispatch, currentCount)
+    } else if (globalRecipesExhausted || !isSupabaseConfigured()) {
+      // ── Fallback: TheMealDB + GPT → save back to grow the pool ─────────
+      const recipes = await fetchRecipesFromWeb(5)
+      await Promise.allSettled(recipes.map((r) => saveGlobalRecipe(r)))
+      await generatePhotosForRecipes(recipes, dispatch, currentCount)
+    }
   } catch {
     // Silently fail — user still has existing cards to swipe
   }

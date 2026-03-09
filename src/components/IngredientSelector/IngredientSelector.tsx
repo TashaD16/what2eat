@@ -53,21 +53,6 @@ export default function IngredientSelector() {
 
   return (
     <Box>
-      <Typography
-        variant="h4"
-        gutterBottom
-        sx={{
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #FFFFFF 0%, rgba(255,255,255,0.6) 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          mb: 3,
-        }}
-      >
-        Что есть в холодильнике?
-      </Typography>
-
       <TextField
         fullWidth
         placeholder="Поиск ингредиентов..."

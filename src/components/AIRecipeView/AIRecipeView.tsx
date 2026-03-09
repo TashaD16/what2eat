@@ -243,6 +243,11 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>
           Приготовление
         </Typography>
+        {recipe.instructions.length === 0 && (
+          <Typography variant="body2" color="text.secondary">
+            Инструкции для этого рецепта недоступны.
+          </Typography>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {recipe.instructions.map((step) => (
             <motion.div

@@ -1,15 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Alert, Typography, Divider } from '@mui/material'
 import { Casino, CameraAlt, AutoAwesome } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients } from './store/slices/ingredientsSlice'
-import { findDishes, generateAIRandomDishes } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDish } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { initDatabase } from './services/database'
-import { supabase } from './services/supabase'
+import { supabase, isSupabaseConfigured } from './services/supabase'
+import { searchGlobalRecipesByIngredients } from './services/globalRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
 import RecipeView from './components/RecipeView'
@@ -109,11 +110,20 @@ function App() {
     )
   }
 
-  const handleFindDishes = () => {
-    if (selectedIngredients.length > 0) {
-      dispatch(resetSwipe())
-      dispatchFindDishes(selectedIngredients)
-      setView('dishes')
+  const handleFindDishes = async () => {
+    if (selectedIngredients.length === 0) return
+    dispatch(resetSwipe())
+    dispatchFindDishes(selectedIngredients)
+    setView('dishes')
+
+    if (isSupabaseConfigured()) {
+      const selectedNames = ingredients
+        .filter((i) => selectedIngredients.includes(i.id))
+        .map((i) => i.name)
+      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames)
+      globalRecipes.forEach((recipe, i) => {
+        dispatch(addAIDish({ recipe, index: 10000 + i }))
+      })
     }
   }
 
@@ -180,45 +190,79 @@ function App() {
     >
       {view === 'ingredients' && (
         <Box>
-          <IngredientSelector />
-          <SearchFilters />
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleFindDishes}
-              disabled={selectedIngredients.length === 0}
-              sx={{ px: 4, py: 1.5, fontSize: '1rem' }}
-            >
-              Найти блюда
-            </Button>
+          {/* === Быстрые действия === */}
+          <Box sx={{ mb: 3 }}>
             <Button
               variant="outlined"
-              size="large"
-              onClick={handleRandomize}
-              startIcon={<Casino />}
-              sx={{ px: 3, py: 1.5 }}
-            >
-              Рандомайзер
-            </Button>
-            <Button
-              variant="outlined"
+              fullWidth
               size="large"
               onClick={() => setView('photo')}
-              startIcon={<CameraAlt />}
-              sx={{ px: 3, py: 1.5, borderColor: 'rgba(168,85,247,0.4)', color: '#A855F7', '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' } }}
+              startIcon={<CameraAlt sx={{ fontSize: 28 }} />}
+              sx={{
+                py: 2,
+                mb: 1.5,
+                fontSize: '1.05rem',
+                borderColor: 'rgba(168,85,247,0.4)',
+                color: '#A855F7',
+                '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' },
+              }}
             >
               Загрузить фото
             </Button>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={handleRandomize}
+                startIcon={<Casino />}
+                sx={{
+                  py: 1.75,
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+                }}
+              >
+                Рандомайзер
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={handleGenerateAIRecipe}
+                disabled={selectedIngredients.length === 0}
+                startIcon={<AutoAwesome />}
+                sx={{
+                  py: 1.75,
+                  borderColor: 'rgba(252,187,0,0.4)',
+                  color: '#fcbb00',
+                  '&:hover': { borderColor: '#fcbb00', bgcolor: 'rgba(252,187,0,0.08)' },
+                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                AI-рецепт
+              </Button>
+            </Box>
+          </Box>
+
+          <Divider sx={{ my: 2 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
+              или выберите продукты вручную
+            </Typography>
+          </Divider>
+
+          <IngredientSelector />
+          <SearchFilters />
+
+          <Box sx={{ mt: 3 }}>
             <Button
-              variant="outlined"
+              variant="contained"
+              fullWidth
               size="large"
-              onClick={handleGenerateAIRecipe}
+              onClick={handleFindDishes}
               disabled={selectedIngredients.length === 0}
-              startIcon={<AutoAwesome />}
-              sx={{ px: 3, py: 1.5, borderColor: 'rgba(255,149,0,0.4)', color: '#FF9500', '&:hover': { borderColor: '#FF9500', bgcolor: 'rgba(255,149,0,0.08)' } }}
+              sx={{ py: 1.75, fontSize: '1rem' }}
             >
-              AI-рецепт
+              Найти блюда
             </Button>
           </Box>
         </Box>

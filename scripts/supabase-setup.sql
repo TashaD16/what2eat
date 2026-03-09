@@ -70,3 +70,25 @@ CREATE POLICY "favorite_recipes_all" ON favorite_recipes USING (auth.uid() = use
 -- Политики user_ingredient_sets
 DROP POLICY IF EXISTS "ingredient_sets_all" ON user_ingredient_sets;
 CREATE POLICY "ingredient_sets_all" ON user_ingredient_sets USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Глобальная база рецептов (общая для всех пользователей)
+CREATE TABLE IF NOT EXISTS global_recipes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  instructions JSONB NOT NULL,    -- RecipeStep[] = [{step, description}]
+  ingredients JSONB NOT NULL,     -- AIRecipeIngredient[] = [{name, quantity, unit}]
+  cooking_time INTEGER,
+  difficulty TEXT CHECK (difficulty IN ('easy', 'medium', 'hard')),
+  image_url TEXT,
+  mealdb_id TEXT UNIQUE,          -- TheMealDB idMeal для дедупликации
+  source TEXT DEFAULT 'mealdb',   -- 'mealdb' | 'openai'
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE global_recipes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "global_recipes_select" ON global_recipes;
+CREATE POLICY "global_recipes_select" ON global_recipes
+  FOR SELECT TO anon USING (true);
+-- INSERT только через service_role (Edge Function)
