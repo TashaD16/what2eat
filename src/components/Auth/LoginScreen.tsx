@@ -55,7 +55,7 @@ export default function LoginScreen() {
             variant="h3"
             sx={{ fontWeight: 900, color: 'white', letterSpacing: '-0.02em', mb: 0.5 }}
           >
-            ЧтоЕсть
+            what2eat
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
             Планировщик блюд для двоих
