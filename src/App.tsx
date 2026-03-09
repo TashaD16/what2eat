@@ -21,6 +21,7 @@ import ShoppingList from './components/ShoppingList'
 import WeeklyPlanner from './components/WeeklyPlanner'
 import PhotoUpload from './components/PhotoUpload'
 import AuthModal from './components/Auth'
+import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
 
 type View = 'ingredients' | 'photo' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
@@ -37,7 +38,7 @@ function App() {
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
-  const { user } = useAppSelector((state) => state.auth)
+  const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
     let cancelled = false
@@ -177,6 +178,20 @@ function App() {
         </Box>
       </Layout>
     )
+  }
+
+  // Show loading spinner while checking auth session
+  if (!authInitialized) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#0a0a0a' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // Require login before accessing the app
+  if (!user) {
+    return <LoginScreen />
   }
 
   return (

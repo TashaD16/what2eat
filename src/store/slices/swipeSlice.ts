@@ -68,6 +68,12 @@ const swipeSlice = createSlice({
         if (!state.dislikedDishIds.includes(dishId)) {
           state.dislikedDishIds.push(dishId)
         }
+        // Remove from favorites if previously liked
+        if (state.likedDishIds.includes(dishId)) {
+          state.likedDishIds = state.likedDishIds.filter((id) => id !== dishId)
+          saveLikedIds(state.likedDishIds)
+          if (userId) removeFavoriteLocalDish(userId, dishId)
+        }
       }
       state.currentIndex += 1
     },

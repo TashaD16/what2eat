@@ -7,6 +7,7 @@ interface AuthState {
   session: Session | null
   loading: boolean
   error: string | null
+  initialized: boolean
 }
 
 const initialState: AuthState = {
@@ -14,6 +15,7 @@ const initialState: AuthState = {
   session: null,
   loading: false,
   error: null,
+  initialized: false,
 }
 
 export const initAuth = createAsyncThunk('auth/init', async () => {
@@ -41,7 +43,10 @@ export const signUpWithEmail = createAsyncThunk(
 )
 
 export const signInWithGoogle = createAsyncThunk('auth/signInWithGoogle', async (_, { rejectWithValue }) => {
-  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  })
   if (error) return rejectWithValue(error.message)
   return null
 })
@@ -67,6 +72,10 @@ const authSlice = createSlice({
       .addCase(initAuth.fulfilled, (state, action) => {
         state.user = action.payload.user
         state.session = action.payload.session
+        state.initialized = true
+      })
+      .addCase(initAuth.rejected, (state) => {
+        state.initialized = true
       })
       .addCase(signInWithEmail.pending, (state) => {
         state.loading = true
