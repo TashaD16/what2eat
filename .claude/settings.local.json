@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.pexels.com)",
+      "WebFetch(domain:images.unsplash.com)",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:www.themealdb.com)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(supabase:*)",
+      "Bash(npm error)",
+      "Read(//c/Users/SI/AppData/Local/npm-cache/_logs/**)",
+      "Bash(winget install:*)",
+      "Bash(scoop install:*)",
+      "Bash(curl:*)",
+      "Bash(tar -xzf /tmp/supabase.tar.gz -C /tmp/)",
+      "Read(//d/tmp/**)",
+      "Bash(mkdir:*)",
+      "Bash(psql:*)",
+      "Bash(DB_PASSWORD='ZJ/U/Rnh$6*gXD9' node:*)",
+      "Bash(export:*)",
+      "Bash(node:*)",
+      "Bash(bun:*)",
+      "WebFetch(domain:landing-what2eat.vercel.app)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
