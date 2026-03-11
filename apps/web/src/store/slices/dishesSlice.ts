@@ -169,7 +169,9 @@ const dishesSlice = createSlice({
       })
       .addCase(findDishes.fulfilled, (state, action) => {
         state.loading = false
-        state.dishes = action.payload.slice(0, FREE_TIER_LIMIT)
+        // Merge SQLite results with any already-shown global recipes (first shown immediately)
+        const fromSearch = action.payload.slice(0, FREE_TIER_LIMIT)
+        state.dishes = [...fromSearch, ...state.dishes]
       })
       .addCase(findDishes.rejected, (state, action) => {
         state.loading = false

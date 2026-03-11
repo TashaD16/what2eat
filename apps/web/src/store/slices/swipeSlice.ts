@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { addFavoriteLocalDish, removeFavoriteLocalDish, getUserFavoriteDishIds, migrateLocalFavoritesToSupabase } from '../../services/favorites'
 
-const STORAGE_KEY = 'w2e_liked_dish_ids'
+const STORAGE_KEY_LIKED = 'w2e_liked_dish_ids'
+const STORAGE_KEY_DISLIKED = 'w2e_disliked_dish_ids'
 
 function loadLikedIds(): number[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEY_LIKED)
     return raw ? (JSON.parse(raw) as number[]) : []
   } catch {
     return []
@@ -14,7 +15,24 @@ function loadLikedIds(): number[] {
 
 function saveLikedIds(ids: number[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    localStorage.setItem(STORAGE_KEY_LIKED, JSON.stringify(ids))
+  } catch {
+    // localStorage unavailable — ignore
+  }
+}
+
+function loadDislikedIds(): number[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DISLIKED)
+    return raw ? (JSON.parse(raw) as number[]) : []
+  } catch {
+    return []
+  }
+}
+
+function saveDislikedIds(ids: number[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY_DISLIKED, JSON.stringify(ids))
   } catch {
     // localStorage unavailable — ignore
   }
@@ -29,7 +47,7 @@ interface SwipeState {
 
 const initialState: SwipeState = {
   likedDishIds: loadLikedIds(),
-  dislikedDishIds: [],
+  dislikedDishIds: loadDislikedIds(),
   currentIndex: 0,
   sessionComplete: false,
 }
@@ -67,6 +85,7 @@ const swipeSlice = createSlice({
       } else {
         if (!state.dislikedDishIds.includes(dishId)) {
           state.dislikedDishIds.push(dishId)
+          saveDislikedIds(state.dislikedDishIds)
         }
         // Remove from favorites if previously liked
         if (state.likedDishIds.includes(dishId)) {
@@ -85,6 +104,23 @@ const swipeSlice = createSlice({
         saveLikedIds(state.likedDishIds)
         if (userId) addFavoriteLocalDish(userId, dishId)
       }
+      if (state.dislikedDishIds.includes(dishId)) {
+        state.dislikedDishIds = state.dislikedDishIds.filter((id) => id !== dishId)
+        saveDislikedIds(state.dislikedDishIds)
+      }
+    },
+    /** Mark dish as disliked (from recipe views). */
+    dislikeDish: (state, action: PayloadAction<{ dishId: number; userId?: string }>) => {
+      const { dishId, userId } = action.payload
+      if (!state.dislikedDishIds.includes(dishId)) {
+        state.dislikedDishIds.push(dishId)
+        saveDislikedIds(state.dislikedDishIds)
+      }
+      if (state.likedDishIds.includes(dishId)) {
+        state.likedDishIds = state.likedDishIds.filter((id) => id !== dishId)
+        saveLikedIds(state.likedDishIds)
+        if (userId) removeFavoriteLocalDish(userId, dishId)
+      }
     },
     unlikeDish: (state, action: PayloadAction<{ dishId: number; userId?: string }>) => {
       const { dishId, userId } = action.payload
@@ -101,6 +137,7 @@ const swipeSlice = createSlice({
       state.currentIndex = 0
       state.sessionComplete = false
       saveLikedIds([])
+      saveDislikedIds([])
     },
   },
   extraReducers: (builder) => {
@@ -114,5 +151,5 @@ const swipeSlice = createSlice({
   },
 })
 
-export const { swipeDish, likeDish, unlikeDish, markSessionComplete, resetSwipe } = swipeSlice.actions
+export const { swipeDish, likeDish, unlikeDish, dislikeDish, markSessionComplete, resetSwipe } = swipeSlice.actions
 export default swipeSlice.reducer

@@ -3,7 +3,7 @@ import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, Inp
 import { Casino, CameraAlt, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSlice'
-import { findDishes, generateAIRandomDishes, addAIDish } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDish, setLoadingMore } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
@@ -44,7 +44,7 @@ function App() {
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
-  const { likedDishIds } = useAppSelector((state) => state.swipe)
+  const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
   const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
@@ -109,13 +109,19 @@ function App() {
     [ingredients, selectedIngredients]
   )
 
-  // Применяем бюджетный фильтр поверх найденных блюд
+  // Бюджетный фильтр + сортировка: без оценки → лайк → дизлайк
   const visibleDishes = useMemo(() => {
-    if (!filters.budgetEnabled || filters.budgetLimit == null) return dishes
-    return dishes.filter(
-      (d) => d.estimated_cost == null || d.estimated_cost <= filters.budgetLimit!
-    )
-  }, [dishes, filters.budgetEnabled, filters.budgetLimit])
+    let list = dishes
+    if (filters.budgetEnabled && filters.budgetLimit != null) {
+      list = list.filter((d) => d.estimated_cost == null || d.estimated_cost <= filters.budgetLimit!)
+    }
+    const rank = (id: number) => {
+      if (likedDishIds.includes(id)) return 1
+      if (dislikedDishIds.includes(id)) return 2
+      return 0
+    }
+    return [...list].sort((a, b) => rank(a.id) - rank(b.id))
+  }, [dishes, filters.budgetEnabled, filters.budgetLimit, likedDishIds, dislikedDishIds])
 
   const dispatchFindDishes = (ids: number[]) => {
     dispatch(
@@ -142,9 +148,18 @@ function App() {
         .filter((i) => selectedIngredients.includes(i.id))
         .map((i) => i.name)
       const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames)
-      globalRecipes.forEach((recipe, i) => {
-        dispatch(addAIDish({ recipe, index: 10000 + i }))
-      })
+      if (globalRecipes.length > 0) {
+        dispatch(addAIDish({ recipe: globalRecipes[0], index: 10000 }))
+        if (globalRecipes.length > 1) {
+          dispatch(setLoadingMore(true))
+          requestAnimationFrame(() => {
+            for (let i = 1; i < globalRecipes.length; i++) {
+              dispatch(addAIDish({ recipe: globalRecipes[i], index: 10000 + i }))
+            }
+            dispatch(setLoadingMore(false))
+          })
+        }
+      }
     }
   }
 

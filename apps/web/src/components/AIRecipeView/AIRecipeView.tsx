@@ -3,7 +3,7 @@ import { ArrowBack, AutoAwesome, Save, AccessTime, Restaurant, Favorite, Close }
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearAIRecipe, saveGeneratedRecipe } from '../../store/slices/aiRecipeSlice'
-import { likeDish, unlikeDish } from '../../store/slices/swipeSlice'
+import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice'
 import { useState } from 'react'
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
@@ -17,12 +17,13 @@ interface AIRecipeViewProps {
 export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   const dispatch = useAppDispatch()
   const { generatedRecipe, loading, error } = useAppSelector((state) => state.aiRecipe)
-  const { likedDishIds } = useAppSelector((state) => state.swipe)
+  const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
   const userId = user?.id
   const [saved, setSaved] = useState(false)
 
   const isLiked = dishId !== null && likedDishIds.includes(dishId)
+  const isDisliked = dishId !== null && dislikedDishIds.includes(dishId)
 
   const handleBack = () => {
     dispatch(clearAIRecipe())
@@ -46,9 +47,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
 
   const handleDislike = () => {
     if (dishId === null) return
-    if (isLiked) {
-      dispatch(unlikeDish({ dishId, userId }))
-    }
+    if (isLiked) dispatch(unlikeDish({ dishId, userId }))
+    dispatch(dislikeDish({ dishId, userId }))
   }
 
   if (loading) {
@@ -132,8 +132,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                   sx={{
                     width: 52,
                     height: 52,
-                    background: 'rgba(255,77,77,0.18)',
-                    border: `2px solid ${isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                    background: isDisliked ? 'rgba(255,77,77,0.35)' : 'rgba(255,77,77,0.18)',
+                    border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
                     backdropFilter: 'blur(10px)',
                     color: '#FF4D4D',
                     '&:hover': { background: 'rgba(255,77,77,0.32)' },

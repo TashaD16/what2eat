@@ -17,7 +17,7 @@ import { ArrowBack, AccessTime, People, FiberManualRecord, Favorite, Close, Add,
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearRecipe } from '../../store/slices/recipeSlice'
-import { likeDish, unlikeDish } from '../../store/slices/swipeSlice'
+import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
 import { Difficulty } from '@what2eat/types'
 import { getDishImageUrl } from '../../utils/imageUtils'
@@ -29,7 +29,7 @@ interface RecipeViewProps {
 export default function RecipeView({ onBack }: RecipeViewProps) {
   const dispatch = useAppDispatch()
   const { currentRecipe, loading, error } = useAppSelector((state) => state.recipe)
-  const { likedDishIds } = useAppSelector((state) => state.swipe)
+  const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [servings, setServings] = useState<number | null>(null)
 
@@ -75,6 +75,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   const imageUrl = getDishImageUrl(currentRecipe.dish_name, currentRecipe.image_url)
   const dishId = currentRecipe.dish_id
   const isLiked = likedDishIds.includes(dishId)
+  const isDisliked = dislikedDishIds.includes(dishId)
   const baseServings = currentRecipe.servings
   const currentServings = servings ?? baseServings
   const servingsScale = currentServings / baseServings
@@ -94,9 +95,8 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   }
 
   const handleDislike = () => {
-    if (isLiked) {
-      dispatch(unlikeDish({ dishId, userId }))
-    }
+    if (isLiked) dispatch(unlikeDish({ dishId, userId }))
+    dispatch(dislikeDish({ dishId, userId }))
   }
 
   return (
@@ -178,8 +178,8 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               sx={{
                 width: 52,
                 height: 52,
-                background: 'rgba(255,77,77,0.18)',
-                border: `2px solid ${isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                background: isDisliked ? 'rgba(255,77,77,0.35)' : 'rgba(255,77,77,0.18)',
+                border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
                 backdropFilter: 'blur(10px)',
                 color: '#FF4D4D',
                 '&:hover': { background: 'rgba(255,77,77,0.32)' },
