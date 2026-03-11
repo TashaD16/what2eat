@@ -36,3 +36,9 @@ dist-ssr
 # Dev notes
 history.md
 
+# Turborepo
+.turbo
+**/dist
+**/node_modules
+apps/web/test-results
+

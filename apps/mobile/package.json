@@ -1,0 +1,11 @@
+{
+  "name": "@what2eat/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "description": "What2Eat mobile app (Expo — coming soon)",
+  "scripts": {
+    "dev":   "echo 'Mobile not yet initialized'",
+    "build": "echo 'Mobile not yet initialized'",
+    "lint":  "echo 'Mobile not yet initialized'"
+  }
+}

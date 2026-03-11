@@ -1,0 +1,17 @@
+{
+  "name": "@what2eat/constants",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "import": "./src/index.ts", "types": "./src/index.ts" }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint":  "tsc --noEmit"
+  },
+  "dependencies": {
+    "@what2eat/types": "*"
+  },
+  "devDependencies": { "typescript": "^5.2.2" }
+}
