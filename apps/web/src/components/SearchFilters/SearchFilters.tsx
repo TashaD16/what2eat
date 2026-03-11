@@ -4,12 +4,12 @@ import {
   Paper,
   Typography,
   Chip,
-  ToggleButton,
-  ToggleButtonGroup,
   Collapse,
   TextField,
   InputAdornment,
   Badge,
+  Switch,
+  FormControlLabel,
 } from '@mui/material'
 import { ExpandMore, Tune } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
@@ -36,26 +36,18 @@ export default function SearchFilters() {
     useAppSelector((state) => state.filters)
   const [expanded, setExpanded] = useState(false)
 
-  const dietValue = veganOnly ? 'vegan' : vegetarianOnly ? 'vegetarian' : 'all'
+  const noMeat = vegetarianOnly || veganOnly
 
-  const handleDietChange = (_: React.MouseEvent, value: string | null) => {
-    if (!value) return
-    if (value === 'vegan') {
-      if (!veganOnly) dispatch(toggleVegan())
-    } else if (value === 'vegetarian') {
-      if (!vegetarianOnly) dispatch(toggleVegetarian())
-    } else {
+  const handleNoMeatToggle = () => {
+    if (noMeat) {
       if (veganOnly) dispatch(toggleVegan())
       if (vegetarianOnly) dispatch(toggleVegetarian())
+    } else {
+      dispatch(toggleVegetarian())
     }
   }
 
-  const activeCount = [
-    vegetarianOnly || veganOnly,
-    cuisine != null,
-    allowMissing,
-    budgetEnabled,
-  ].filter(Boolean).length
+  const activeCount = [noMeat, cuisine != null, allowMissing, budgetEnabled].filter(Boolean).length
 
   return (
     <Paper
@@ -67,7 +59,7 @@ export default function SearchFilters() {
         overflow: 'hidden',
       }}
     >
-      {/* Header row */}
+      {/* Header */}
       <Box
         onClick={() => setExpanded((v) => !v)}
         sx={{
@@ -95,88 +87,34 @@ export default function SearchFilters() {
           Фильтры
         </Typography>
 
-        {/* Active filter chips shown when collapsed */}
+        {/* Active chips when collapsed */}
         {!expanded && activeCount > 0 && (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {(vegetarianOnly || veganOnly) && (
-              <Chip
-                label={veganOnly ? 'Веган' : 'Вегет.'}
-                size="small"
-                sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(76,175,80,0.2)', color: '#81c784' }}
-              />
+            {noMeat && (
+              <Chip label="Без мяса" size="small" sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(76,175,80,0.2)', color: '#81c784' }} />
             )}
             {cuisine && (
-              <Chip
-                label={CUISINE_OPTIONS.find((o) => o.value === cuisine)?.label}
-                size="small"
-                sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(25,118,210,0.2)', color: '#64b5f6' }}
-              />
+              <Chip label={CUISINE_OPTIONS.find((o) => o.value === cuisine)?.label} size="small" sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(25,118,210,0.2)', color: '#64b5f6' }} />
             )}
             {allowMissing && (
-              <Chip
-                label="Докупить"
-                size="small"
-                sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(255,152,0,0.2)', color: '#ffb74d' }}
-              />
+              <Chip label="Докупить" size="small" sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(255,152,0,0.2)', color: '#ffb74d' }} />
             )}
             {budgetEnabled && (
-              <Chip
-                label="Бюджет"
-                size="small"
-                sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(156,39,176,0.2)', color: '#ce93d8' }}
-              />
+              <Chip label={budgetLimit ? `≤${budgetLimit}₽` : 'Бюджет'} size="small" sx={{ height: 20, fontSize: '0.68rem', bgcolor: 'rgba(156,39,176,0.2)', color: '#ce93d8' }} />
             )}
           </Box>
         )}
 
         <Badge badgeContent={activeCount} color="primary" sx={{ mr: 0.5 }}>
-          <ExpandMore
-            sx={{
-              fontSize: 20,
-              color: 'rgba(255,255,255,0.35)',
-              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s',
-            }}
-          />
+          <ExpandMore sx={{ fontSize: 20, color: 'rgba(255,255,255,0.35)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
         </Badge>
       </Box>
 
-      {/* Expanded content */}
+      {/* Expanded */}
       <Collapse in={expanded}>
         <Box sx={{ px: 2, pb: 2, pt: 0.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Diet filter */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.75, display: 'block' }}>
-              Питание
-            </Typography>
-            <ToggleButtonGroup
-              exclusive
-              value={dietValue}
-              onChange={handleDietChange}
-              size="small"
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 1.5,
-                  py: 0.5,
-                  fontSize: '0.78rem',
-                  color: 'rgba(255,255,255,0.5)',
-                  borderColor: 'rgba(255,255,255,0.12)',
-                  '&.Mui-selected': {
-                    color: '#81c784',
-                    bgcolor: 'rgba(76,175,80,0.15)',
-                    borderColor: 'rgba(76,175,80,0.4)',
-                    '&:hover': { bgcolor: 'rgba(76,175,80,0.2)' },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="all">Все</ToggleButton>
-              <ToggleButton value="vegetarian">Вегетарианское</ToggleButton>
-              <ToggleButton value="vegan">Веганское</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
 
-          {/* Cuisine filter */}
+          {/* Кухня */}
           <Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.75, display: 'block' }}>
               Кухня
@@ -201,51 +139,83 @@ export default function SearchFilters() {
             </Box>
           </Box>
 
-          {/* Allow missing + Budget */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            <Chip
-              label="Немного докупить"
-              size="small"
-              clickable
-              onClick={() => dispatch(toggleAllowMissing())}
-              variant={allowMissing ? 'filled' : 'outlined'}
-              sx={{
-                fontSize: '0.78rem',
-                ...(allowMissing
-                  ? { bgcolor: 'rgba(255,152,0,0.25)', color: '#ffb74d', borderColor: 'rgba(255,152,0,0.5)' }
-                  : { color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.15)' }),
-              }}
-            />
-            <Chip
-              label={budgetEnabled && budgetLimit ? `Бюджет ≤ ${budgetLimit}₽` : 'Бюджет'}
-              size="small"
-              clickable
-              onClick={() => dispatch(toggleBudget())}
-              variant={budgetEnabled ? 'filled' : 'outlined'}
-              sx={{
-                fontSize: '0.78rem',
-                ...(budgetEnabled
-                  ? { bgcolor: 'rgba(156,39,176,0.25)', color: '#ce93d8', borderColor: 'rgba(156,39,176,0.5)' }
-                  : { color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.15)' }),
-              }}
-            />
-          </Box>
+          {/* Питание + Бюджет в одну строку */}
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-          {/* Budget input */}
-          <Collapse in={budgetEnabled}>
-            <TextField
-              size="small"
-              type="number"
-              label="Максимум"
-              value={budgetLimit ?? ''}
-              onChange={(e) => dispatch(setBudgetLimit(e.target.value ? Number(e.target.value) : null))}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">₽</InputAdornment>,
-              }}
-              inputProps={{ min: 1, step: 1 }}
-              sx={{ maxWidth: 160 }}
-            />
-          </Collapse>
+            {/* Питание */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.5, display: 'block' }}>
+                Питание
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={noMeat}
+                    onChange={handleNoMeatToggle}
+                    size="small"
+                    color="success"
+                  />
+                }
+                label={
+                  <Typography variant="body2" sx={{ color: noMeat ? '#81c784' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+                    Без мяса
+                  </Typography>
+                }
+              />
+            </Box>
+
+            {/* Бюджет */}
+            <Box>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.5, display: 'block' }}>
+                Бюджет
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={allowMissing}
+                      onChange={() => dispatch(toggleAllowMissing())}
+                      size="small"
+                      color="warning"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ color: allowMissing ? '#ffb74d' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+                      Докупить
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={budgetEnabled}
+                      onChange={() => dispatch(toggleBudget())}
+                      size="small"
+                      color="secondary"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ color: budgetEnabled ? '#ce93d8' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+                      Лимит
+                    </Typography>
+                  }
+                />
+                {budgetEnabled && (
+                  <TextField
+                    size="small"
+                    type="number"
+                    placeholder="Сумма"
+                    value={budgetLimit ?? ''}
+                    onChange={(e) => dispatch(setBudgetLimit(e.target.value ? Number(e.target.value) : null))}
+                    InputProps={{ endAdornment: <InputAdornment position="end">₽</InputAdornment> }}
+                    inputProps={{ min: 1, step: 100 }}
+                    sx={{ maxWidth: 120 }}
+                  />
+                )}
+              </Box>
+            </Box>
+
+          </Box>
         </Box>
       </Collapse>
     </Paper>
