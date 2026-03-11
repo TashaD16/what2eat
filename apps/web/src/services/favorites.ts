@@ -10,9 +10,14 @@ export interface FavoriteRecord {
 
 export async function addFavoriteLocalDish(userId: string, dishId: number): Promise<void> {
   if (!isSupabaseConfigured()) return
-  await supabase
+  const { data: existing } = await supabase
     .from('favorite_recipes')
-    .upsert({ user_id: userId, local_dish_id: dishId }, { onConflict: 'user_id,local_dish_id' })
+    .select('id')
+    .eq('user_id', userId)
+    .eq('local_dish_id', dishId)
+    .maybeSingle()
+  if (existing) return
+  await supabase.from('favorite_recipes').insert({ user_id: userId, local_dish_id: dishId })
 }
 
 export async function removeFavoriteLocalDish(userId: string, dishId: number): Promise<void> {
@@ -37,6 +42,13 @@ export async function getUserFavoriteDishIds(userId: string): Promise<number[]> 
 
 export async function migrateLocalFavoritesToSupabase(userId: string, dishIds: number[]): Promise<void> {
   if (!isSupabaseConfigured() || dishIds.length === 0) return
-  const rows = dishIds.map((id) => ({ user_id: userId, local_dish_id: id }))
-  await supabase.from('favorite_recipes').upsert(rows, { onConflict: 'user_id,local_dish_id' })
+  const { data: existing } = await supabase
+    .from('favorite_recipes')
+    .select('local_dish_id')
+    .eq('user_id', userId)
+    .in('local_dish_id', dishIds)
+  const existingIds = new Set((existing ?? []).map((r) => r.local_dish_id as number))
+  const newRows = dishIds.filter((id) => !existingIds.has(id)).map((id) => ({ user_id: userId, local_dish_id: id }))
+  if (newRows.length === 0) return
+  await supabase.from('favorite_recipes').insert(newRows)
 }
