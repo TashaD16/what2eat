@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography, Divider, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material'
-import { Casino, CameraAlt, AutoAwesome, Search, Close } from '@mui/icons-material'
+import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Drawer, Collapse, IconButton } from '@mui/material'
+import { Casino, CameraAlt, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
-import { fetchIngredients } from './store/slices/ingredientsSlice'
+import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSlice'
 import { findDishes, generateAIRandomDishes, addAIDish } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
@@ -38,6 +38,8 @@ function App() {
   const [plannerShoppingDishIds, setPlannerShoppingDishIds] = useState<number[] | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ id: number; name: string }>>([])
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
@@ -94,6 +96,18 @@ function App() {
     setPrevView('ingredients')
     setView('ai_recipe')
   }
+
+  const activeFilterCount = [
+    filters.vegetarianOnly || filters.veganOnly,
+    filters.cuisine != null,
+    filters.allowMissing,
+    filters.budgetEnabled,
+  ].filter(Boolean).length
+
+  const selectedIngredientObjects = useMemo(
+    () => ingredients.filter((i) => selectedIngredients.includes(i.id)),
+    [ingredients, selectedIngredients]
+  )
 
   // Применяем бюджетный фильтр поверх найденных блюд
   const visibleDishes = useMemo(() => {
@@ -228,8 +242,8 @@ function App() {
     >
       {view === 'ingredients' && (
         <Box>
-          {/* === Поиск по названию === */}
-          <Box sx={{ mb: 3, position: 'relative' }} ref={searchRef}>
+          {/* === Поиск + кнопка фильтров === */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 1, position: 'relative' }} ref={searchRef}>
             <TextField
               fullWidth
               placeholder="Найти рецепт по названию..."
@@ -245,8 +259,21 @@ function App() {
                 ) : undefined,
               }}
             />
+            <Badge badgeContent={activeFilterCount || undefined} color="primary">
+              <IconButton
+                onClick={() => setFiltersOpen((v) => !v)}
+                sx={{
+                  border: '1px solid',
+                  borderColor: filtersOpen ? 'primary.main' : 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  color: filtersOpen ? 'primary.main' : 'rgba(255,255,255,0.5)',
+                }}
+              >
+                <Tune sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Badge>
             {searchResults.length > 0 && (
-              <Paper sx={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
+              <Paper sx={{ position: 'absolute', top: '100%', left: 0, right: 48, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
                 <List dense disablePadding>
                   {searchResults.map((r) => (
                     <ListItemButton key={r.id} onClick={() => handleSearchSelect(r.id)}>
@@ -258,8 +285,15 @@ function App() {
             )}
           </Box>
 
+          {/* === Панель фильтров === */}
+          <Collapse in={filtersOpen}>
+            <Paper variant="outlined" sx={{ mb: 2, p: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <SearchFilters />
+            </Paper>
+          </Collapse>
+
           {/* === Быстрые действия === */}
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, mt: filtersOpen ? 0 : 2 }}>
             <Button
               variant="outlined"
               fullWidth
@@ -312,27 +346,74 @@ function App() {
             </Box>
           </Box>
 
-          <Divider sx={{ my: 2 }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-              или выберите продукты вручную
-            </Typography>
-          </Divider>
+          {/* === Кнопка открытия Drawer === */}
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => setDrawerOpen(true)}
+            startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
+            sx={{
+              mb: selectedIngredients.length > 0 ? 1 : 2,
+              borderColor: 'rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.7)',
+              '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+            }}
+          >
+            {selectedIngredients.length > 0
+              ? `Продукты (${selectedIngredients.length})`
+              : 'Выбрать продукты'}
+          </Button>
 
-          <IngredientSelector />
-          <SearchFilters />
+          {/* === Чипы выбранных ингредиентов === */}
+          {selectedIngredients.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
+              {selectedIngredientObjects.map((ing) => (
+                <Chip
+                  key={ing.id}
+                  label={ing.name}
+                  size="small"
+                  onDelete={() => dispatch(toggleIngredient(ing.id))}
+                  sx={{
+                    bgcolor: 'rgba(25,118,210,0.15)',
+                    color: '#90caf9',
+                    borderColor: 'rgba(25,118,210,0.3)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(144,202,249,0.6)', '&:hover': { color: '#90caf9' } },
+                  }}
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+          )}
 
-          <Box sx={{ mt: 3 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              size="large"
-              onClick={handleFindDishes}
-              disabled={selectedIngredients.length === 0}
-              sx={{ py: 1.75, fontSize: '1rem' }}
-            >
-              Найти блюда
-            </Button>
-          </Box>
+          {/* === CTA === */}
+          <Button
+            variant="contained"
+            fullWidth
+            size="large"
+            onClick={handleFindDishes}
+            disabled={selectedIngredients.length === 0}
+            sx={{ py: 1.75, fontSize: '1rem' }}
+          >
+            Найти блюда
+          </Button>
+
+          {/* === Bottom Drawer === */}
+          <Drawer
+            anchor="bottom"
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            PaperProps={{ sx: { borderRadius: '16px 16px 0 0', maxHeight: '80vh' } }}
+          >
+            <Box sx={{ p: 2, pb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Выберите продукты</Typography>
+                <Button onClick={() => setDrawerOpen(false)} variant="contained" size="small">
+                  Готово{selectedIngredients.length > 0 ? ` (${selectedIngredients.length})` : ''}
+                </Button>
+              </Box>
+              <IngredientSelector />
+            </Box>
+          </Drawer>
         </Box>
       )}
 
