@@ -28,13 +28,14 @@ export interface FindDishesOptions {
   allowMissing?: number
   vegetarianOnly?: boolean
   veganOnly?: boolean
+  cuisine?: string | null
 }
 
 export async function findDishesByIngredients(
   ingredientIds: number[],
   options: FindDishesOptions = {}
 ): Promise<Dish[]> {
-  const { allowMissing = 0, vegetarianOnly = false, veganOnly = false } = options
+  const { allowMissing = 0, vegetarianOnly = false, veganOnly = false, cuisine = null } = options
   if (ingredientIds.length === 0) {
     return []
   }
@@ -54,11 +55,10 @@ export async function findDishesByIngredients(
     console.log('All allowed ingredients (selected + basic):', allAllowedIngredients)
     
     // Шаг 1: Получаем все блюда-кандидаты одним запросом
-    const dietaryFilter = veganOnly
-      ? 'AND d.is_vegan = 1'
-      : vegetarianOnly
-      ? 'AND d.is_vegetarian = 1'
-      : ''
+    const dietaryFilter = [
+      veganOnly ? 'AND d.is_vegan = 1' : vegetarianOnly ? 'AND d.is_vegetarian = 1' : '',
+      cuisine ? 'AND d.cuisine = ?' : '',
+    ].join(' ')
     const dishesQuery = `
       SELECT DISTINCT
         d.id,
@@ -80,7 +80,7 @@ export async function findDishesByIngredients(
     `
     
     const dishesStmt = db.prepare(dishesQuery)
-    dishesStmt.bind(ingredientIds)
+    dishesStmt.bind(cuisine ? [...ingredientIds, cuisine] : ingredientIds)
     
     const candidateDishes: Dish[] = []
     const candidateDishIds: number[] = []
@@ -549,3 +549,41 @@ export async function getDishById(dishId: number): Promise<Dish | null> {
   }
 }
 
+/**
+ * Поиск блюд по названию (case-insensitive)
+ */
+export async function searchDishesByName(query: string): Promise<Dish[]> {
+  if (!query) return []
+  const db = getDatabase()
+  try {
+    const stmt = db.prepare(`
+      SELECT id, name, description, image_url, cooking_time, difficulty, servings, estimated_cost, is_vegetarian, is_vegan
+      FROM dishes
+      WHERE LOWER(name) LIKE LOWER(?)
+      ORDER BY name
+      LIMIT 10
+    `)
+    stmt.bind([`%${query}%`])
+    const results: Dish[] = []
+    while (stmt.step()) {
+      const row = stmt.getAsObject()
+      results.push({
+        id: row.id as number,
+        name: row.name as string,
+        description: (row.description as string) || null,
+        image_url: (row.image_url as string) || null,
+        cooking_time: row.cooking_time as number,
+        difficulty: row.difficulty as Dish['difficulty'],
+        servings: row.servings as number,
+        estimated_cost: (row.estimated_cost as number) ?? null,
+        is_vegetarian: Boolean(row.is_vegetarian),
+        is_vegan: Boolean(row.is_vegan),
+      })
+    }
+    stmt.free()
+    return results
+  } catch (error) {
+    console.error('Error searching dishes by name:', error)
+    return []
+  }
+}

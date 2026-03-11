@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Box,
   Typography,
@@ -12,7 +13,7 @@ import {
   Grid,
   IconButton,
 } from '@mui/material'
-import { ArrowBack, AccessTime, People, FiberManualRecord, Favorite, Close } from '@mui/icons-material'
+import { ArrowBack, AccessTime, People, FiberManualRecord, Favorite, Close, Add, Remove } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearRecipe } from '../../store/slices/recipeSlice'
@@ -30,6 +31,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   const { currentRecipe, loading, error } = useAppSelector((state) => state.recipe)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const userId = useAppSelector((state) => state.auth.user?.id)
+  const [servings, setServings] = useState<number | null>(null)
 
   const handleBack = () => {
     dispatch(clearRecipe())
@@ -73,6 +75,15 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   const imageUrl = getDishImageUrl(currentRecipe.dish_name, currentRecipe.image_url)
   const dishId = currentRecipe.dish_id
   const isLiked = likedDishIds.includes(dishId)
+  const baseServings = currentRecipe.servings
+  const currentServings = servings ?? baseServings
+  const servingsScale = currentServings / baseServings
+
+  const scaleQty = (qty: number) => {
+    const scaled = qty * servingsScale
+    // Show integer if clean, else 1 decimal place
+    return scaled % 1 === 0 ? scaled : parseFloat(scaled.toFixed(1))
+  }
 
   const handleLike = () => {
     if (isLiked) {
@@ -210,11 +221,19 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                 label={`${currentRecipe.cooking_time} минут`}
                 variant="outlined"
               />
-              <Chip
-                icon={<People />}
-                label={`${currentRecipe.servings} порций`}
-                variant="outlined"
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(255,255,255,0.23)', borderRadius: 4, px: 1, py: 0.25 }}>
+                <People sx={{ fontSize: 18, color: 'text.secondary', ml: 0.5 }} />
+                <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25 }}>
+                  <Remove sx={{ fontSize: 16 }} />
+                </IconButton>
+                <Typography variant="body2" sx={{ minWidth: 24, textAlign: 'center', fontWeight: 600 }}>
+                  {currentServings}
+                </Typography>
+                <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25 }}>
+                  <Add sx={{ fontSize: 16 }} />
+                </IconButton>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mr: 0.5 }}>порций</Typography>
+              </Box>
               <Chip
                 label={DIFFICULTY_LABELS[currentRecipe.difficulty]}
                 sx={{ bgcolor: getDifficultyColor(currentRecipe.difficulty), color: 'white', fontWeight: 600 }}
@@ -249,7 +268,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     </Typography>
                   </Box>
                   <Chip
-                    label={`${ing.quantity} ${ing.unit}`}
+                    label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
                       bgcolor: 'rgba(255,149,0,0.12)',

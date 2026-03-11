@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography, Divider } from '@mui/material'
-import { Casino, CameraAlt, AutoAwesome } from '@mui/icons-material'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { Box, Button, CircularProgress, Alert, Typography, Divider, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material'
+import { Casino, CameraAlt, AutoAwesome, Search, Close } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients } from './store/slices/ingredientsSlice'
 import { findDishes, generateAIRandomDishes, addAIDish } from './store/slices/dishesSlice'
@@ -9,6 +9,7 @@ import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { initDatabase } from './services/database'
+import { searchDishesByName } from './services/dishes'
 import { supabase, isSupabaseConfigured } from './services/supabase'
 import { searchGlobalRecipesByIngredients } from './services/globalRecipes'
 import Layout from './components/Layout'
@@ -34,6 +35,10 @@ function App() {
   const [dbError, setDbError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [currentAiDishId, setCurrentAiDishId] = useState<number | null>(null)
+  const [plannerShoppingDishIds, setPlannerShoppingDishIds] = useState<number[] | undefined>(undefined)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Array<{ id: number; name: string }>>([])
+  const searchRef = useRef<HTMLDivElement>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
@@ -85,7 +90,7 @@ function App() {
       .filter((i) => selectedIngredients.includes(i.id))
       .map((i) => i.name)
     if (selectedNames.length === 0) return
-    dispatch(generateAIRecipe(selectedNames))
+    dispatch(generateAIRecipe({ ingredientNames: selectedNames, cuisine: filters.cuisine }))
     setPrevView('ingredients')
     setView('ai_recipe')
   }
@@ -106,6 +111,7 @@ function App() {
           allowMissing: filters.allowMissing ? 2 : 0,
           vegetarianOnly: filters.vegetarianOnly,
           veganOnly: filters.veganOnly,
+          cuisine: filters.cuisine,
         },
       })
     )
@@ -130,7 +136,7 @@ function App() {
 
   const handleRandomize = () => {
     dispatch(resetSwipe())
-    dispatch(generateAIRandomDishes())
+    dispatch(generateAIRandomDishes(filters.cuisine))
     setView('dishes')
   }
 
@@ -151,15 +157,32 @@ function App() {
     }
   }, [dispatch, aiDishRecipes])
 
+  const handleSearchQueryChange = useCallback(async (query: string) => {
+    setSearchQuery(query)
+    if (query.trim().length < 2) {
+      setSearchResults([])
+      return
+    }
+    const results = await searchDishesByName(query.trim())
+    setSearchResults(results.slice(0, 6).map((d) => ({ id: d.id, name: d.name })))
+  }, [])
+
+  const handleSearchSelect = (dishId: number) => {
+    setSearchQuery('')
+    setSearchResults([])
+    handleDishSelect(dishId, 'ingredients')
+  }
+
   const handlePhotoIngredientsConfirmed = (ids: number[]) => {
     dispatch(resetSwipe())
     dispatch(
       findDishes({
         ingredientIds: ids,
         options: {
-          allowMissing: 3,
+          allowMissing: filters.allowMissing ? 3 : 2,
           vegetarianOnly: filters.vegetarianOnly,
           veganOnly: filters.veganOnly,
+          cuisine: filters.cuisine,
         },
       })
     )
@@ -205,6 +228,36 @@ function App() {
     >
       {view === 'ingredients' && (
         <Box>
+          {/* === Поиск по названию === */}
+          <Box sx={{ mb: 3, position: 'relative' }} ref={searchRef}>
+            <TextField
+              fullWidth
+              placeholder="Найти рецепт по названию..."
+              value={searchQuery}
+              onChange={(e) => handleSearchQueryChange(e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><Search sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
+                endAdornment: searchQuery ? (
+                  <InputAdornment position="end">
+                    <Close sx={{ cursor: 'pointer', color: 'text.secondary', fontSize: 18 }} onClick={() => { setSearchQuery(''); setSearchResults([]) }} />
+                  </InputAdornment>
+                ) : undefined,
+              }}
+            />
+            {searchResults.length > 0 && (
+              <Paper sx={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
+                <List dense disablePadding>
+                  {searchResults.map((r) => (
+                    <ListItemButton key={r.id} onClick={() => handleSearchSelect(r.id)}>
+                      <ListItemText primary={r.name} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Paper>
+            )}
+          </Box>
+
           {/* === Быстрые действия === */}
           <Box sx={{ mb: 3 }}>
             <Button
@@ -344,13 +397,23 @@ function App() {
       )}
 
       {view === 'shopping_list' && (
-        <ShoppingList onBack={() => setView('swipe_results')} />
+        <ShoppingList
+          onBack={() => {
+            setPlannerShoppingDishIds(undefined)
+            setView(plannerShoppingDishIds ? 'weekly_planner' : 'swipe_results')
+          }}
+          plannerDishIds={plannerShoppingDishIds}
+        />
       )}
 
       {view === 'weekly_planner' && (
         <WeeklyPlanner
           onDishSelect={handleDishSelect}
           onBack={() => setView('ingredients')}
+          onShoppingList={(ids) => {
+            setPlannerShoppingDishIds(ids)
+            setView('shopping_list')
+          }}
         />
       )}
 

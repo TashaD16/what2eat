@@ -10,8 +10,9 @@ import {
   Button,
   Alert,
   Paper,
+  Tooltip,
 } from '@mui/material'
-import { ArrowBack, ShoppingCart } from '@mui/icons-material'
+import { ArrowBack, ShoppingCart, ContentCopy, Check } from '@mui/icons-material'
 import { useAppSelector } from '../../hooks/redux'
 import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
 import { Ingredient } from '@what2eat/types'
@@ -20,12 +21,16 @@ const STORAGE_KEY = 'what2eat_shopping_checked'
 
 interface ShoppingListProps {
   onBack: () => void
+  plannerDishIds?: number[]
 }
 
-export default function ShoppingList({ onBack }: ShoppingListProps) {
+export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListProps) {
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { dishes } = useAppSelector((state) => state.dishes)
   const { selectedIngredients } = useAppSelector((state) => state.ingredients)
+  const [copied, setCopied] = useState(false)
+
+  const sourceDishIds = plannerDishIds ?? likedDishIds
 
   const [checked, setChecked] = useState<Set<number>>(() => {
     try {
@@ -38,7 +43,7 @@ export default function ShoppingList({ onBack }: ShoppingListProps) {
 
   // Собираем список покупок: missing_ingredients лайкнутых блюд
   const shoppingItems = useMemo(() => {
-    const likedDishes = dishes.filter((d) => likedDishIds.includes(d.id))
+    const likedDishes = dishes.filter((d) => sourceDishIds.includes(d.id))
     const byId = new Map<number, Ingredient>()
 
     for (const dish of likedDishes) {
@@ -55,7 +60,7 @@ export default function ShoppingList({ onBack }: ShoppingListProps) {
     }
 
     return Array.from(byId.values())
-  }, [dishes, likedDishIds, selectedIngredients])
+  }, [dishes, sourceDishIds, selectedIngredients])
 
   const grouped = useMemo(() => {
     const map = new Map<string, Ingredient[]>()
@@ -85,6 +90,20 @@ export default function ShoppingList({ onBack }: ShoppingListProps) {
     localStorage.removeItem(STORAGE_KEY)
   }
 
+  const copyToClipboard = () => {
+    const lines: string[] = ['Список покупок:\n']
+    for (const [category, items] of grouped.entries()) {
+      const label = INGREDIENT_CATEGORIES[category as keyof typeof INGREDIENT_CATEGORIES] ?? category
+      lines.push(`${label}:`)
+      items.forEach((ing) => lines.push(`  • ${ing.name}`))
+      lines.push('')
+    }
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -93,11 +112,27 @@ export default function ShoppingList({ onBack }: ShoppingListProps) {
         </Button>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ShoppingCart color="primary" />
-          <Typography variant="h5">Список покупок</Typography>
+          <Typography variant="h5">
+            {plannerDishIds ? 'Покупки на неделю' : 'Список покупок'}
+          </Typography>
         </Box>
-        <Button variant="text" size="small" color="secondary" onClick={clearChecked}>
-          Сбросить
-        </Button>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title={copied ? 'Скопировано!' : 'Скопировать список'}>
+            <Button
+              variant="text"
+              size="small"
+              onClick={copyToClipboard}
+              disabled={shoppingItems.length === 0}
+              startIcon={copied ? <Check /> : <ContentCopy />}
+              color={copied ? 'success' : 'inherit'}
+            >
+              {copied ? 'Готово' : 'Копировать'}
+            </Button>
+          </Tooltip>
+          <Button variant="text" size="small" color="secondary" onClick={clearChecked}>
+            Сбросить
+          </Button>
+        </Box>
       </Box>
 
       {shoppingItems.length === 0 ? (

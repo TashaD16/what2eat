@@ -16,9 +16,12 @@ const initialState: AIRecipeState = {
 
 export const generateAIRecipe = createAsyncThunk(
   'aiRecipe/generate',
-  async (ingredientNames: string[], { rejectWithValue }) => {
+  async (
+    { ingredientNames, cuisine }: { ingredientNames: string[]; cuisine?: string | null },
+    { rejectWithValue }
+  ) => {
     try {
-      return await generateRecipeByIngredients(ingredientNames)
+      return await generateRecipeByIngredients(ingredientNames, cuisine)
     } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Ошибка генерации рецепта')
     }

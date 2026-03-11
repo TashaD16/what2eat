@@ -3,7 +3,10 @@ import { RecipeStep } from '@what2eat/types'
 import {
   MealDBMeal,
   getRandomMeals,
+  getMealsByArea,
+  getMealById,
   findMealsByIngredients,
+  cuisineToMealDbAreas,
   extractIngredients,
   estimateMeta,
 } from './mealDbService'
@@ -132,31 +135,42 @@ async function translateIngredientsToEnglish(namesRu: string[]): Promise<string[
  * Falls back to GPT-4o-mini generation if TheMealDB has no results.
  * Image is always TheMealDB photo (no DALL-E needed).
  */
-export async function generateRecipeByIngredients(ingredientNames: string[]): Promise<AIRecipe> {
+export async function generateRecipeByIngredients(
+  ingredientNames: string[],
+  cuisine?: string | null
+): Promise<AIRecipe> {
   // Translate ingredient names to English for TheMealDB
   const namesEn = await translateIngredientsToEnglish(ingredientNames)
   const validNamesEn = namesEn.filter(Boolean)
 
+  const areas = cuisineToMealDbAreas(cuisine ?? null)
+
   if (validNamesEn.length > 0) {
-    const meals = await findMealsByIngredients(validNamesEn, 1)
-    if (meals.length > 0) {
-      const recipe = await translateMealToRussian(meals[0])
+    const meals = await findMealsByIngredients(validNamesEn, areas.length > 0 ? 10 : 1)
+    // If cuisine filter set, prefer meals matching the target area
+    const filtered = areas.length > 0
+      ? meals.filter((m) => areas.includes(m.strArea))
+      : meals
+    const candidate = filtered[0] ?? meals[0]
+    if (candidate) {
+      const recipe = await translateMealToRussian(candidate)
       recipe.source_ingredients = ingredientNames
       return recipe
     }
   }
 
   // Fallback: generate with GPT-4o-mini (no web search, just smart generation)
-  return generateRecipeWithGPT(ingredientNames)
+  return generateRecipeWithGPT(ingredientNames, cuisine ?? null)
 }
 
 /**
  * GPT-4o-mini fallback when TheMealDB has no results.
  * Generates recipe text only — uses Unsplash placeholder for photo.
  */
-async function generateRecipeWithGPT(ingredientNames: string[]): Promise<AIRecipe> {
+async function generateRecipeWithGPT(ingredientNames: string[], cuisine: string | null = null): Promise<AIRecipe> {
+  const cuisineHint = cuisine ? `\nПредпочтительная кухня: ${cuisine}.` : ''
   const prompt = `Составь вкусный рецепт из следующих продуктов: ${ingredientNames.join(', ')}.
-Можно добавить базовые специи/соль/масло.
+Можно добавить базовые специи/соль/масло.${cuisineHint}
 
 Верни ТОЛЬКО JSON (без пояснений):
 {
@@ -208,9 +222,27 @@ export async function fetchRecipesFromWeb(count = 5): Promise<AIRecipe[]> {
  */
 export async function fetchRecipesProgressively(
   count: number,
-  onRecipe: (recipe: AIRecipe, index: number) => void
+  onRecipe: (recipe: AIRecipe, index: number) => void,
+  cuisine?: string | null
 ): Promise<AIRecipe[]> {
-  const meals = await getRandomMeals(count)
+  let meals: MealDBMeal[]
+  const areas = cuisineToMealDbAreas(cuisine ?? null)
+
+  if (areas.length > 0) {
+    // Fetch meal IDs for first matching area, then get full details
+    let ids: string[] = []
+    for (const area of areas) {
+      ids = await getMealsByArea(area)
+      if (ids.length > 0) break
+    }
+    // Shuffle and pick `count` IDs
+    const shuffled = [...ids].sort(() => Math.random() - 0.5).slice(0, count)
+    const fetched = await Promise.all(shuffled.map((id) => getMealById(id)))
+    meals = fetched.filter((m): m is MealDBMeal => m !== null)
+  } else {
+    meals = await getRandomMeals(count)
+  }
+
   if (meals.length === 0) throw new Error('TheMealDB недоступен. Проверьте интернет-соединение.')
 
   const successful: AIRecipe[] = []

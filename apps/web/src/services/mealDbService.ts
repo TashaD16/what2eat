@@ -96,6 +96,23 @@ export async function findMealsByIngredients(
   return meals.filter((m): m is MealDBMeal => m !== null)
 }
 
+/** Returns meal IDs for a given TheMealDB area (cuisine). */
+export async function getMealsByArea(area: string): Promise<string[]> {
+  const data = await apiFetch<{ meals: MealListItem[] | null }>(
+    `filter.php?a=${encodeURIComponent(area)}`
+  )
+  return (data?.meals ?? []).map((m) => m.idMeal)
+}
+
+/** Maps internal cuisine value to TheMealDB strArea values. */
+export function cuisineToMealDbAreas(cuisine: string | null): string[] {
+  if (cuisine === 'russian') return ['Russian']
+  if (cuisine === 'italian') return ['Italian']
+  if (cuisine === 'asian') return ['Japanese', 'Chinese', 'Thai']
+  if (cuisine === 'american') return ['American']
+  return []
+}
+
 /** Extract ingredient list from TheMealDB strIngredient1-20 / strMeasure1-20 fields. */
 export function extractIngredients(
   meal: MealDBMeal

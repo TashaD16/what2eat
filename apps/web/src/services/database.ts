@@ -16,14 +16,10 @@ export async function initDatabase(): Promise<Database> {
 
 async function _doInit(): Promise<Database> {
 
-  // Добавляем таймаут для загрузки sql.js
-  // На Vercel и в продакшене используем CDN; локально — файл из public/
-  const base = typeof window !== 'undefined' && window.location.origin.includes('localhost')
-    ? ''
-    : 'https://sql.js.org/dist/'
+  // wasm-файл всегда берём локально из public/ (работает и на localhost, и на 127.0.0.1, и в продакшене)
   const SQL = await Promise.race([
     initSqlJs({
-      locateFile: (file) => (base ? `${base}${file}` : `/${file}`),
+      locateFile: (file) => `/${file}`,
     }),
     new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Timeout loading sql.js')), 30000)

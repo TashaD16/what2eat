@@ -14,7 +14,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material'
-import { ArrowBack, Add, Delete, MenuBook } from '@mui/icons-material'
+import { ArrowBack, Add, Delete, MenuBook, ShoppingCart } from '@mui/icons-material'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { assignDishToDay, removeDishFromDay, DayOfWeek } from '../../store/slices/weeklyPlannerSlice'
 
@@ -32,9 +32,10 @@ const DAYS = Object.keys(DAY_LABELS) as DayOfWeek[]
 interface WeeklyPlannerProps {
   onDishSelect: (dishId: number) => void
   onBack: () => void
+  onShoppingList?: (dishIds: number[]) => void
 }
 
-export default function WeeklyPlanner({ onDishSelect, onBack }: WeeklyPlannerProps) {
+export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: WeeklyPlannerProps) {
   const dispatch = useAppDispatch()
   const { plan } = useAppSelector((state) => state.weeklyPlanner)
   const { dishes } = useAppSelector((state) => state.dishes)
@@ -67,11 +68,25 @@ export default function WeeklyPlanner({ onDishSelect, onBack }: WeeklyPlannerPro
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />}>
           Назад
         </Button>
-        <Typography variant="h5">Планировщик недели</Typography>
+        <Typography variant="h5" sx={{ flexGrow: 1 }}>Планировщик недели</Typography>
+        {onShoppingList && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ShoppingCart />}
+            onClick={() => {
+              const ids = DAYS.map((d) => plan[d]).filter((id): id is number => id != null)
+              onShoppingList(ids)
+            }}
+            disabled={DAYS.every((d) => plan[d] == null)}
+          >
+            Список покупок
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={1.5}>

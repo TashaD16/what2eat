@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface FiltersState {
   vegetarianOnly: boolean
@@ -6,6 +6,7 @@ interface FiltersState {
   allowMissing: boolean
   budgetEnabled: boolean
   budgetLimit: number | null
+  cuisine: string | null
 }
 
 const initialState: FiltersState = {
@@ -14,6 +15,7 @@ const initialState: FiltersState = {
   allowMissing: false,
   budgetEnabled: false,
   budgetLimit: null,
+  cuisine: null,
 }
 
 const filtersSlice = createSlice({
@@ -37,9 +39,12 @@ const filtersSlice = createSlice({
     setBudgetLimit: (state, action) => {
       state.budgetLimit = action.payload
     },
+    setCuisine: (state, action: PayloadAction<string | null>) => {
+      state.cuisine = action.payload
+    },
   },
 })
 
-export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit } =
+export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit, setCuisine } =
   filtersSlice.actions
 export default filtersSlice.reducer

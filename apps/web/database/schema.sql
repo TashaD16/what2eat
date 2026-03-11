@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS dishes (
     servings INTEGER NOT NULL DEFAULT 4,
     estimated_cost REAL,            -- примерная стоимость в $
     is_vegetarian INTEGER DEFAULT 0, -- 1 если вегетарианское
-    is_vegan INTEGER DEFAULT 0       -- 1 если веганское
+    is_vegan INTEGER DEFAULT 0,      -- 1 если веганское
+    cuisine TEXT DEFAULT 'russian'   -- кухня: russian, italian, asian, american, other
 );
 
 -- Связующая таблица блюд и ингредиентов (многие-ко-многим)

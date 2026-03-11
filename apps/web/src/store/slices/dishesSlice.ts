@@ -282,7 +282,7 @@ async function generatePhotosForRecipes(
  *
  * When ≤3 cards remain, SwipeDeck auto-dispatches loadMoreWebDishes.
  */
-export const generateAIRandomDishes = () => async (dispatch: (action: unknown) => void) => {
+export const generateAIRandomDishes = (cuisine?: string | null) => async (dispatch: (action: unknown) => void) => {
   dispatch(startAIRandom())
 
   if (isSupabaseConfigured()) {
@@ -344,7 +344,7 @@ export const generateAIRandomDishes = () => async (dispatch: (action: unknown) =
           } else {
             dispatchWithPreload(recipe, i, dispatch, false)
           }
-        })
+        }, cuisine)
       } catch (e) {
         dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
         return
