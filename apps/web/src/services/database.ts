@@ -1,4 +1,5 @@
 import initSqlJs, { Database } from 'sql.js'
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
 
 let db: Database | null = null
 let initPromise: Promise<Database> | null = null
@@ -16,10 +17,10 @@ export async function initDatabase(): Promise<Database> {
 
 async function _doInit(): Promise<Database> {
 
-  // wasm-файл всегда берём локально из public/ (работает и на localhost, и на 127.0.0.1, и в продакшене)
+  // wasm-файл берём через Vite asset URL — Vite сам добавит хэш и включит в бандл
   const SQL = await Promise.race([
     initSqlJs({
-      locateFile: (file) => `/${file}`,
+      locateFile: () => sqlWasmUrl,
     }),
     new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Timeout loading sql.js')), 30000)
