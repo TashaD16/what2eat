@@ -180,9 +180,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'rgba(255,255,255,0.72)',
+              bgcolor: 'rgba(204,251,241,0.55)',
               borderRadius: 4,
-              border: '1px solid rgba(0,0,0,0.08)',
+              border: '1px solid rgba(32,201,151,0.20)',
             }}
           >
             <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 3 }}>
@@ -298,7 +298,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         onClose={() => setInfoDish(null)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { bgcolor: 'rgba(255,255,255,0.96)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden' } }}
+        PaperProps={{ sx: { bgcolor: 'rgba(236,253,245,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(32,201,151,0.20)' } }}
       >
         {infoDish && (
           <>
@@ -427,8 +427,8 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 <Box
                   key={dish.name}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.72)',
-                    border: '1px solid rgba(0,0,0,0.08)',
+                    bgcolor: 'rgba(204,251,241,0.50)',
+                    border: '1px solid rgba(32,201,151,0.18)',
                     borderRadius: 3,
                     p: 2,
                   }}

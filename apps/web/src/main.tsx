@@ -32,7 +32,7 @@ const theme = createTheme({
     mode: 'light',
     background: {
       default: 'transparent',
-      paper: 'rgba(255,255,255,0.82)',
+      paper: 'rgba(236,253,245,0.82)',
     },
     primary: {
       main: '#20C997',
@@ -86,10 +86,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: 'rgba(255,255,255,0.88)',
+          background: 'rgba(236,253,245,0.90)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(15,23,42,0.08)',
+          borderBottom: '1px solid rgba(32,201,151,0.15)',
           boxShadow: 'none',
         },
       },
@@ -98,14 +98,14 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: 'rgba(255,255,255,0.82)',
+          background: 'rgba(236,253,245,0.82)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(15,23,42,0.08)',
+          border: '1px solid rgba(32,201,151,0.15)',
         },
         outlined: {
-          background: 'rgba(255,255,255,0.92)',
-          border: '1px solid rgba(15,23,42,0.10)',
+          background: 'rgba(204,251,241,0.55)',
+          border: '1px solid rgba(32,201,151,0.20)',
         },
       },
     },
@@ -130,17 +130,17 @@ const theme = createTheme({
         },
         outlined: {
           color: '#0F172A',
-          borderColor: 'rgba(15,23,42,0.30)',
-          background: 'rgba(255,255,255,0.70)',
+          borderColor: 'rgba(32,201,151,0.35)',
+          background: 'rgba(204,251,241,0.35)',
           backdropFilter: 'blur(8px)',
           '&:hover': {
-            borderColor: 'rgba(15,23,42,0.50)',
-            background: 'rgba(255,255,255,0.90)',
+            borderColor: 'rgba(32,201,151,0.60)',
+            background: 'rgba(204,251,241,0.65)',
           },
         },
         text: {
           color: '#0F172A',
-          '&:hover': { background: 'rgba(0,0,0,0.06)' },
+          '&:hover': { background: 'rgba(32,201,151,0.08)' },
         },
       },
     },
@@ -154,10 +154,10 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: 'rgba(255,255,255,0.82)',
+          background: 'rgba(236,253,245,0.82)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(15,23,42,0.08)',
+          border: '1px solid rgba(32,201,151,0.15)',
           borderRadius: 20,
         },
       },
@@ -210,8 +210,8 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          background: 'rgba(255,255,255,0.96)',
-          border: '1px solid rgba(15,23,42,0.10)',
+          background: 'rgba(236,253,245,0.97)',
+          border: '1px solid rgba(32,201,151,0.20)',
         },
       },
     },

@@ -123,11 +123,11 @@ export default function IngredientSelector() {
                     p: 1.5,
                     cursor: 'pointer',
                     border: isSelected ? '1.5px solid rgba(32,201,151,0.6)' : '1px solid rgba(15,23,42,0.10)',
-                    bgcolor: isSelected ? 'rgba(32,201,151,0.12)' : 'rgba(255,255,255,0.65)',
+                    bgcolor: isSelected ? 'rgba(32,201,151,0.12)' : 'rgba(204,251,241,0.40)',
                     boxShadow: isSelected ? '0 0 16px rgba(32,201,151,0.20)' : 'none',
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: isSelected ? 'rgba(32,201,151,0.18)' : 'rgba(255,255,255,0.95)',
+                      bgcolor: isSelected ? 'rgba(32,201,151,0.18)' : 'rgba(204,251,241,0.75)',
                       border: isSelected ? '1.5px solid rgba(32,201,151,0.7)' : '1px solid rgba(15,23,42,0.18)',
                     },
                   }}

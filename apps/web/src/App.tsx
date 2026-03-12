@@ -371,8 +371,8 @@ function App() {
                 startIcon={<Casino />}
                 sx={{
                   py: 1.75,
-                  borderColor: 'rgba(0,0,0,0.2)',
-                  '&:hover': { borderColor: 'rgba(0,0,0,0.35)', bgcolor: 'rgba(0,0,0,0.04)' },
+                  borderColor: 'rgba(32,201,151,0.35)',
+                  '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
                 }}
               >
                 Рандомайзер
@@ -405,9 +405,9 @@ function App() {
             startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
             sx={{
               mb: selectedIngredients.length > 0 ? 1 : 2,
-              borderColor: 'rgba(0,0,0,0.2)',
+              borderColor: 'rgba(32,201,151,0.35)',
               color: 'text.primary',
-              '&:hover': { borderColor: 'rgba(0,0,0,0.35)', bgcolor: 'rgba(0,0,0,0.04)' },
+              '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
             }}
           >
             {selectedIngredients.length > 0
