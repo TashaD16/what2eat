@@ -178,8 +178,8 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               sx={{
                 width: 52,
                 height: 52,
-                background: isDisliked ? 'rgba(255,77,77,0.35)' : 'rgba(255,77,77,0.18)',
-                border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                background: isDisliked ? 'rgba(255,77,77,0.55)' : 'rgba(255,77,77,0.35)',
+                border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.65)'}`,
                 backdropFilter: 'blur(10px)',
                 color: '#FF4D4D',
                 '&:hover': { background: 'rgba(255,77,77,0.32)' },
@@ -195,8 +195,8 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               sx={{
                 width: 52,
                 height: 52,
-                background: isLiked ? 'rgba(34,197,94,0.35)' : 'rgba(34,197,94,0.18)',
-                border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.4)'}`,
+                background: isLiked ? 'rgba(34,197,94,0.55)' : 'rgba(34,197,94,0.35)',
+                border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.65)'}`,
                 backdropFilter: 'blur(10px)',
                 color: '#22C55E',
                 boxShadow: isLiked ? '0 0 16px rgba(34,197,94,0.4)' : 'none',
@@ -221,7 +221,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                 label={`${currentRecipe.cooking_time} минут`}
                 variant="outlined"
               />
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(255,255,255,0.23)', borderRadius: 4, px: 1, py: 0.25 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(0,0,0,0.15)', borderRadius: 4, px: 1, py: 0.25 }}>
                 <People sx={{ fontSize: 18, color: 'text.secondary', ml: 0.5 }} />
                 <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25 }}>
                   <Remove sx={{ fontSize: 16 }} />
@@ -256,7 +256,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderBottom: index < currentRecipe.ingredients.length - 1
-                      ? '1px solid rgba(255,255,255,0.06)'
+                      ? '1px solid rgba(0,0,0,0.07)'
                       : 'none',
                     gap: 1,
                   }}

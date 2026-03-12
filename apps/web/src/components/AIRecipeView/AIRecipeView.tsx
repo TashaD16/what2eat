@@ -132,8 +132,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                   sx={{
                     width: 52,
                     height: 52,
-                    background: isDisliked ? 'rgba(255,77,77,0.35)' : 'rgba(255,77,77,0.18)',
-                    border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.4)'}`,
+                    background: isDisliked ? 'rgba(255,77,77,0.55)' : 'rgba(255,77,77,0.35)',
+                    border: `2px solid ${isDisliked ? 'rgba(255,77,77,0.85)' : isLiked ? 'rgba(255,77,77,0.7)' : 'rgba(255,77,77,0.65)'}`,
                     backdropFilter: 'blur(10px)',
                     color: '#FF4D4D',
                     '&:hover': { background: 'rgba(255,77,77,0.32)' },
@@ -149,8 +149,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                   sx={{
                     width: 52,
                     height: 52,
-                    background: isLiked ? 'rgba(34,197,94,0.35)' : 'rgba(34,197,94,0.18)',
-                    border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.4)'}`,
+                    background: isLiked ? 'rgba(34,197,94,0.55)' : 'rgba(34,197,94,0.35)',
+                    border: `2px solid ${isLiked ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.65)'}`,
                     backdropFilter: 'blur(10px)',
                     color: '#22C55E',
                     boxShadow: isLiked ? '0 0 16px rgba(34,197,94,0.4)' : 'none',

@@ -156,7 +156,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </Box>
           )}
         </Box>
-        <Button variant="text" onClick={handleReset} size="small" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
+        <Button variant="text" onClick={handleReset} size="small" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>
           Сначала
         </Button>
       </Box>
@@ -237,7 +237,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 68,
                 height: 68,
                 background: 'rgba(255,77,77,0.15)',
-                border: '2px solid rgba(255,77,77,0.4)',
+                border: '2px solid rgba(255,77,77,0.65)',
                 color: '#FF4D4D',
                 boxShadow: '0 4px 20px rgba(255,77,77,0.2)',
                 '&:hover': {
@@ -257,7 +257,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 52,
                 height: 52,
                 background: 'rgba(168,85,247,0.15)',
-                border: '2px solid rgba(168,85,247,0.4)',
+                border: '2px solid rgba(168,85,247,0.65)',
                 color: '#A855F7',
                 boxShadow: '0 4px 16px rgba(168,85,247,0.2)',
                 '&:hover': {
@@ -277,7 +277,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 68,
                 height: 68,
                 background: 'rgba(34,197,94,0.15)',
-                border: '2px solid rgba(34,197,94,0.4)',
+                border: '2px solid rgba(34,197,94,0.65)',
                 color: '#22C55E',
                 boxShadow: '0 4px 20px rgba(34,197,94,0.2)',
                 '&:hover': {

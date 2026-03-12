@@ -104,7 +104,7 @@ const theme = createTheme({
           border: '1px solid rgba(0,0,0,0.08)',
         },
         outlined: {
-          background: 'rgba(255,255,255,0.6)',
+          background: 'rgba(255,255,255,0.92)',
           border: '1px solid rgba(0,0,0,0.1)',
         },
       },
@@ -124,8 +124,8 @@ const theme = createTheme({
             boxShadow: '0 6px 28px rgba(249,115,22,0.45)',
           },
           '&.Mui-disabled': {
-            background: 'rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.25)',
+            background: 'rgba(0,0,0,0.08)',
+            color: 'rgba(0,0,0,0.30)',
           },
         },
         outlined: {

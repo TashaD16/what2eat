@@ -95,11 +95,11 @@ export default function IngredientSelector() {
                   label={name}
                   onDelete={() => ingredient && handleToggle(ingredient.id)}
                   sx={{
-                    background: 'linear-gradient(135deg, rgba(249,115,22,0.3) 0%, rgba(252,187,0,0.2) 100%)',
+                    background: 'linear-gradient(135deg, rgba(249,115,22,0.85) 0%, rgba(252,187,0,0.75) 100%)',
                     border: '1px solid rgba(249,115,22,0.4)',
                     color: 'white',
                     fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#f97316' } },
+                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#f97316' } },
                   }}
                 />
               )

@@ -37,7 +37,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               onClick={onFavoritesClick}
               aria-label="Избранные блюда"
               sx={{
-                color: 'rgba(255,255,255,0.7)',
+                color: 'text.secondary',
                 mr: 0.5,
                 '&:hover': { color: '#f97316', background: 'rgba(249,115,22,0.08)' },
               }}
@@ -53,10 +53,10 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               size="small"
               startIcon={<CalendarMonth sx={{ fontSize: 16 }} />}
               sx={{
-                color: 'rgba(255,255,255,0.7)',
+                color: 'text.secondary',
                 borderRadius: 3,
                 px: 2,
-                '&:hover': { color: '#fff', background: 'rgba(255,255,255,0.08)' },
+                '&:hover': { color: 'text.primary', background: 'rgba(0,0,0,0.05)' },
               }}
             >
               Планировщик
@@ -77,7 +77,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               onClick={onAuthClick}
               size="small"
               aria-label="Войти"
-              sx={{ ml: 1, color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#f97316' } }}
+              sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: '#f97316' } }}
             >
               <Login />
             </IconButton>
@@ -87,7 +87,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               <IconButton
                 onClick={onSignOut}
                 size="small"
-                sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#f44336' } }}
+                sx={{ color: 'text.disabled', '&:hover': { color: '#f44336' } }}
               >
                 <Logout fontSize="small" />
               </IconButton>
