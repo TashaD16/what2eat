@@ -129,14 +129,18 @@ const theme = createTheme({
           },
         },
         outlined: {
-          borderColor: 'rgba(15,23,42,0.20)',
+          color: '#0F172A',
+          borderColor: 'rgba(15,23,42,0.30)',
+          background: 'rgba(255,255,255,0.70)',
+          backdropFilter: 'blur(8px)',
           '&:hover': {
-            borderColor: 'rgba(15,23,42,0.35)',
-            background: 'rgba(0,0,0,0.04)',
+            borderColor: 'rgba(15,23,42,0.50)',
+            background: 'rgba(255,255,255,0.90)',
           },
         },
         text: {
-          '&:hover': { background: 'rgba(0,0,0,0.05)' },
+          color: '#0F172A',
+          '&:hover': { background: 'rgba(0,0,0,0.06)' },
         },
       },
     },
