@@ -307,7 +307,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         onClose={() => setInfoDish(null)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { bgcolor: 'rgba(236,253,245,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(32,201,151,0.20)' } }}
+        PaperProps={{ sx: { bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(8,18,35,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(32,201,151,0.20)' } }}
       >
         {infoDish && (
           <>
@@ -347,16 +347,16 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               {/* Info chips */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
                 <Chip
-                  icon={<AccessTime sx={{ fontSize: '13px !important', color: 'rgba(0,0,0,0.4) !important' }} />}
+                  icon={<AccessTime sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
                   label={`${infoDish.cooking_time} мин`}
                   size="small"
-                  sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', border: '1px solid rgba(0,0,0,0.1)' }}
+                  sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
                 />
                 <Chip
-                  icon={<People sx={{ fontSize: '13px !important', color: 'rgba(0,0,0,0.4) !important' }} />}
+                  icon={<People sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
                   label={`${infoDish.servings} порц.`}
                   size="small"
-                  sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', border: '1px solid rgba(0,0,0,0.1)' }}
+                  sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
                 />
                 {infoDish.is_vegan && (
                   <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
