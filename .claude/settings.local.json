@@ -33,7 +33,10 @@
       "Bash(find /d/learn/unicorn-sandbox-projects/what2eat/packages/types -type f -name \"*.ts\" 2>/dev/null | head -20)",
       "Bash(cd D:/learn/unicorn-sandbox-projects/what2eat/apps/web && npx eslint src/App.tsx src/components/SearchFilters/SearchFilters.tsx src/components/RecipeView/RecipeView.tsx src/components/ShoppingList/ShoppingList.tsx src/components/WeeklyPlanner/WeeklyPlanner.tsx src/services/aiRecipes.ts src/services/dishes.ts src/services/mealDbService.ts src/store/slices/aiRecipeSlice.ts src/store/slices/dishesSlice.ts src/store/slices/filtersSlice.ts --max-warnings 0 2>&1 | tail -30)",
       "Bash(ls -la D:/learn/unicorn-sandbox-projects/what2eat/apps/web/public/sql-wasm.wasm && xxd D:/learn/unicorn-sandbox-projects/what2eat/apps/web/public/sql-wasm.wasm | head -1)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(cd apps/web && npx eslint src --ext ts,tsx --max-warnings 0 2>&1 | tail -5)",
+      "Bash(cd D:/learn/unicorn-sandbox-projects/what2eat/apps/web && npx eslint src --ext ts,tsx --max-warnings 0 2>&1 | tail -5)",
+      "Bash(cd \"D:/learn/unicorn-sandbox-projects/what2eat\" && npx turbo lint 2>&1 | tail -10)"
     ]
   }
 }

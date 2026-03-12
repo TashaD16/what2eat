@@ -1,6 +1,7 @@
 import { Box, AppBar, Toolbar, Typography, Container, Button, IconButton, Badge, Avatar, Tooltip } from '@mui/material'
-import { CalendarMonth, RestaurantMenu, Login, Logout } from '@mui/icons-material'
+import { CalendarMonth, RestaurantMenu, Login, Logout, DarkMode, LightMode } from '@mui/icons-material'
 import { ReactNode } from 'react'
+import { useThemeMode } from '../../contexts/ThemeContext'
 
 interface LayoutProps {
   children: ReactNode
@@ -13,6 +14,8 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut }: LayoutProps) {
+  const { mode, toggleMode } = useThemeMode()
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'transparent' }}>
       <AppBar position="sticky" sx={{ mb: 3 }}>
@@ -32,6 +35,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
           >
             What2eat
           </Typography>
+
           {likedCount != null && likedCount > 0 && onFavoritesClick && (
             <IconButton
               onClick={onFavoritesClick}
@@ -39,7 +43,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               sx={{
                 color: 'text.secondary',
                 mr: 0.5,
-                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.08)' },
+                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.10)' },
               }}
             >
               <Badge badgeContent={likedCount} color="error" max={99}>
@@ -47,6 +51,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               </Badge>
             </IconButton>
           )}
+
           {onPlannerClick && (
             <Button
               onClick={onPlannerClick}
@@ -56,18 +61,31 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
                 color: 'text.secondary',
                 borderRadius: 3,
                 px: 2,
-                '&:hover': { color: 'text.primary', background: 'rgba(0,0,0,0.05)' },
+                '&:hover': { color: 'text.primary', background: 'rgba(32,201,151,0.10)' },
               }}
             >
               Планировщик
             </Button>
           )}
+
+          <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>
+            <IconButton
+              onClick={toggleMode}
+              size="small"
+              sx={{
+                ml: 0.5,
+                color: 'text.secondary',
+                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.10)' },
+              }}
+            >
+              {mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+
           {user ? (
             <Tooltip title={user.email ?? 'Аккаунт'}>
-              <IconButton onClick={onSignOut} size="small" sx={{ ml: 1 }}>
-                <Avatar
-                  sx={{ width: 32, height: 32, bgcolor: '#20C997', fontSize: '0.85rem' }}
-                >
+              <IconButton onClick={onSignOut} size="small" sx={{ ml: 0.5 }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: '#20C997', fontSize: '0.85rem' }}>
                   {user.email?.[0]?.toUpperCase() ?? '?'}
                 </Avatar>
               </IconButton>
@@ -77,11 +95,12 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               onClick={onAuthClick}
               size="small"
               aria-label="Войти"
-              sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
+              sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
             >
               <Login />
             </IconButton>
           )}
+
           {user && (
             <Tooltip title="Выйти">
               <IconButton

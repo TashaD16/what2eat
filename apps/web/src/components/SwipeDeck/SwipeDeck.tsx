@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
 import { motion } from 'framer-motion'
+import { useTheme } from '@mui/material/styles'
 
 interface CardAPI {
   swipe(dir?: string): Promise<void>
@@ -31,6 +32,8 @@ interface SwipeDeckProps {
 
 export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
+  const theme = useTheme()
+  const isLight = theme.palette.mode === 'light'
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions, aiRandomMode } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
@@ -239,10 +242,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 background: 'rgba(255,77,77,0.15)',
                 border: '2px solid rgba(255,77,77,0.65)',
                 color: '#FF4D4D',
-                boxShadow: '0 4px 20px rgba(255,77,77,0.2)',
+                boxShadow: isLight
+                  ? '0 4px 20px rgba(255,77,77,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
+                  : '0 4px 20px rgba(255,77,77,0.20)',
                 '&:hover': {
                   background: 'rgba(255,77,77,0.25)',
-                  boxShadow: '0 6px 28px rgba(255,77,77,0.4)',
+                  boxShadow: '0 6px 28px rgba(255,77,77,0.40)',
                 },
               }}
             >
@@ -259,10 +264,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 background: 'rgba(168,85,247,0.15)',
                 border: '2px solid rgba(168,85,247,0.65)',
                 color: '#A855F7',
-                boxShadow: '0 4px 16px rgba(168,85,247,0.2)',
+                boxShadow: isLight
+                  ? '0 4px 16px rgba(168,85,247,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
+                  : '0 4px 16px rgba(168,85,247,0.20)',
                 '&:hover': {
                   background: 'rgba(168,85,247,0.25)',
-                  boxShadow: '0 6px 24px rgba(168,85,247,0.4)',
+                  boxShadow: '0 6px 24px rgba(168,85,247,0.40)',
                 },
               }}
             >
@@ -279,10 +286,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 background: 'rgba(34,197,94,0.15)',
                 border: '2px solid rgba(34,197,94,0.65)',
                 color: '#22C55E',
-                boxShadow: '0 4px 20px rgba(34,197,94,0.2)',
+                boxShadow: isLight
+                  ? '0 4px 20px rgba(34,197,94,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
+                  : '0 4px 20px rgba(34,197,94,0.20)',
                 '&:hover': {
                   background: 'rgba(34,197,94,0.25)',
-                  boxShadow: '0 6px 28px rgba(34,197,94,0.4)',
+                  boxShadow: '0 6px 28px rgba(34,197,94,0.40)',
                 },
               }}
             >

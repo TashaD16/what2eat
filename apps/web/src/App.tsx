@@ -443,7 +443,12 @@ function App() {
             size="large"
             onClick={handleFindDishes}
             disabled={selectedIngredients.length === 0}
-            sx={{ py: 1.75, fontSize: '1rem' }}
+            sx={{
+              py: 1.75,
+              fontSize: '1rem',
+              boxShadow: '0 6px 32px rgba(32,201,151,0.50)',
+              '&:hover': { boxShadow: '0 8px 40px rgba(32,201,151,0.65)' },
+            }}
           >
             Найти блюда
           </Button>

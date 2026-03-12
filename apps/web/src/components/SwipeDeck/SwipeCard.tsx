@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Box, Typography, Chip } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { AccessTime, AttachMoney, ShoppingCart } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
@@ -14,6 +15,8 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
   const imageUrl = getDishImageUrl(dish.name, dish.image_url)
   const fallbackUrl = getDishImageUrl(dish.name, null)
   const [imgLoaded, setImgLoaded] = useState(false)
+  const theme = useTheme()
+  const isLight = theme.palette.mode === 'light'
 
   return (
     <Box
@@ -23,7 +26,10 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         height: '100%',
         borderRadius: 4,
         overflow: 'hidden',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+        boxShadow: isLight
+          ? '0 24px 64px rgba(32,201,151,0.22), 0 8px 32px rgba(0,0,0,0.10)'
+          : '0 24px 64px rgba(0,0,0,0.60)',
+        border: isLight ? '1px solid rgba(32,201,151,0.20)' : 'none',
         cursor: 'grab',
         bgcolor: '#111',
         '&:active': { cursor: 'grabbing' },
