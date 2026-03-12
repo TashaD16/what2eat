@@ -61,7 +61,7 @@ export default function SearchFilters() {
               sx={{
                 fontSize: '0.78rem',
                 ...(cuisine === opt.value
-                  ? { bgcolor: 'rgba(25,118,210,0.3)', color: '#90caf9', borderColor: 'rgba(25,118,210,0.5)' }
+                  ? { bgcolor: 'rgba(29,78,216,0.12)', color: '#1d4ed8', borderColor: 'rgba(29,78,216,0.35)' }
                   : { color: 'text.secondary', borderColor: 'rgba(0,0,0,0.15)' }),
               }}
             />

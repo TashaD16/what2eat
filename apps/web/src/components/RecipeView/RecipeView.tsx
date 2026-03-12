@@ -262,7 +262,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                    <FiberManualRecord sx={{ fontSize: 6, color: '#FF9500', flexShrink: 0 }} />
+                    <FiberManualRecord sx={{ fontSize: 6, color: '#c2410c', flexShrink: 0 }} />
                     <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                       {ing.ingredient_name}
                     </Typography>
@@ -271,9 +271,9 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(255,149,0,0.12)',
-                      color: '#FF9500',
-                      border: '1px solid rgba(255,149,0,0.25)',
+                      bgcolor: 'rgba(194,65,12,0.08)',
+                      color: '#c2410c',
+                      border: '1px solid rgba(194,65,12,0.2)',
                       fontWeight: 600,
                       fontSize: '0.72rem',
                       height: 22,

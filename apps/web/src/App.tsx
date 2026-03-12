@@ -425,10 +425,10 @@ function App() {
                   size="small"
                   onDelete={() => dispatch(toggleIngredient(ing.id))}
                   sx={{
-                    bgcolor: 'rgba(25,118,210,0.15)',
-                    color: '#90caf9',
-                    borderColor: 'rgba(25,118,210,0.3)',
-                    '& .MuiChip-deleteIcon': { color: 'rgba(144,202,249,0.6)', '&:hover': { color: '#90caf9' } },
+                    bgcolor: 'rgba(249,115,22,0.08)',
+                    color: '#c2410c',
+                    borderColor: 'rgba(249,115,22,0.25)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(194,65,12,0.5)', '&:hover': { color: '#c2410c' } },
                   }}
                   variant="outlined"
                 />

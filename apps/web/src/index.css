@@ -27,12 +27,12 @@
   --border-strong:    rgba(0, 0, 0, 0.15);
 
   /* Tags */
-  --tag-vegan:        #4ade80;
-  --tag-vegetarian:   #fbbf24;
-  --tag-ingredient:   #ff9500;
-  --tag-filter:       #90caf9;
-  --tag-missing:      #fbbf24;
-  --tag-budget:       #ce93d8;
+  --tag-vegan:        #15803d;
+  --tag-vegetarian:   #b45309;
+  --tag-ingredient:   #c2410c;
+  --tag-filter:       #1d4ed8;
+  --tag-missing:      #b45309;
+  --tag-budget:       #7c3aed;
 }
 
 body {

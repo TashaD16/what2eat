@@ -7,7 +7,7 @@ import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice
 import { useState } from 'react'
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
-const DIFFICULTY_COLORS = { easy: '#4CAF50', medium: '#FF9500', hard: '#f44336' } as const
+const DIFFICULTY_COLORS = { easy: '#16a34a', medium: '#c2410c', hard: '#dc2626' } as const
 
 interface AIRecipeViewProps {
   dishId: number | null
@@ -105,8 +105,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
           />
           <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <AutoAwesome sx={{ color: '#FF9500', fontSize: 16 }} />
-              <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <AutoAwesome sx={{ color: '#c2410c', fontSize: 16 }} />
+              <Typography variant="caption" sx={{ color: '#c2410c', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Рецепт из открытых источников
               </Typography>
             </Box>
@@ -183,8 +183,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
       {!recipe.image_url && (
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <AutoAwesome sx={{ color: '#FF9500', fontSize: 20 }} />
-            <Typography variant="caption" sx={{ color: '#FF9500', fontWeight: 600, textTransform: 'uppercase' }}>
+            <AutoAwesome sx={{ color: '#c2410c', fontSize: 20 }} />
+            <Typography variant="caption" sx={{ color: '#c2410c', fontWeight: 600, textTransform: 'uppercase' }}>
               AI-рецепт
             </Typography>
           </Box>

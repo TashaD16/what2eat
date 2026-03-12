@@ -94,25 +94,25 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
             />
             {dish.estimated_cost != null && (
               <Chip
-                icon={<AttachMoney sx={{ fontSize: '14px !important', color: '#4ade80 !important' }} />}
+                icon={<AttachMoney sx={{ fontSize: '14px !important', color: '#15803d !important' }} />}
                 label={`$${dish.estimated_cost.toFixed(0)}`}
                 size="small"
                 sx={{
-                  bgcolor: 'rgba(34,197,94,0.15)',
-                  color: '#4ade80',
-                  border: '1px solid rgba(34,197,94,0.3)',
+                  bgcolor: 'rgba(22,163,74,0.1)',
+                  color: '#15803d',
+                  border: '1px solid rgba(22,163,74,0.25)',
                 }}
               />
             )}
             {dish.is_vegan && (
-              <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' }} />
+              <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
             )}
             {!dish.is_vegan && dish.is_vegetarian && (
-              <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }} />
+              <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.2)' }} />
             )}
           </Box>
           {dish.match_count !== undefined && (
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', mb: 1, display: 'block' }}>
+            <Typography variant="caption" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
               Совпадений: {dish.match_count}
             </Typography>
           )}
@@ -130,8 +130,8 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
                 py: 0.75,
               }}
             >
-              <ShoppingCart sx={{ fontSize: 13, color: '#fbbf24' }} />
-              <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 500 }}>
+              <ShoppingCart sx={{ fontSize: 13, color: '#b45309' }} />
+              <Typography variant="caption" sx={{ color: '#b45309', fontWeight: 500 }}>
                 Докупить: {dish.missing_ingredients.map(i => i.name).join(', ')}
               </Typography>
             </Box>

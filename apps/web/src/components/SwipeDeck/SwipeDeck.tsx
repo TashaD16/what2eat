@@ -149,8 +149,8 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           </Typography>
           {loadingMore && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CircularProgress size={12} sx={{ color: '#FF9500' }} />
-              <Typography variant="caption" sx={{ color: '#FF9500', fontSize: '0.65rem' }}>
+              <CircularProgress size={12} sx={{ color: '#c2410c' }} />
+              <Typography variant="caption" sx={{ color: '#c2410c', fontSize: '0.65rem' }}>
                 +ещё
               </Typography>
             </Box>
@@ -350,10 +350,10 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', border: '1px solid rgba(0,0,0,0.1)' }}
                 />
                 {infoDish.is_vegan && (
-                  <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }} />
+                  <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
                 )}
                 {!infoDish.is_vegan && infoDish.is_vegetarian && (
-                  <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }} />
+                  <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.2)' }} />
                 )}
               </Box>
 
@@ -405,17 +405,17 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               gap: 1,
               width: '100%',
               bgcolor: 'transparent',
-              border: '1px solid rgba(251,191,36,0.3)',
+              border: '1px solid rgba(180,83,9,0.25)',
               borderRadius: 2,
               px: 2,
               py: 1.25,
               cursor: 'pointer',
-              color: '#fbbf24',
-              '&:hover': { bgcolor: 'rgba(251,191,36,0.06)' },
+              color: '#b45309',
+              '&:hover': { bgcolor: 'rgba(180,83,9,0.05)' },
             }}
           >
             <Restaurant sx={{ fontSize: 18 }} />
-            <Typography variant="body2" sx={{ fontWeight: 600, flexGrow: 1, textAlign: 'left', color: '#fbbf24' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, flexGrow: 1, textAlign: 'left', color: '#b45309' }}>
               Популярные рецепты из интернета
             </Typography>
             {popularExpanded ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
@@ -446,7 +446,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                         display: 'flex',
                         alignItems: 'center',
                         gap: 0.4,
-                        color: '#60a5fa',
+                        color: '#1d4ed8',
                         textDecoration: 'none',
                         fontSize: '0.72rem',
                         fontWeight: 500,
@@ -478,7 +478,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                         key={ing}
                         label={ing}
                         size="small"
-                        sx={{ bgcolor: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)', height: 22, fontSize: '0.68rem' }}
+                        sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.18)', height: 22, fontSize: '0.68rem' }}
                       />
                     ))}
                   </Box>
