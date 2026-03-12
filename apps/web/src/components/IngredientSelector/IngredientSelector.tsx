@@ -95,11 +95,11 @@ export default function IngredientSelector() {
                   label={name}
                   onDelete={() => ingredient && handleToggle(ingredient.id)}
                   sx={{
-                    background: 'linear-gradient(135deg, rgba(249,115,22,0.85) 0%, rgba(252,187,0,0.75) 100%)',
-                    border: '1px solid rgba(249,115,22,0.4)',
+                    background: 'linear-gradient(135deg, rgba(32,201,151,0.85) 0%, rgba(56,217,169,0.75) 100%)',
+                    border: '1px solid rgba(32,201,151,0.4)',
                     color: 'white',
                     fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#f97316' } },
+                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#18B383' } },
                   }}
                 />
               )
@@ -122,13 +122,13 @@ export default function IngredientSelector() {
                   sx={{
                     p: 1.5,
                     cursor: 'pointer',
-                    border: isSelected ? '1.5px solid rgba(249,115,22,0.6)' : '1px solid rgba(0,0,0,0.1)',
-                    bgcolor: isSelected ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.65)',
-                    boxShadow: isSelected ? '0 0 16px rgba(249,115,22,0.2)' : 'none',
+                    border: isSelected ? '1.5px solid rgba(32,201,151,0.6)' : '1px solid rgba(15,23,42,0.10)',
+                    bgcolor: isSelected ? 'rgba(32,201,151,0.12)' : 'rgba(255,255,255,0.65)',
+                    boxShadow: isSelected ? '0 0 16px rgba(32,201,151,0.20)' : 'none',
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: isSelected ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.95)',
-                      border: isSelected ? '1.5px solid rgba(249,115,22,0.7)' : '1px solid rgba(0,0,0,0.18)',
+                      bgcolor: isSelected ? 'rgba(32,201,151,0.18)' : 'rgba(255,255,255,0.95)',
+                      border: isSelected ? '1.5px solid rgba(32,201,151,0.7)' : '1px solid rgba(15,23,42,0.18)',
                     },
                   }}
                   onClick={() => handleToggle(ingredient.id)}
@@ -137,7 +137,7 @@ export default function IngredientSelector() {
                     variant="body2"
                     align="center"
                     sx={{
-                      color: isSelected ? '#f97316' : 'text.primary',
+                      color: isSelected ? '#18B383' : 'text.primary',
                       fontWeight: isSelected ? 600 : 400,
                     }}
                   >

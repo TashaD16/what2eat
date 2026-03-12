@@ -45,7 +45,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
-        <CircularProgress sx={{ color: '#f97316' }} />
+        <CircularProgress sx={{ color: '#20C997' }} />
       </Box>
     )
   }
@@ -262,7 +262,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                    <FiberManualRecord sx={{ fontSize: 6, color: '#c2410c', flexShrink: 0 }} />
+                    <FiberManualRecord sx={{ fontSize: 6, color: '#20C997', flexShrink: 0 }} />
                     <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                       {ing.ingredient_name}
                     </Typography>
@@ -271,9 +271,9 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(194,65,12,0.08)',
-                      color: '#c2410c',
-                      border: '1px solid rgba(194,65,12,0.2)',
+                      bgcolor: 'rgba(32,201,151,0.08)',
+                      color: '#0F9B6E',
+                      border: '1px solid rgba(32,201,151,0.25)',
                       fontWeight: 600,
                       fontSize: '0.72rem',
                       height: 22,
@@ -307,12 +307,12 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #ea6c0a 0%, #f97316 100%)',
+                          background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
-                          boxShadow: '0 2px 12px rgba(249,115,22,0.35)',
+                          boxShadow: '0 2px 12px rgba(32,201,151,0.35)',
                         }}
                       >
                         <Typography variant="caption" sx={{ color: 'white', fontWeight: 800, fontSize: '0.75rem' }}>

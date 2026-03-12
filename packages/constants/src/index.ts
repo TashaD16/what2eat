@@ -17,6 +17,6 @@ export const DIFFICULTY_LABELS = {
 
 export const DIFFICULTY_COLORS = {
   easy: '#16a34a',
-  medium: '#c2410c',
+  medium: '#D97706',
   hard: '#dc2626',
 } as const

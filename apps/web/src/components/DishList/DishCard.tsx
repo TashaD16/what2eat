@@ -108,7 +108,7 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
               <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
             )}
             {!dish.is_vegan && dish.is_vegetarian && (
-              <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.2)' }} />
+              <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(217,119,6,0.08)', color: '#b45309', border: '1px solid rgba(217,119,6,0.20)' }} />
             )}
           </Box>
           {dish.match_count !== undefined && (

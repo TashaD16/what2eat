@@ -23,7 +23,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
             sx={{
               flexGrow: 1,
               fontWeight: 900,
-              background: 'linear-gradient(135deg, #f97316 0%, #fcbb00 100%)',
+              background: 'linear-gradient(135deg, #20C997 0%, #38D9A9 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -39,7 +39,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               sx={{
                 color: 'text.secondary',
                 mr: 0.5,
-                '&:hover': { color: '#f97316', background: 'rgba(249,115,22,0.08)' },
+                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.08)' },
               }}
             >
               <Badge badgeContent={likedCount} color="error" max={99}>
@@ -66,7 +66,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
             <Tooltip title={user.email ?? 'Аккаунт'}>
               <IconButton onClick={onSignOut} size="small" sx={{ ml: 1 }}>
                 <Avatar
-                  sx={{ width: 32, height: 32, bgcolor: '#f97316', fontSize: '0.85rem' }}
+                  sx={{ width: 32, height: 32, bgcolor: '#20C997', fontSize: '0.85rem' }}
                 >
                   {user.email?.[0]?.toUpperCase() ?? '?'}
                 </Avatar>
@@ -77,7 +77,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               onClick={onAuthClick}
               size="small"
               aria-label="Войти"
-              sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: '#f97316' } }}
+              sx={{ ml: 1, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
             >
               <Login />
             </IconButton>

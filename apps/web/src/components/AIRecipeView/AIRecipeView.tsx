@@ -7,7 +7,7 @@ import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice
 import { useState } from 'react'
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
-const DIFFICULTY_COLORS = { easy: '#16a34a', medium: '#c2410c', hard: '#dc2626' } as const
+const DIFFICULTY_COLORS = { easy: '#16a34a', medium: '#D97706', hard: '#dc2626' } as const
 
 interface AIRecipeViewProps {
   dishId: number | null
@@ -105,8 +105,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
           />
           <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, p: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <AutoAwesome sx={{ color: '#c2410c', fontSize: 16 }} />
-              <Typography variant="caption" sx={{ color: '#c2410c', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <AutoAwesome sx={{ color: '#20C997', fontSize: 16 }} />
+              <Typography variant="caption" sx={{ color: '#20C997', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Рецепт из открытых источников
               </Typography>
             </Box>
@@ -183,8 +183,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
       {!recipe.image_url && (
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <AutoAwesome sx={{ color: '#c2410c', fontSize: 20 }} />
-            <Typography variant="caption" sx={{ color: '#c2410c', fontWeight: 600, textTransform: 'uppercase' }}>
+            <AutoAwesome sx={{ color: '#20C997', fontSize: 20 }} />
+            <Typography variant="caption" sx={{ color: '#20C997', fontWeight: 600, textTransform: 'uppercase' }}>
               AI-рецепт
             </Typography>
           </Box>
@@ -262,7 +262,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     minWidth: 32,
                     height: 32,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #ea6c0a 0%, #f97316 100%)',
+                    background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -271,7 +271,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     fontSize: '0.85rem',
                     flexShrink: 0,
                     mt: 0.25,
-                    boxShadow: '0 2px 10px rgba(249,115,22,0.3)',
+                    boxShadow: '0 2px 10px rgba(32,201,151,0.30)',
                   }}
                 >
                   {step.step}

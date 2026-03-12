@@ -149,8 +149,8 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           </Typography>
           {loadingMore && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CircularProgress size={12} sx={{ color: '#c2410c' }} />
-              <Typography variant="caption" sx={{ color: '#c2410c', fontSize: '0.65rem' }}>
+              <CircularProgress size={12} sx={{ color: '#20C997' }} />
+              <Typography variant="caption" sx={{ color: '#20C997', fontSize: '0.65rem' }}>
                 +ещё
               </Typography>
             </Box>
@@ -366,7 +366,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   <List dense disablePadding>
                     {infoDish.ingredients.slice(0, 6).map((ing) => (
                       <ListItem key={ing.id} sx={{ px: 0, py: 0.4 }}>
-                        <FiberManualRecord sx={{ fontSize: 6, color: '#FF9500', mr: 1, flexShrink: 0 }} />
+                        <FiberManualRecord sx={{ fontSize: 6, color: '#20C997', mr: 1, flexShrink: 0 }} />
                         <Typography variant="body2" sx={{ color: 'text.primary' }}>{ing.name}</Typography>
                       </ListItem>
                     ))}

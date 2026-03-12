@@ -6,30 +6,30 @@
   --bg-swipe-card:    #1a1a1a;
 
   /* Brand */
-  --color-primary:    #f97316;
-  --color-primary-dk: #ea6c0a;
-  --color-primary-lt: #fb923c;
-  --color-secondary:  #fcbb00;
+  --color-primary:    #20C997;
+  --color-primary-dk: #18B383;
+  --color-primary-lt: #38D9A9;
+  --color-secondary:  #FFB74D;
 
   /* Actions */
   --color-like:       #22c55e;
   --color-dislike:    #ff4d4d;
   --color-info:       #a855f7;
-  --color-warning:    #ff9500;
+  --color-warning:    #FFB74D;
 
   /* Text */
-  --text-primary:     #1a1a2e;
-  --text-secondary:   #64748b;
-  --text-muted:       rgba(0, 0, 0, 0.40);
+  --text-primary:     #0F172A;
+  --text-secondary:   #475569;
+  --text-muted:       rgba(15, 23, 42, 0.50);
 
   /* Borders */
-  --border-default:   rgba(0, 0, 0, 0.08);
-  --border-strong:    rgba(0, 0, 0, 0.15);
+  --border-default:   rgba(15, 23, 42, 0.08);
+  --border-strong:    rgba(15, 23, 42, 0.15);
 
   /* Tags */
   --tag-vegan:        #15803d;
   --tag-vegetarian:   #b45309;
-  --tag-ingredient:   #c2410c;
+  --tag-ingredient:   #0F9B6E;
   --tag-filter:       #1d4ed8;
   --tag-missing:      #b45309;
   --tag-budget:       #7c3aed;

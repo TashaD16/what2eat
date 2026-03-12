@@ -386,9 +386,9 @@ function App() {
                 startIcon={<AutoAwesome />}
                 sx={{
                   py: 1.75,
-                  borderColor: 'rgba(252,187,0,0.4)',
-                  color: '#fcbb00',
-                  '&:hover': { borderColor: '#fcbb00', bgcolor: 'rgba(252,187,0,0.08)' },
+                  borderColor: 'rgba(32,201,151,0.4)',
+                  color: '#20C997',
+                  '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.08)' },
                   '&.Mui-disabled': { borderColor: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.25)' },
                 }}
               >
@@ -425,10 +425,10 @@ function App() {
                   size="small"
                   onDelete={() => dispatch(toggleIngredient(ing.id))}
                   sx={{
-                    bgcolor: 'rgba(249,115,22,0.08)',
-                    color: '#c2410c',
-                    borderColor: 'rgba(249,115,22,0.25)',
-                    '& .MuiChip-deleteIcon': { color: 'rgba(194,65,12,0.5)', '&:hover': { color: '#c2410c' } },
+                    bgcolor: 'rgba(32,201,151,0.08)',
+                    color: '#0F9B6E',
+                    borderColor: 'rgba(32,201,151,0.25)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(15,155,110,0.5)', '&:hover': { color: '#0F9B6E' } },
                   }}
                   variant="outlined"
                 />
@@ -478,7 +478,7 @@ function App() {
       {view === 'dishes' && (
         dishesLoading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
-            <CircularProgress size={56} sx={{ color: '#FF9500' }} />
+            <CircularProgress size={56} sx={{ color: '#20C997' }} />
             <Box sx={{ textAlign: 'center' }}>
               <Typography sx={{ color: 'text.primary', fontWeight: 600, mb: 0.5 }}>
                 {loadingStep === 'search' ? 'Загружаем рецепты...' : 'Переводим и готовим блюда...'}

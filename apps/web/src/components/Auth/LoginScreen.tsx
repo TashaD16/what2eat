@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <Box sx={{ textAlign: 'center', mb: 5 }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: 900, background: 'linear-gradient(135deg, #f97316 0%, #fcbb00 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', mb: 0.5 }}
+            sx={{ fontWeight: 900, background: 'linear-gradient(135deg, #20C997 0%, #38D9A9 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', mb: 0.5 }}
           >
             what2eat
           </Typography>
