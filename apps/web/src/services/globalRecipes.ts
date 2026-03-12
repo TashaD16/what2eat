@@ -63,12 +63,27 @@ export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> 
   })) as AIRecipe[]
 }
 
+export interface SearchGlobalRecipesOptions {
+  /** При true — только рецепты, где все ингредиенты входят в выбранные или в список специй */
+  strictOnlySelectedAndSpices?: boolean
+  /** Названия специй (категория spices) — при strictOnlySelectedAndSpices не требуют выбора */
+  spiceNames?: string[]
+}
+
 /**
  * Searches global_recipes by ingredient names.
  * Fetches all recipes and ranks client-side by number of matching ingredients.
  */
-export async function searchGlobalRecipesByIngredients(ingredientNames: string[]): Promise<AIRecipe[]> {
+export async function searchGlobalRecipesByIngredients(
+  ingredientNames: string[],
+  options: SearchGlobalRecipesOptions = {}
+): Promise<AIRecipe[]> {
   if (!isSupabaseConfigured() || ingredientNames.length === 0) return []
+
+  const { strictOnlySelectedAndSpices = false, spiceNames = [] } = options
+  const lowerNames = ingredientNames.map((n) => n.toLowerCase())
+  const lowerSpice = spiceNames.map((n) => n.toLowerCase())
+  const allowedLower = new Set([...lowerNames, ...lowerSpice])
 
   const { data, error } = await supabase
     .from('global_recipes')
@@ -76,8 +91,6 @@ export async function searchGlobalRecipesByIngredients(ingredientNames: string[]
     .limit(500)
 
   if (error || !data) return []
-
-  const lowerNames = ingredientNames.map((n) => n.toLowerCase())
 
   const scored = data
     .map((r) => {
@@ -87,9 +100,20 @@ export async function searchGlobalRecipesByIngredients(ingredientNames: string[]
     })
     .filter(({ score }) => score > 0)
 
-  scored.sort((a, b) => b.score - a.score)
+  let filtered = scored
+  if (strictOnlySelectedAndSpices && allowedLower.size > 0) {
+    filtered = scored.filter(({ r }) => {
+      const ings = (r.ingredients ?? []) as Array<{ name?: string }>
+      return ings.every((ing) => {
+        const name = (ing.name ?? '').trim().toLowerCase()
+        return name === '' || allowedLower.has(name)
+      })
+    })
+  }
 
-  return scored.slice(0, 20).map(({ r }) => ({
+  filtered.sort((a, b) => b.score - a.score)
+
+  return filtered.slice(0, 20).map(({ r }) => ({
     id: r.id,
     name: r.name,
     description: r.description ?? '',
@@ -101,6 +125,29 @@ export async function searchGlobalRecipesByIngredients(ingredientNames: string[]
     source_ingredients: ingredientNames,
     created_at: r.created_at,
   })) as AIRecipe[]
+}
+
+/** Поиск рецептов по названию (для строки поиска в шапке). */
+export async function searchGlobalRecipesByName(query: string): Promise<Array<{ id: string; name: string }>> {
+  if (!isSupabaseConfigured() || !query.trim()) return []
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('id, name')
+    .ilike('name', `%${query.trim()}%`)
+    .limit(10)
+    .order('name')
+  if (error) {
+    console.error('searchGlobalRecipesByName:', error)
+    return []
+  }
+  return (data ?? []).map((r: { id: string; name: string }) => ({ id: r.id, name: r.name }))
+}
+
+/** Загрузка одного рецепта по UUID (для открытия из поиска по названию). */
+export async function getGlobalRecipeById(id: string): Promise<AIRecipe | null> {
+  if (!isSupabaseConfigured() || !id) return null
+  const recipes = await getGlobalRecipesByIds([id])
+  return recipes[0] ?? null
 }
 
 /** Saves a new OpenAI-generated recipe to the global pool. */

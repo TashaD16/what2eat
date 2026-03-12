@@ -8,10 +8,8 @@ import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
-import { initDatabase } from './services/database'
-import { searchDishesByName } from './services/dishes'
 import { supabase, isSupabaseConfigured } from './services/supabase'
-import { searchGlobalRecipesByIngredients } from './services/globalRecipes'
+import { searchGlobalRecipesByIngredients, searchGlobalRecipesByName, getGlobalRecipeById } from './services/globalRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
 import RecipeView from './components/RecipeView'
@@ -31,13 +29,13 @@ function App() {
   const dispatch = useAppDispatch()
   const [view, setView] = useState<View>('ingredients')
   const [prevView, setPrevView] = useState<View>('swipe_results')
-  const [dbInitialized, setDbInitialized] = useState(false)
-  const [dbError, setDbError] = useState<string | null>(null)
+  const [appReady, setAppReady] = useState(false)
+  const [appError, setAppError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [currentAiDishId, setCurrentAiDishId] = useState<number | null>(null)
   const [plannerShoppingDishIds, setPlannerShoppingDishIds] = useState<number[] | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Array<{ id: number; name: string }>>([])
+  const [searchResults, setSearchResults] = useState<Array<{ id: string | number; name: string }>>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -51,15 +49,16 @@ function App() {
     let cancelled = false
     const initializeApp = async () => {
       try {
-        await initDatabase()
-        if (!cancelled) {
-          setDbInitialized(true)
-          dispatch(fetchIngredients())
-          dispatch(initAuth())
+        if (!isSupabaseConfigured()) {
+          if (!cancelled) setAppError('Настройте Supabase (VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY). Ингредиенты и рецепты загружаются из Supabase.')
+          return
         }
+        dispatch(initAuth())
+        await dispatch(fetchIngredients()).unwrap()
+        if (!cancelled) setAppReady(true)
       } catch (error) {
         if (!cancelled) {
-          setDbError(`Не удалось инициализировать базу данных: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
+          setAppError(`Не удалось загрузить данные: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}. Проверьте Supabase и выполните скрипт supabase-ingredients.sql.`)
         }
       }
     }
@@ -147,7 +146,11 @@ function App() {
       const selectedNames = ingredients
         .filter((i) => selectedIngredients.includes(i.id))
         .map((i) => i.name)
-      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames)
+      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name)
+      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
+        strictOnlySelectedAndSpices: !filters.allowMissing,
+        spiceNames,
+      })
       if (globalRecipes.length > 0) {
         dispatch(addAIDish({ recipe: globalRecipes[0], index: 10000 }))
         if (globalRecipes.length > 1) {
@@ -170,15 +173,12 @@ function App() {
   }
 
   const handleDishSelect = useCallback((dishId: number, from: View = 'swipe_results') => {
-    if (dishId < 0) {
-      // AI-generated dish from randomizer — show AI recipe view
-      const aiRecipe = aiDishRecipes[dishId]
-      if (aiRecipe) {
-        dispatch(setGeneratedRecipe(aiRecipe))
-        setCurrentAiDishId(dishId)
-        setPrevView(from)
-        setView('ai_recipe')
-      }
+    const aiRecipe = aiDishRecipes[dishId]
+    if (aiRecipe) {
+      dispatch(setGeneratedRecipe(aiRecipe))
+      setCurrentAiDishId(dishId)
+      setPrevView(from)
+      setView('ai_recipe')
     } else {
       dispatch(fetchRecipe(dishId))
       setPrevView(from)
@@ -192,17 +192,28 @@ function App() {
       setSearchResults([])
       return
     }
-    const results = await searchDishesByName(query.trim())
-    setSearchResults(results.slice(0, 6).map((d) => ({ id: d.id, name: d.name })))
+    if (!isSupabaseConfigured()) return
+    const results = await searchGlobalRecipesByName(query.trim())
+    setSearchResults(results.slice(0, 6).map((r) => ({ id: r.id, name: r.name })))
   }, [])
 
-  const handleSearchSelect = (dishId: number) => {
+  const handleSearchSelect = async (id: string | number) => {
     setSearchQuery('')
     setSearchResults([])
-    handleDishSelect(dishId, 'ingredients')
+    if (typeof id === 'number') {
+      handleDishSelect(id, 'ingredients')
+      return
+    }
+    const recipe = await getGlobalRecipeById(id)
+    if (recipe) {
+      dispatch(setGeneratedRecipe(recipe))
+      setCurrentAiDishId(null)
+      setPrevView('ingredients')
+      setView('ai_recipe')
+    }
   }
 
-  const handlePhotoIngredientsConfirmed = (ids: number[]) => {
+  const handlePhotoIngredientsConfirmed = async (ids: number[]) => {
     dispatch(resetSwipe())
     dispatch(
       findDishes({
@@ -216,17 +227,42 @@ function App() {
       })
     )
     setView('dishes')
+    if (isSupabaseConfigured()) {
+      const selectedNames = ingredients.filter((i) => ids.includes(i.id)).map((i) => i.name)
+      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name)
+      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
+        strictOnlySelectedAndSpices: !filters.allowMissing,
+        spiceNames,
+      })
+      if (globalRecipes.length > 0) {
+        dispatch(addAIDish({ recipe: globalRecipes[0], index: 10000 }))
+        if (globalRecipes.length > 1) {
+          dispatch(setLoadingMore(true))
+          requestAnimationFrame(() => {
+            for (let i = 1; i < globalRecipes.length; i++) {
+              dispatch(addAIDish({ recipe: globalRecipes[i], index: 10000 + i }))
+            }
+            dispatch(setLoadingMore(false))
+          })
+        }
+      }
+    }
   }
 
-  if (!dbInitialized) {
+  if (!appReady && !appError) {
     return (
       <Layout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          {dbError ? (
-            <Alert severity="error">{dbError}</Alert>
-          ) : (
-            <CircularProgress />
-          )}
+          <CircularProgress />
+        </Box>
+      </Layout>
+    )
+  }
+  if (appError) {
+    return (
+      <Layout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', p: 2 }}>
+          <Alert severity="error" sx={{ maxWidth: 480, textAlign: 'left' }}>{appError}</Alert>
         </Box>
       </Layout>
     )
@@ -291,7 +327,7 @@ function App() {
               <Paper sx={{ position: 'absolute', top: '100%', left: 0, right: 48, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
                 <List dense disablePadding>
                   {searchResults.map((r) => (
-                    <ListItemButton key={r.id} onClick={() => handleSearchSelect(r.id)}>
+                    <ListItemButton key={String(r.id)} onClick={() => handleSearchSelect(r.id)}>
                       <ListItemText primary={r.name} />
                     </ListItemButton>
                   ))}

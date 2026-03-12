@@ -16,28 +16,22 @@ No test runner is configured yet.
 
 ## Architecture
 
-**What2Eat** ("ЧтоЕсть") is a meal planning React SPA for a couple. The UI is in Russian. It runs entirely in the browser — no backend, no network requests.
+**What2Eat** ("ЧтоЕсть") is a meal planning React SPA for a couple. The UI is in Russian. Данные хранятся в **Supabase**; локальная SQLite БД не используется.
 
-### Data layer: sql.js (SQLite via WebAssembly)
+### Data layer: Supabase
 
-- `src/services/database.ts` — initializes the SQLite DB using sql.js; exposes `getDatabase()` used by all other services
-- The DB is loaded from `database/schema.sql` at startup; seed data populates ingredients, dishes, and recipes
-- All queries use parameterized statements (`db.prepare(...).bind([...])`) to avoid SQL injection
-- `recipe.instructions` is stored as a JSON string and parsed at read time
-
-### DB schema (5 tables)
-
-- `ingredients` — id, name, category (`meat|cereals|vegetables|dairy|spices|other`), image_url
-- `dishes` — id, name, description, image_url, cooking_time (minutes), difficulty (`easy|medium|hard`), servings
-- `dish_ingredients` — many-to-many join between dishes and ingredients (used for search)
-- `recipes` — one-to-one with dishes; `instructions` is a JSON array of `RecipeStep`
-- `recipe_ingredients` — per-recipe ingredient quantities (ingredient_id, quantity, unit)
+- `src/services/supabase.ts` — клиент Supabase; `isSupabaseConfigured()` проверяет наличие `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`
+- **Таблицы в Supabase:**
+  - `ingredients` — id (serial), name, category (`meat|cereals|vegetables|dairy|spices|other`), image_url. Создание и сид: `apps/web/scripts/supabase-ingredients.sql`
+  - `global_recipes` — рецепты (id UUID, name, description, instructions JSONB, ingredients JSONB, cooking_time, difficulty, image_url и т.д.)
+- Рецепты и поиск блюд идут только через `global_recipes`; ингредиенты — через таблицу `ingredients`
 
 ### Service layer (`src/services/`)
 
-- `ingredients.ts` — `getAllIngredients`, `getIngredientsByCategory`, `searchIngredients`
-- `recipes.ts` — `getRecipeByDishId` (joins recipes + dishes + recipe_ingredients in one query)
-- `dishes.ts` — dish search by ingredient IDs (ranks by match count, returns up to 5 results)
+- `ingredients.ts` — `getAllIngredients`, `getIngredientsByCategory`, `searchIngredients` (Supabase)
+- `globalRecipes.ts` — `searchGlobalRecipesByIngredients`, `searchGlobalRecipesByName`, `getGlobalRecipeById`, `getGlobalRecipesByIds`, `saveGlobalRecipe`
+- `dishes.ts` — только тип `FindDishesOptions` и заглушка `findDishesByIngredients` (возвращает `[]`); блюда подгружаются из global_recipes в App
+- `recipes.ts` — заглушка `getRecipeByDishId` (возвращает `null`); полные рецепты показываются через AIRecipeView и `getGlobalRecipeById`
 
 ### State management: Redux Toolkit (`src/store/`)
 
@@ -61,10 +55,10 @@ Use typed hooks from `src/hooks/redux.ts` (`useAppSelector`, `useAppDispatch`) i
 
 ### Key data flow
 
-1. App init → `fetchIngredients` thunk → `ingredientsService.getAllIngredients()` → SQLite → Redux
-2. User selects ingredients → `toggleIngredient(id)` dispatched → `selectedIngredients[]` updated
-3. "Find dishes" → `dishesService.findDishesByIngredients(selectedIngredients)` → SQL COUNT match → top 5 results
-4. User picks dish → `getRecipeByDishId(dishId)` → full Recipe object → `RecipeView`
+1. App init → требуется Supabase → `fetchIngredients()` → Supabase `ingredients` → Redux
+2. User selects ingredients → `toggleIngredient(id)` → `selectedIngredients[]` updated
+3. "Find dishes" / фото → `searchGlobalRecipesByIngredients(selectedNames)` → Supabase `global_recipes` → `addAIDish` в Redux (карточки с отрицательными id)
+4. User picks dish → рецепт уже в `aiDishRecipes[dishId]` или загружается `getGlobalRecipeById(id)` при выборе из поиска по названию → `AIRecipeView`
 
 ### TypeScript types (`src/types/`)
 

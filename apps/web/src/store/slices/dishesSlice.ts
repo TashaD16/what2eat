@@ -54,12 +54,10 @@ export const findDishes = createAsyncThunk(
   }
 )
 
+/** Локальная БД удалена — рандомайзер использует только generateAIRandomDishes (Supabase global_recipes). */
 export const randomizeMeatDishes = createAsyncThunk(
   'dishes/randomizeMeat',
-  async () => {
-    const allDishes = await dishesService.getAllDishes()
-    return dishesService.randomizeDishes(allDishes)
-  }
+  async (): Promise<Dish[]> => []
 )
 
 export const fetchPopularDishSuggestions = createAsyncThunk(

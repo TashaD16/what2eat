@@ -3,14 +3,6 @@
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
-    { "source": "/((?!assets/|database/|.*\\.).*)", "destination": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/database/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
-      ]
-    }
+    { "source": "/((?!assets/|.*\\.).*)", "destination": "/index.html" }
   ]
 }

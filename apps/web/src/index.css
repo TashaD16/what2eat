@@ -1,0 +1,50 @@
+:root {
+  /* Background */
+  --bg-app:           #0a0a0a;
+  --bg-card:          rgba(23, 23, 23, 0.85);
+  --bg-dialog:        #141414;
+  --bg-swipe-card:    #111;
+
+  /* Brand */
+  --color-primary:    #31983d;
+  --color-primary-dk: #1e7a26;
+  --color-primary-lt: #4caf50;
+  --color-secondary:  #fcbb00;
+
+  /* Actions */
+  --color-like:       #22c55e;
+  --color-dislike:    #ff4d4d;
+  --color-info:       #a855f7;
+  --color-warning:    #ff9500;
+
+  /* Text */
+  --text-primary:     #ffffff;
+  --text-secondary:   #9ca3af;
+  --text-muted:       rgba(255, 255, 255, 0.40);
+
+  /* Borders */
+  --border-default:   rgba(255, 255, 255, 0.08);
+  --border-strong:    rgba(255, 255, 255, 0.15);
+
+  /* Tags */
+  --tag-vegan:        #4ade80;
+  --tag-vegetarian:   #fbbf24;
+  --tag-ingredient:   #ff9500;
+  --tag-filter:       #90caf9;
+  --tag-missing:      #fbbf24;
+  --tag-budget:       #ce93d8;
+}
+
+body {
+  background: var(--bg-app);
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
