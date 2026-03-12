@@ -46,7 +46,7 @@ export default function SearchFilters() {
 
       {/* Кухня */}
       <Box>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.75, display: 'block' }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
           Кухня
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
@@ -62,7 +62,7 @@ export default function SearchFilters() {
                 fontSize: '0.78rem',
                 ...(cuisine === opt.value
                   ? { bgcolor: 'rgba(25,118,210,0.3)', color: '#90caf9', borderColor: 'rgba(25,118,210,0.5)' }
-                  : { color: 'rgba(255,255,255,0.5)', borderColor: 'rgba(255,255,255,0.15)' }),
+                  : { color: 'text.secondary', borderColor: 'rgba(0,0,0,0.15)' }),
               }}
             />
           ))}
@@ -74,7 +74,7 @@ export default function SearchFilters() {
 
         {/* Питание */}
         <Box>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.5, display: 'block' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
             Питание
           </Typography>
           <FormControlLabel
@@ -87,7 +87,7 @@ export default function SearchFilters() {
               />
             }
             label={
-              <Typography variant="body2" sx={{ color: noMeat ? '#81c784' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+              <Typography variant="body2" sx={{ color: noMeat ? '#81c784' : 'text.secondary', fontSize: '0.82rem' }}>
                 Без мяса
               </Typography>
             }
@@ -96,7 +96,7 @@ export default function SearchFilters() {
 
         {/* Бюджет */}
         <Box>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mb: 0.5, display: 'block' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
             Бюджет
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -110,7 +110,7 @@ export default function SearchFilters() {
                 />
               }
               label={
-                <Typography variant="body2" sx={{ color: allowMissing ? '#ffb74d' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+                <Typography variant="body2" sx={{ color: allowMissing ? '#ffb74d' : 'text.secondary', fontSize: '0.82rem' }}>
                   Докупить
                 </Typography>
               }
@@ -125,7 +125,7 @@ export default function SearchFilters() {
                 />
               }
               label={
-                <Typography variant="body2" sx={{ color: budgetEnabled ? '#ce93d8' : 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>
+                <Typography variant="body2" sx={{ color: budgetEnabled ? '#ce93d8' : 'text.secondary', fontSize: '0.82rem' }}>
                   Лимит
                 </Typography>
               }

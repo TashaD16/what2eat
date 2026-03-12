@@ -271,7 +271,7 @@ function App() {
   // Show loading spinner while checking auth session
   if (!authInitialized) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#0a0a0a' }}>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'transparent' }}>
         <CircularProgress />
       </Box>
     )
@@ -315,9 +315,9 @@ function App() {
                 onClick={() => setFiltersOpen((v) => !v)}
                 sx={{
                   border: '1px solid',
-                  borderColor: filtersOpen ? 'primary.main' : 'rgba(255,255,255,0.15)',
+                  borderColor: filtersOpen ? 'primary.main' : 'rgba(0,0,0,0.15)',
                   borderRadius: 1,
-                  color: filtersOpen ? 'primary.main' : 'rgba(255,255,255,0.5)',
+                  color: filtersOpen ? 'primary.main' : 'text.secondary',
                 }}
               >
                 <Tune sx={{ fontSize: 20 }} />
@@ -338,7 +338,7 @@ function App() {
 
           {/* === Панель фильтров === */}
           <Collapse in={filtersOpen}>
-            <Paper variant="outlined" sx={{ mb: 2, p: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <Paper variant="outlined" sx={{ mb: 2, p: 2 }}>
               <SearchFilters />
             </Paper>
           </Collapse>
@@ -371,8 +371,8 @@ function App() {
                 startIcon={<Casino />}
                 sx={{
                   py: 1.75,
-                  borderColor: 'rgba(255,255,255,0.2)',
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+                  borderColor: 'rgba(0,0,0,0.2)',
+                  '&:hover': { borderColor: 'rgba(0,0,0,0.35)', bgcolor: 'rgba(0,0,0,0.04)' },
                 }}
               >
                 Рандомайзер
@@ -389,7 +389,7 @@ function App() {
                   borderColor: 'rgba(252,187,0,0.4)',
                   color: '#fcbb00',
                   '&:hover': { borderColor: '#fcbb00', bgcolor: 'rgba(252,187,0,0.08)' },
-                  '&.Mui-disabled': { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.2)' },
+                  '&.Mui-disabled': { borderColor: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.25)' },
                 }}
               >
                 AI-рецепт
@@ -405,9 +405,9 @@ function App() {
             startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
             sx={{
               mb: selectedIngredients.length > 0 ? 1 : 2,
-              borderColor: 'rgba(255,255,255,0.2)',
-              color: 'rgba(255,255,255,0.7)',
-              '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+              borderColor: 'rgba(0,0,0,0.2)',
+              color: 'text.primary',
+              '&:hover': { borderColor: 'rgba(0,0,0,0.35)', bgcolor: 'rgba(0,0,0,0.04)' },
             }}
           >
             {selectedIngredients.length > 0
@@ -480,10 +480,10 @@ function App() {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
             <CircularProgress size={56} sx={{ color: '#FF9500' }} />
             <Box sx={{ textAlign: 'center' }}>
-              <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600, mb: 0.5 }}>
+              <Typography sx={{ color: 'text.primary', fontWeight: 600, mb: 0.5 }}>
                 {loadingStep === 'search' ? 'Загружаем рецепты...' : 'Переводим и готовим блюда...'}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {loadingStep === 'search'
                   ? 'Получаем рецепты из открытых источников'
                   : 'Первое блюдо появится через несколько секунд'}

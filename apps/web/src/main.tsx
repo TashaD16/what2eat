@@ -18,7 +18,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
   render() {
     if (this.state.error) {
       return (
-        <div style={{ background: '#0A0A0A', color: '#FF4D4D', padding: 24, fontFamily: 'monospace', whiteSpace: 'pre-wrap', fontSize: 13 }}>
+        <div style={{ background: '#fef2f2', color: '#dc2626', padding: 24, fontFamily: 'monospace', whiteSpace: 'pre-wrap', fontSize: 13 }}>
           {this.state.error}
         </div>
       )
@@ -29,10 +29,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: string |
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     background: {
-      default: '#0a0a0a',
-      paper: 'rgba(23,23,23,0.85)',
+      default: 'transparent',
+      paper: 'rgba(255,255,255,0.82)',
     },
     primary: {
       main: '#f97316',
@@ -47,10 +47,10 @@ const theme = createTheme({
     success: { main: '#22C55E' },
     warning: { main: '#FBBF24' },
     info: { main: '#A855F7' },
-    error: { main: '#ff6568' },
+    error: { main: '#ef4444' },
     text: {
-      primary: '#FFFFFF',
-      secondary: '#9CA3AF',
+      primary: '#1a1a2e',
+      secondary: '#64748b',
     },
   },
   typography: {
@@ -67,23 +67,18 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#0A0A0A',
-          backgroundImage: [
-            'radial-gradient(ellipse 480px 420px at -8% -8%, rgba(134,239,172,0.13) 0%, transparent 70%)',
-            'radial-gradient(ellipse 320px 300px at -8% 62%, rgba(253,224,71,0.10) 0%, transparent 70%)',
-            'radial-gradient(ellipse 520px 460px at 110% 108%, rgba(252,187,0,0.12) 0%, transparent 70%)',
-            "url('/food-pattern.svg')",
-          ].join(', '),
-          backgroundSize: 'auto, auto, auto, 480px 360px',
-          backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat',
+          backgroundImage: "url('/desktop.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
           backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+          scrollbarColor: 'rgba(0,0,0,0.15) transparent',
         },
         '*::-webkit-scrollbar': { width: '6px' },
         '*::-webkit-scrollbar-track': { background: 'transparent' },
         '*::-webkit-scrollbar-thumb': {
-          background: 'rgba(255,255,255,0.15)',
+          background: 'rgba(0,0,0,0.15)',
           borderRadius: '3px',
         },
       },
@@ -91,10 +86,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: 'rgba(10,10,10,0.75)',
+          background: 'rgba(255,255,255,0.88)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(0,0,0,0.08)',
           boxShadow: 'none',
         },
       },
@@ -103,14 +98,14 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: 'rgba(23,23,23,0.85)',
+          background: 'rgba(255,255,255,0.82)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(0,0,0,0.08)',
         },
         outlined: {
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.6)',
+          border: '1px solid rgba(0,0,0,0.1)',
         },
       },
     },
@@ -134,31 +129,31 @@ const theme = createTheme({
           },
         },
         outlined: {
-          borderColor: 'rgba(255,255,255,0.2)',
+          borderColor: 'rgba(0,0,0,0.2)',
           '&:hover': {
-            borderColor: 'rgba(255,255,255,0.4)',
-            background: 'rgba(255,255,255,0.05)',
+            borderColor: 'rgba(0,0,0,0.35)',
+            background: 'rgba(0,0,0,0.04)',
           },
         },
         text: {
-          '&:hover': { background: 'rgba(255,255,255,0.06)' },
+          '&:hover': { background: 'rgba(0,0,0,0.05)' },
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: { borderRadius: 8, fontWeight: 500 },
-        outlined: { borderColor: 'rgba(255,255,255,0.2)' },
+        outlined: { borderColor: 'rgba(0,0,0,0.15)' },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: 'rgba(23,23,23,0.85)',
+          background: 'rgba(255,255,255,0.82)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(0,0,0,0.08)',
           borderRadius: 20,
         },
       },
@@ -167,8 +162,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+            '& fieldset': { borderColor: 'rgba(0,0,0,0.15)' },
+            '&:hover fieldset': { borderColor: 'rgba(0,0,0,0.3)' },
             '&.Mui-focused fieldset': { borderColor: '#f97316' },
           },
         },
@@ -200,19 +195,19 @@ const theme = createTheme({
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)' },
+        root: { borderRadius: 12, border: '1px solid rgba(0,0,0,0.1)' },
       },
     },
     MuiDivider: {
       styleOverrides: {
-        root: { borderColor: 'rgba(255,255,255,0.08)' },
+        root: { borderColor: 'rgba(0,0,0,0.1)' },
       },
     },
     MuiDialog: {
       styleOverrides: {
         paper: {
-          background: '#141414',
-          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'rgba(255,255,255,0.96)',
+          border: '1px solid rgba(0,0,0,0.1)',
         },
       },
     },

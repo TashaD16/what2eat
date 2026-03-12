@@ -119,14 +119,14 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
             py: 8,
             px: 2,
             borderRadius: 4,
-            border: '1px dashed rgba(255,255,255,0.12)',
+            border: '1px dashed rgba(0,0,0,0.15)',
           }}
         >
-          <FavoriteBorder sx={{ fontSize: 52, color: 'rgba(255,255,255,0.15)', mb: 2 }} />
-          <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.4)', mb: 1 }}>
+          <FavoriteBorder sx={{ fontSize: 52, color: 'rgba(0,0,0,0.15)', mb: 2 }} />
+          <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
             Нет понравившихся блюд
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.25)', mb: 3 }}>
+          <Typography variant="body2" sx={{ color: 'text.disabled', mb: 3 }}>
             Свайпайте вправо, чтобы сохранить блюдо
           </Typography>
           <Button variant="contained" onClick={handleRepeat} startIcon={<Refresh />}>

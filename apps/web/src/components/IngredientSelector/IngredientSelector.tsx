@@ -62,7 +62,7 @@ export default function IngredientSelector() {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Search sx={{ color: 'rgba(255,255,255,0.3)' }} />
+              <Search sx={{ color: 'rgba(0,0,0,0.3)' }} />
             </InputAdornment>
           ),
         }}
@@ -83,7 +83,7 @@ export default function IngredientSelector() {
 
       {selectedIngredientNames.length > 0 && (
         <Box sx={{ mb: 2.5 }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1, display: 'block' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1, display: 'block' }}>
             Выбрано: {selectedIngredientNames.length}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -122,13 +122,13 @@ export default function IngredientSelector() {
                   sx={{
                     p: 1.5,
                     cursor: 'pointer',
-                    border: isSelected ? '1.5px solid rgba(249,115,22,0.6)' : '1px solid rgba(255,255,255,0.08)',
-                    bgcolor: isSelected ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: isSelected ? '1.5px solid rgba(249,115,22,0.6)' : '1px solid rgba(0,0,0,0.1)',
+                    bgcolor: isSelected ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.65)',
                     boxShadow: isSelected ? '0 0 16px rgba(249,115,22,0.2)' : 'none',
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: isSelected ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.07)',
-                      border: isSelected ? '1.5px solid rgba(249,115,22,0.7)' : '1px solid rgba(255,255,255,0.15)',
+                      bgcolor: isSelected ? 'rgba(249,115,22,0.18)' : 'rgba(255,255,255,0.95)',
+                      border: isSelected ? '1.5px solid rgba(249,115,22,0.7)' : '1px solid rgba(0,0,0,0.18)',
                     },
                   }}
                   onClick={() => handleToggle(ingredient.id)}
@@ -137,7 +137,7 @@ export default function IngredientSelector() {
                     variant="body2"
                     align="center"
                     sx={{
-                      color: isSelected ? '#fb923c' : 'rgba(255,255,255,0.75)',
+                      color: isSelected ? '#f97316' : 'text.primary',
                       fontWeight: isSelected ? 600 : 400,
                     }}
                   >
@@ -151,7 +151,7 @@ export default function IngredientSelector() {
       </Grid>
 
       {filteredIngredients.length === 0 && (
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', mt: 6 }}>
+        <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', mt: 6 }}>
           Ингредиенты не найдены
         </Typography>
       )}

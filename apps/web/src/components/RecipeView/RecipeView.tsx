@@ -212,7 +212,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2.5, mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'rgba(255,255,255,0.9)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
               Информация
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -242,7 +242,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
           </Paper>
 
           <Paper sx={{ p: 2.5 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'rgba(255,255,255,0.9)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
               Ингредиенты
             </Typography>
             <List dense disablePadding>
@@ -263,7 +263,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                     <FiberManualRecord sx={{ fontSize: 6, color: '#FF9500', flexShrink: 0 }} />
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                       {ing.ingredient_name}
                     </Typography>
                   </Box>
@@ -288,7 +288,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
 
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2.5, color: 'rgba(255,255,255,0.9)' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2.5, color: 'text.primary' }}>
               Инструкция
             </Typography>
             <Divider sx={{ mb: 2.5 }} />
@@ -320,7 +320,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                         </Typography>
                       </Box>
                     </Box>
-                    <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.6 }}>
+                    <Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.6 }}>
                       {step.description}
                     </Typography>
                     {index < currentRecipe.instructions.length - 1 && (

@@ -105,15 +105,15 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   if (dishes.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
-        <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, mb: 2 }}>
+        <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 2 }}>
           В базе нет подходящих блюд
         </Typography>
         {suggestedDishNames.length > 0 && (
           <Box sx={{ mb: 3, textAlign: 'left', maxWidth: 360, mx: 'auto' }}>
-            <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
               <Restaurant fontSize="small" /> ИИ предлагает приготовить:
             </Typography>
-            <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'rgba(255,255,255,0.9)' }}>
+            <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.primary' }}>
               {suggestedDishNames.map((name) => (
                 <li key={name}>{name}</li>
               ))}
@@ -138,7 +138,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           <Typography
             variant="body2"
             sx={{
-              color: remaining > 0 ? 'rgba(255,255,255,0.5)' : '#22C55E',
+              color: remaining > 0 ? 'text.secondary' : '#22C55E',
               fontWeight: 600,
               fontSize: '0.8rem',
               letterSpacing: '0.05em',
@@ -180,12 +180,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'rgba(255,255,255,0.03)',
+              bgcolor: 'rgba(255,255,255,0.72)',
               borderRadius: 4,
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid rgba(0,0,0,0.08)',
             }}
           >
-            <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, mb: 3 }}>
+            <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 3 }}>
               Вы просмотрели все блюда!
             </Typography>
             <Button variant="contained" onClick={onComplete} size="large" sx={{ px: 4 }}>
@@ -298,7 +298,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         onClose={() => setInfoDish(null)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { bgcolor: '#141414', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden' } }}
+        PaperProps={{ sx: { bgcolor: 'rgba(255,255,255,0.96)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden' } }}
       >
         {infoDish && (
           <>
@@ -323,14 +323,14 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </Box>
 
             <DialogTitle sx={{ pb: 0.5, pt: 1.5, px: 2.5 }}>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: 'white', lineHeight: 1.2 }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
                 {infoDish.name}
               </Typography>
             </DialogTitle>
 
             <DialogContent sx={{ px: 2.5, pt: 1, pb: 2 }}>
               {infoDish.description && (
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.65)', mb: 2, lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, lineHeight: 1.6 }}>
                   {infoDish.description}
                 </Typography>
               )}
@@ -338,16 +338,16 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               {/* Info chips */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
                 <Chip
-                  icon={<AccessTime sx={{ fontSize: '13px !important', color: 'rgba(255,255,255,0.5) !important' }} />}
+                  icon={<AccessTime sx={{ fontSize: '13px !important', color: 'rgba(0,0,0,0.4) !important' }} />}
                   label={`${infoDish.cooking_time} мин`}
                   size="small"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', border: '1px solid rgba(0,0,0,0.1)' }}
                 />
                 <Chip
-                  icon={<People sx={{ fontSize: '13px !important', color: 'rgba(255,255,255,0.5) !important' }} />}
+                  icon={<People sx={{ fontSize: '13px !important', color: 'rgba(0,0,0,0.4) !important' }} />}
                   label={`${infoDish.servings} порц.`}
                   size="small"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', border: '1px solid rgba(0,0,0,0.1)' }}
                 />
                 {infoDish.is_vegan && (
                   <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }} />
@@ -360,18 +360,18 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               {/* Ingredients */}
               {infoDish.ingredients && infoDish.ingredients.length > 0 && (
                 <Box>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, display: 'block', mb: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, display: 'block', mb: 1 }}>
                     Основные ингредиенты
                   </Typography>
                   <List dense disablePadding>
                     {infoDish.ingredients.slice(0, 6).map((ing) => (
                       <ListItem key={ing.id} sx={{ px: 0, py: 0.4 }}>
                         <FiberManualRecord sx={{ fontSize: 6, color: '#FF9500', mr: 1, flexShrink: 0 }} />
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>{ing.name}</Typography>
+                        <Typography variant="body2" sx={{ color: 'text.primary' }}>{ing.name}</Typography>
                       </ListItem>
                     ))}
                     {infoDish.ingredients.length > 6 && (
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', pl: 2.5 }}>
+                      <Typography variant="caption" sx={{ color: 'text.disabled', pl: 2.5 }}>
                         и ещё {infoDish.ingredients.length - 6}...
                       </Typography>
                     )}
@@ -427,14 +427,14 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 <Box
                   key={dish.name}
                   sx={{
-                    bgcolor: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    bgcolor: 'rgba(255,255,255,0.72)',
+                    border: '1px solid rgba(0,0,0,0.08)',
                     borderRadius: 3,
                     p: 2,
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, mb: 0.5 }}>
-                    <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 700, lineHeight: 1.3 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'text.primary', fontWeight: 700, lineHeight: 1.3 }}>
                       {dish.name}
                     </Typography>
                     <Box
@@ -460,17 +460,17 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                     </Box>
                   </Box>
 
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block', mb: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
                     {dish.description}
                   </Typography>
 
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
                     {dish.cookingTime && (
                       <Chip
-                        icon={<AccessTime sx={{ fontSize: '12px !important', color: 'rgba(255,255,255,0.4) !important' }} />}
+                        icon={<AccessTime sx={{ fontSize: '12px !important', color: 'rgba(0,0,0,0.35) !important' }} />}
                         label={dish.cookingTime}
                         size="small"
-                        sx={{ bgcolor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', height: 22, fontSize: '0.68rem' }}
+                        sx={{ bgcolor: 'rgba(0,0,0,0.06)', color: 'text.secondary', height: 22, fontSize: '0.68rem' }}
                       />
                     )}
                     {(dish.mainIngredients ?? []).map((ing) => (

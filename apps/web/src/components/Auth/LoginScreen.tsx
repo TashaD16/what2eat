@@ -44,7 +44,7 @@ export default function LoginScreen() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#0a0a0a',
+        bgcolor: 'transparent',
         px: 2,
       }}
     >
@@ -53,11 +53,11 @@ export default function LoginScreen() {
         <Box sx={{ textAlign: 'center', mb: 5 }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: 900, color: 'white', letterSpacing: '-0.02em', mb: 0.5 }}
+            sx={{ fontWeight: 900, background: 'linear-gradient(135deg, #f97316 0%, #fcbb00 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', mb: 0.5 }}
           >
             what2eat
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Планировщик блюд для двоих
           </Typography>
         </Box>
@@ -65,13 +65,14 @@ export default function LoginScreen() {
         {/* Card */}
         <Box
           sx={{
-            bgcolor: '#141414',
+            bgcolor: 'rgba(255,255,255,0.88)',
             borderRadius: 4,
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid rgba(0,0,0,0.1)',
+            backdropFilter: 'blur(20px)',
             p: 3.5,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: 'white', mb: 2.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 2.5 }}>
             {mode === 'signin' ? 'Вход в аккаунт' : 'Регистрация'}
           </Typography>
 
@@ -96,21 +97,21 @@ export default function LoginScreen() {
             sx={{
               py: 1.4,
               mb: 2.5,
-              borderColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
+              borderColor: 'rgba(0,0,0,0.2)',
+              color: 'text.primary',
               fontWeight: 600,
               fontSize: '0.95rem',
               '&:hover': {
-                borderColor: 'rgba(255,255,255,0.5)',
-                bgcolor: 'rgba(255,255,255,0.05)',
+                borderColor: 'rgba(0,0,0,0.35)',
+                bgcolor: 'rgba(0,0,0,0.04)',
               },
             }}
           >
             Войти через Google
           </Button>
 
-          <Divider sx={{ mb: 2.5, borderColor: 'rgba(255,255,255,0.1)' }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', px: 1 }}>
+          <Divider sx={{ mb: 2.5 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
               или email
             </Typography>
           </Divider>
@@ -160,7 +161,7 @@ export default function LoginScreen() {
               component="button"
               variant="body2"
               onClick={switchMode}
-              sx={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none', '&:hover': { color: 'white' } }}
+              sx={{ color: 'text.secondary', textDecoration: 'none', '&:hover': { color: 'primary.main' } }}
             >
               {mode === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
             </Link>

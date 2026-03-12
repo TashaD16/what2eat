@@ -1,9 +1,9 @@
 :root {
   /* Background */
-  --bg-app:           #0a0a0a;
-  --bg-card:          rgba(23, 23, 23, 0.85);
-  --bg-dialog:        #141414;
-  --bg-swipe-card:    #111;
+  --bg-app:           transparent;
+  --bg-card:          rgba(255, 255, 255, 0.82);
+  --bg-dialog:        rgba(255, 255, 255, 0.96);
+  --bg-swipe-card:    #1a1a1a;
 
   /* Brand */
   --color-primary:    #f97316;
@@ -18,13 +18,13 @@
   --color-warning:    #ff9500;
 
   /* Text */
-  --text-primary:     #ffffff;
-  --text-secondary:   #9ca3af;
-  --text-muted:       rgba(255, 255, 255, 0.40);
+  --text-primary:     #1a1a2e;
+  --text-secondary:   #64748b;
+  --text-muted:       rgba(0, 0, 0, 0.40);
 
   /* Borders */
-  --border-default:   rgba(255, 255, 255, 0.08);
-  --border-strong:    rgba(255, 255, 255, 0.15);
+  --border-default:   rgba(0, 0, 0, 0.08);
+  --border-strong:    rgba(0, 0, 0, 0.15);
 
   /* Tags */
   --tag-vegan:        #4ade80;
