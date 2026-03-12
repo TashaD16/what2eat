@@ -45,7 +45,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
-        <CircularProgress sx={{ color: '#FF4D4D' }} />
+        <CircularProgress sx={{ color: '#f97316' }} />
       </Box>
     )
   }
@@ -307,12 +307,12 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #FF4D4D 0%, #FF9500 100%)',
+                          background: 'linear-gradient(135deg, #ea6c0a 0%, #f97316 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
-                          boxShadow: '0 2px 12px rgba(255,77,77,0.35)',
+                          boxShadow: '0 2px 12px rgba(249,115,22,0.35)',
                         }}
                       >
                         <Typography variant="caption" sx={{ color: 'white', fontWeight: 800, fontSize: '0.75rem' }}>

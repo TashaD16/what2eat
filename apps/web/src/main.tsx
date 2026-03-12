@@ -35,9 +35,9 @@ const theme = createTheme({
       paper: 'rgba(23,23,23,0.85)',
     },
     primary: {
-      main: '#31983d',
-      light: '#4caf50',
-      dark: '#1e7a26',
+      main: '#f97316',
+      light: '#fb923c',
+      dark: '#ea6c0a',
       contrastText: '#ffffff',
     },
     secondary: {
@@ -113,11 +113,11 @@ const theme = createTheme({
           fontWeight: 600,
         },
         contained: {
-          background: 'linear-gradient(135deg, #1e7a26 0%, #31983d 100%)',
-          boxShadow: '0 4px 20px rgba(49,152,61,0.3)',
+          background: 'linear-gradient(135deg, #ea6c0a 0%, #f97316 100%)',
+          boxShadow: '0 4px 20px rgba(249,115,22,0.3)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #166320 0%, #278030 100%)',
-            boxShadow: '0 6px 28px rgba(49,152,61,0.45)',
+            background: 'linear-gradient(135deg, #c55a08 0%, #ea6c0a 100%)',
+            boxShadow: '0 6px 28px rgba(249,115,22,0.45)',
           },
           '&.Mui-disabled': {
             background: 'rgba(255,255,255,0.08)',
@@ -160,7 +160,7 @@ const theme = createTheme({
           '& .MuiOutlinedInput-root': {
             '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
             '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-            '&.Mui-focused fieldset': { borderColor: '#31983d' },
+            '&.Mui-focused fieldset': { borderColor: '#f97316' },
           },
         },
       },
@@ -168,16 +168,16 @@ const theme = createTheme({
     MuiSwitch: {
       styleOverrides: {
         root: {
-          '& .MuiSwitch-switchBase.Mui-checked': { color: '#31983d' },
+          '& .MuiSwitch-switchBase.Mui-checked': { color: '#f97316' },
           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: '#31983d',
+            backgroundColor: '#f97316',
           },
         },
       },
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: { backgroundColor: '#31983d' },
+        indicator: { backgroundColor: '#f97316' },
       },
     },
     MuiTab: {
@@ -185,7 +185,7 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           fontWeight: 500,
-          '&.Mui-selected': { color: '#31983d' },
+          '&.Mui-selected': { color: '#f97316' },
         },
       },
     },

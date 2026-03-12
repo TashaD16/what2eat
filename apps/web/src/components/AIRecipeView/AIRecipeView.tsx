@@ -7,7 +7,7 @@ import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice
 import { useState } from 'react'
 
 const DIFFICULTY_LABELS = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
-const DIFFICULTY_COLORS = { easy: '#4CAF50', medium: '#FF9800', hard: '#f44336' } as const
+const DIFFICULTY_COLORS = { easy: '#4CAF50', medium: '#FF9500', hard: '#f44336' } as const
 
 interface AIRecipeViewProps {
   dishId: number | null
@@ -262,7 +262,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     minWidth: 32,
                     height: 32,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #FF4D4D 0%, #FF9500 100%)',
+                    background: 'linear-gradient(135deg, #ea6c0a 0%, #f97316 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -271,7 +271,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     fontSize: '0.85rem',
                     flexShrink: 0,
                     mt: 0.25,
-                    boxShadow: '0 2px 10px rgba(255,77,77,0.3)',
+                    boxShadow: '0 2px 10px rgba(249,115,22,0.3)',
                   }}
                 >
                   {step.step}
