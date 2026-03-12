@@ -303,22 +303,35 @@ function App() {
               onChange={(e) => handleSearchQueryChange(e.target.value)}
               size="small"
               InputProps={{
-                startAdornment: <InputAdornment position="start"><Search sx={{ color: 'text.secondary', fontSize: 20 }} /></InputAdornment>,
+                startAdornment: <InputAdornment position="start"><Search sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 20 }} /></InputAdornment>,
                 endAdornment: searchQuery ? (
                   <InputAdornment position="end">
-                    <Close sx={{ cursor: 'pointer', color: 'text.secondary', fontSize: 18 }} onClick={() => { setSearchQuery(''); setSearchResults([]) }} />
+                    <Close sx={{ cursor: 'pointer', color: 'rgba(255,255,255,0.8)', fontSize: 18 }} onClick={() => { setSearchQuery(''); setSearchResults([]) }} />
                   </InputAdornment>
                 ) : undefined,
               }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
+                  boxShadow: '0 6px 32px rgba(32,201,151,0.50)',
+                  color: 'white',
+                  '& fieldset': { border: 'none' },
+                  '&:hover fieldset': { border: 'none' },
+                  '&.Mui-focused fieldset': { border: 'none', boxShadow: 'none' },
+                  '& input::placeholder': { color: 'rgba(255,255,255,0.75)', opacity: 1 },
+                  '& input': { color: 'white' },
+                },
+              }}
             />
-            <Badge badgeContent={activeFilterCount || undefined} color="primary">
+            <Badge badgeContent={activeFilterCount || undefined} color="error">
               <IconButton
                 onClick={() => setFiltersOpen((v) => !v)}
                 sx={{
-                  border: '1px solid',
-                  borderColor: filtersOpen ? 'primary.main' : 'rgba(0,0,0,0.15)',
-                  borderRadius: 1,
-                  color: filtersOpen ? 'primary.main' : 'text.secondary',
+                  borderRadius: 1.5,
+                  background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
+                  boxShadow: '0 6px 32px rgba(32,201,151,0.50)',
+                  color: 'white',
+                  '&:hover': { background: 'linear-gradient(135deg, #0F9B6E 0%, #18B383 100%)', boxShadow: '0 6px 32px rgba(32,201,151,0.65)' },
                 }}
               >
                 <Tune sx={{ fontSize: 20 }} />
@@ -347,7 +360,7 @@ function App() {
           {/* === Быстрые действия === */}
           <Box sx={{ mb: 3, mt: filtersOpen ? 0 : 2 }}>
             <Button
-              variant="outlined"
+              variant="contained"
               fullWidth
               size="large"
               onClick={() => setView('photo')}
@@ -356,42 +369,29 @@ function App() {
                 py: 2,
                 mb: 1.5,
                 fontSize: '1.05rem',
-                borderColor: 'rgba(168,85,247,0.4)',
-                color: '#A855F7',
-                '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' },
               }}
             >
               Загрузить фото
             </Button>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
               <Button
-                variant="outlined"
+                variant="contained"
                 size="large"
                 fullWidth
                 onClick={handleRandomize}
                 startIcon={<Casino />}
-                sx={{
-                  py: 1.75,
-                  borderColor: 'rgba(32,201,151,0.35)',
-                  '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
-                }}
+                sx={{ py: 1.75 }}
               >
                 Рандомайзер
               </Button>
               <Button
-                variant="outlined"
+                variant="contained"
                 size="large"
                 fullWidth
                 onClick={handleGenerateAIRecipe}
                 disabled={selectedIngredients.length === 0}
                 startIcon={<AutoAwesome />}
-                sx={{
-                  py: 1.75,
-                  borderColor: 'rgba(32,201,151,0.4)',
-                  color: '#20C997',
-                  '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.08)' },
-                  '&.Mui-disabled': { borderColor: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.25)' },
-                }}
+                sx={{ py: 1.75 }}
               >
                 AI-рецепт
               </Button>
@@ -400,15 +400,12 @@ function App() {
 
           {/* === Кнопка открытия Drawer === */}
           <Button
-            variant="outlined"
+            variant="contained"
             fullWidth
             onClick={() => setDrawerOpen(true)}
             startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
             sx={{
               mb: selectedIngredients.length > 0 ? 1 : 2,
-              borderColor: 'rgba(32,201,151,0.35)',
-              color: 'text.primary',
-              '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
             }}
           >
             {selectedIngredients.length > 0
