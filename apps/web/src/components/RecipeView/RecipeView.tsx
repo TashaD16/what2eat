@@ -216,16 +216,22 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             sx={{
               p: 2.5,
               height: '100%',
-              background: (theme) =>
-                theme.palette.mode === 'light'
-                  ? 'rgba(204,251,241,0.55)'
-                  : 'rgba(20,40,65,0.80)',
-              border: '1px solid rgba(32,201,151,0.22)',
+              background: (t) =>
+                t.palette.mode === 'light'
+                  ? 'linear-gradient(160deg, rgba(32,201,151,0.18) 0%, rgba(56,217,169,0.12) 100%)'
+                  : 'linear-gradient(160deg, rgba(32,201,151,0.16) 0%, rgba(15,40,60,0.90) 100%)',
+              border: '1.5px solid rgba(32,201,151,0.32)',
+              boxShadow: '0 4px 24px rgba(32,201,151,0.12)',
             }}
           >
-            {/* Мета-чипы */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
-              <Chip icon={<AccessTime />} label={`${currentRecipe.cooking_time} мин`} variant="outlined" size="small" />
+            {/* Мета-информация */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
+              <Chip
+                icon={<AccessTime sx={{ fontSize: '14px !important', color: '#0F9B6E !important' }} />}
+                label={`${currentRecipe.cooking_time} мин`}
+                size="small"
+                sx={{ bgcolor: 'rgba(32,201,151,0.15)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.30)', fontWeight: 600 }}
+              />
               <Chip
                 label={DIFFICULTY_LABELS[currentRecipe.difficulty]}
                 size="small"
@@ -234,18 +240,18 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             </Box>
 
             {/* Порции */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(32,201,151,0.25)', borderRadius: 3, px: 1, py: 0.25, mb: 2, width: 'fit-content' }}>
-              <People sx={{ fontSize: 16, color: 'text.secondary', ml: 0.5 }} />
-              <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(32,201,151,0.10)', border: '1px solid rgba(32,201,151,0.28)', borderRadius: 3, px: 1, py: 0.5, mb: 2, width: 'fit-content' }}>
+              <People sx={{ fontSize: 16, color: '#0F9B6E', ml: 0.5 }} />
+              <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Remove sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 700 }}>
+              <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 700, color: '#0F9B6E' }}>
                 {currentServings}
               </Typography>
-              <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25 }}>
+              <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Add sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mr: 0.5, fontSize: '0.8rem' }}>порц.</Typography>
+              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>порц.</Typography>
             </Box>
 
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
@@ -298,11 +304,12 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             sx={{
               p: 3,
               height: '100%',
-              background: (theme) =>
-                theme.palette.mode === 'light'
-                  ? 'rgba(236,253,245,0.88)'
-                  : 'rgba(15,28,50,0.85)',
-              border: '1px solid rgba(32,201,151,0.18)',
+              background: (t) =>
+                t.palette.mode === 'light'
+                  ? 'linear-gradient(160deg, rgba(32,201,151,0.10) 0%, rgba(236,253,245,0.95) 100%)'
+                  : 'linear-gradient(160deg, rgba(32,201,151,0.12) 0%, rgba(12,22,42,0.92) 100%)',
+              border: '1.5px solid rgba(32,201,151,0.25)',
+              boxShadow: '0 4px 24px rgba(32,201,151,0.08)',
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
