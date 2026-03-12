@@ -65,7 +65,7 @@ export default function LoginScreen() {
         {/* Card */}
         <Box
           sx={{
-            bgcolor: 'rgba(204,251,241,0.82)',
+            bgcolor: 'rgba(204,251,241,0.55)',
             borderRadius: 4,
             border: '1px solid rgba(32,201,151,0.25)',
             backdropFilter: 'blur(20px)',

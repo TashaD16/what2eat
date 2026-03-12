@@ -82,7 +82,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
           border: '1px solid rgba(32,201,151,0.15)',
         },
         outlined: {
-          background: mode === 'light' ? 'rgba(204,251,241,0.82)' : 'rgba(20,35,60,0.82)',
+          background: mode === 'light' ? 'rgba(204,251,241,0.55)' : 'rgba(20,35,60,0.70)',
           border: '1px solid rgba(32,201,151,0.22)',
         },
       },
@@ -151,7 +151,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            background: mode === 'light' ? 'rgba(204,251,241,0.82)' : 'rgba(10,18,35,0.82)',
+            background: mode === 'light' ? 'rgba(204,251,241,0.30)' : 'rgba(10,18,35,0.55)',
             backdropFilter: 'blur(8px)',
             '& fieldset': {
               borderColor: mode === 'light' ? 'rgba(32,201,151,0.30)' : 'rgba(32,201,151,0.22)',
