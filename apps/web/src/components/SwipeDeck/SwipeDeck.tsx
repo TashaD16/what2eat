@@ -436,7 +436,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 <Box
                   key={dish.name}
                   sx={{
-                    bgcolor: 'rgba(204,251,241,0.50)',
+                    bgcolor: 'rgba(204,251,241,0.82)',
                     border: '1px solid rgba(32,201,151,0.18)',
                     borderRadius: 3,
                     p: 2,
