@@ -77,7 +77,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   if (!generatedRecipe) return null
 
   const recipe = generatedRecipe
-  const baseServings = recipe.servings ?? 2
+  const baseServings = 2
   const currentServings = servings ?? baseServings
   const servingsScale = currentServings / baseServings
   const scaleQty = (qty: number | string) => {
