@@ -5,6 +5,7 @@ import { useThemeMode } from '../../contexts/ThemeContext'
 
 interface LayoutProps {
   children: ReactNode
+  onHomeClick?: () => void
   onPlannerClick?: () => void
   likedCount?: number
   onFavoritesClick?: () => void
@@ -13,7 +14,7 @@ interface LayoutProps {
   onSignOut?: () => void
 }
 
-export default function Layout({ children, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut }: LayoutProps) {
+export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut }: LayoutProps) {
   const { mode, toggleMode } = useThemeMode()
 
   return (
@@ -23,6 +24,7 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
           <Typography
             variant="h6"
             component="div"
+            onClick={onHomeClick}
             sx={{
               flexGrow: 1,
               fontWeight: 900,
@@ -31,9 +33,11 @@ export default function Layout({ children, onPlannerClick, likedCount, onFavorit
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               letterSpacing: '-0.02em',
+              cursor: onHomeClick ? 'pointer' : 'default',
+              userSelect: 'none',
             }}
           >
-            What2eat
+            what2eat
           </Typography>
 
           {likedCount != null && likedCount > 0 && onFavoritesClick && (

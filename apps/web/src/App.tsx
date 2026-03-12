@@ -284,6 +284,7 @@ function App() {
 
   return (
     <Layout
+      onHomeClick={() => setView('ingredients')}
       onPlannerClick={() => setView('weekly_planner')}
       likedCount={likedDishIds.length}
       onFavoritesClick={() => setView('swipe_results')}

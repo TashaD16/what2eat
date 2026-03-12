@@ -210,38 +210,44 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
       </Box>
 
       <Grid container spacing={3}>
+        {/* ── Левый блок: Ингредиенты ── */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2.5, mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-              Информация
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Chip
-                icon={<AccessTime />}
-                label={`${currentRecipe.cooking_time} минут`}
-                variant="outlined"
-              />
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(0,0,0,0.15)', borderRadius: 4, px: 1, py: 0.25 }}>
-                <People sx={{ fontSize: 18, color: 'text.secondary', ml: 0.5 }} />
-                <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25 }}>
-                  <Remove sx={{ fontSize: 16 }} />
-                </IconButton>
-                <Typography variant="body2" sx={{ minWidth: 24, textAlign: 'center', fontWeight: 600 }}>
-                  {currentServings}
-                </Typography>
-                <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25 }}>
-                  <Add sx={{ fontSize: 16 }} />
-                </IconButton>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mr: 0.5 }}>порций</Typography>
-              </Box>
+          <Paper
+            sx={{
+              p: 2.5,
+              height: '100%',
+              background: (theme) =>
+                theme.palette.mode === 'light'
+                  ? 'rgba(204,251,241,0.55)'
+                  : 'rgba(20,40,65,0.80)',
+              border: '1px solid rgba(32,201,151,0.22)',
+            }}
+          >
+            {/* Мета-чипы */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
+              <Chip icon={<AccessTime />} label={`${currentRecipe.cooking_time} мин`} variant="outlined" size="small" />
               <Chip
                 label={DIFFICULTY_LABELS[currentRecipe.difficulty]}
+                size="small"
                 sx={{ bgcolor: getDifficultyColor(currentRecipe.difficulty), color: 'white', fontWeight: 600 }}
               />
             </Box>
-          </Paper>
 
-          <Paper sx={{ p: 2.5 }}>
+            {/* Порции */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid rgba(32,201,151,0.25)', borderRadius: 3, px: 1, py: 0.25, mb: 2, width: 'fit-content' }}>
+              <People sx={{ fontSize: 16, color: 'text.secondary', ml: 0.5 }} />
+              <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25 }}>
+                <Remove sx={{ fontSize: 14 }} />
+              </IconButton>
+              <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 700 }}>
+                {currentServings}
+              </Typography>
+              <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25 }}>
+                <Add sx={{ fontSize: 14 }} />
+              </IconButton>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mr: 0.5, fontSize: '0.8rem' }}>порц.</Typography>
+            </Box>
+
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
               Ингредиенты
             </Typography>
@@ -256,7 +262,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderBottom: index < currentRecipe.ingredients.length - 1
-                      ? '1px solid rgba(0,0,0,0.07)'
+                      ? '1px solid rgba(32,201,151,0.12)'
                       : 'none',
                     gap: 1,
                   }}
@@ -271,9 +277,9 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(32,201,151,0.08)',
+                      bgcolor: 'rgba(32,201,151,0.10)',
                       color: '#0F9B6E',
-                      border: '1px solid rgba(32,201,151,0.25)',
+                      border: '1px solid rgba(32,201,151,0.28)',
                       fontWeight: 600,
                       fontSize: '0.72rem',
                       height: 22,
@@ -286,10 +292,21 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
           </Paper>
         </Grid>
 
+        {/* ── Правый блок: Приготовление ── */}
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2.5, color: 'text.primary' }}>
-              Инструкция
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              background: (theme) =>
+                theme.palette.mode === 'light'
+                  ? 'rgba(236,253,245,0.88)'
+                  : 'rgba(15,28,50,0.85)',
+              border: '1px solid rgba(32,201,151,0.18)',
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+              Приготовление
             </Typography>
             <Divider sx={{ mb: 2.5 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>

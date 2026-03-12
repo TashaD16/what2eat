@@ -36,7 +36,8 @@
       "Bash(npx supabase:*)",
       "Bash(cd apps/web && npx eslint src --ext ts,tsx --max-warnings 0 2>&1 | tail -5)",
       "Bash(cd D:/learn/unicorn-sandbox-projects/what2eat/apps/web && npx eslint src --ext ts,tsx --max-warnings 0 2>&1 | tail -5)",
-      "Bash(cd \"D:/learn/unicorn-sandbox-projects/what2eat\" && npx turbo lint 2>&1 | tail -10)"
+      "Bash(cd \"D:/learn/unicorn-sandbox-projects/what2eat\" && npx turbo lint 2>&1 | tail -10)",
+      "Bash(cd \"D:/learn/unicorn-sandbox-projects/what2eat\" && npx turbo lint 2>&1 | tail -8)"
     ]
   }
 }
