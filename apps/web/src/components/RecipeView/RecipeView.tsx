@@ -10,7 +10,6 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Grid,
   IconButton,
 } from '@mui/material'
 import { ArrowBack, AccessTime, People, FiberManualRecord, Favorite, Close, Add, Remove } from '@mui/icons-material'
@@ -209,22 +208,25 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
         </Box>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* ── Левый блок: Ингредиенты ── */}
-        <Grid item xs={12} md={4}>
+      {/* ── 30% / 70% columns ── */}
+      <Box sx={{ display: 'flex', gap: 2.5, flexDirection: { xs: 'column', md: 'row' }, alignItems: 'stretch' }}>
+
+        {/* ── Левый блок 30%: Ингредиенты ── */}
+        <Box sx={{ width: { xs: '100%', md: '30%' }, flexShrink: 0 }}>
           <Paper
             sx={{
               p: 2.5,
               height: '100%',
               background: (t) =>
                 t.palette.mode === 'light'
-                  ? 'linear-gradient(160deg, rgba(32,201,151,0.18) 0%, rgba(56,217,169,0.12) 100%)'
-                  : 'linear-gradient(160deg, rgba(32,201,151,0.16) 0%, rgba(15,40,60,0.90) 100%)',
-              border: '1.5px solid rgba(32,201,151,0.32)',
-              boxShadow: '0 4px 24px rgba(32,201,151,0.12)',
+                  ? 'rgba(230,252,244,0.97)'
+                  : 'rgba(8,18,35,0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1.5px solid rgba(32,201,151,0.30)',
+              boxShadow: '0 4px 24px rgba(32,201,151,0.14)',
             }}
           >
-            {/* Мета-информация */}
+            {/* Мета-чипы */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
               <Chip
                 icon={<AccessTime sx={{ fontSize: '14px !important', color: '#0F9B6E !important' }} />}
@@ -240,7 +242,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             </Box>
 
             {/* Порции */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(32,201,151,0.10)', border: '1px solid rgba(32,201,151,0.28)', borderRadius: 3, px: 1, py: 0.5, mb: 2, width: 'fit-content' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(32,201,151,0.10)', border: '1px solid rgba(32,201,151,0.25)', borderRadius: 3, px: 1, py: 0.5, mb: 2, width: 'fit-content' }}>
               <People sx={{ fontSize: 16, color: '#0F9B6E', ml: 0.5 }} />
               <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Remove sx={{ fontSize: 14 }} />
@@ -268,7 +270,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderBottom: index < currentRecipe.ingredients.length - 1
-                      ? '1px solid rgba(32,201,151,0.12)'
+                      ? '1px solid rgba(32,201,151,0.14)'
                       : 'none',
                     gap: 1,
                   }}
@@ -283,7 +285,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                     label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(32,201,151,0.10)',
+                      bgcolor: 'rgba(32,201,151,0.12)',
                       color: '#0F9B6E',
                       border: '1px solid rgba(32,201,151,0.28)',
                       fontWeight: 600,
@@ -296,19 +298,20 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               ))}
             </List>
           </Paper>
-        </Grid>
+        </Box>
 
-        {/* ── Правый блок: Приготовление ── */}
-        <Grid item xs={12} md={8}>
+        {/* ── Правый блок 70%: Приготовление ── */}
+        <Box sx={{ flex: 1 }}>
           <Paper
             sx={{
               p: 3,
               height: '100%',
               background: (t) =>
                 t.palette.mode === 'light'
-                  ? 'linear-gradient(160deg, rgba(32,201,151,0.10) 0%, rgba(236,253,245,0.95) 100%)'
-                  : 'linear-gradient(160deg, rgba(32,201,151,0.12) 0%, rgba(12,22,42,0.92) 100%)',
-              border: '1.5px solid rgba(32,201,151,0.25)',
+                  ? 'rgba(240,253,248,0.97)'
+                  : 'rgba(8,18,35,0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1.5px solid rgba(32,201,151,0.22)',
               boxShadow: '0 4px 24px rgba(32,201,151,0.08)',
             }}
           >
@@ -355,8 +358,9 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               ))}
             </Box>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+
+      </Box>
     </Box>
   )
 }
