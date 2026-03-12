@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+  <defs>
+    <style>
+      .fi { fill: none; stroke: rgba(255,255,255,0.065); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+      .fid { fill: rgba(255,255,255,0.065); stroke: none; }
+    </style>
+  </defs>
+
+  <!-- ── ROW 1 ── Tomato (60,60) · Carrot (180,60) · Broccoli (300,60) · Cheese (420,60) -->
+
+  <!-- Tomato -->
+  <g class="fi">
+    <circle cx="60" cy="66" r="22"/>
+    <line x1="60" y1="44" x2="60" y2="36"/>
+    <path d="M55,43 C51,37 49,30 53,27"/>
+    <path d="M65,43 C69,37 71,30 67,27"/>
+  </g>
+
+  <!-- Carrot -->
+  <g class="fi">
+    <path d="M175,47 C170,63 174,75 180,83 C186,75 190,63 185,47 C183,40 177,40 175,47Z"/>
+    <path d="M178,41 C174,31 170,24 172,19"/>
+    <line x1="180" y1="40" x2="180" y2="18"/>
+    <path d="M182,41 C186,31 190,24 188,19"/>
+  </g>
+
+  <!-- Broccoli -->
+  <g class="fi">
+    <path d="M296,79 L296,70 Q300,66 304,70 L304,79"/>
+    <circle cx="300" cy="57" r="14"/>
+    <circle cx="288" cy="63" r="10"/>
+    <circle cx="312" cy="63" r="10"/>
+  </g>
+
+  <!-- Cheese wedge -->
+  <g class="fi">
+    <path d="M403,80 L437,80 L428,43 Z"/>
+    <circle cx="416" cy="67" r="4"/>
+    <circle cx="428" cy="73" r="3"/>
+  </g>
+
+  <!-- ── ROW 2 ── Avocado (60,180) · Egg (180,180) · Bread (300,180) · Fish (420,180) -->
+
+  <!-- Avocado -->
+  <g class="fi">
+    <path d="M60,153 C43,163 39,184 48,197 C56,207 72,206 78,196 C85,184 82,161 60,153Z"/>
+    <ellipse cx="60" cy="185" rx="9" ry="11"/>
+  </g>
+
+  <!-- Egg -->
+  <g class="fi">
+    <path d="M180,156 C165,156 157,174 159,188 C161,202 171,208 180,208 C189,208 199,202 201,188 C203,174 195,156 180,156Z"/>
+  </g>
+
+  <!-- Bread / toast slice -->
+  <g class="fi">
+    <rect x="280" y="167" width="40" height="31" rx="4"/>
+    <path d="M280,173 Q300,157 320,173"/>
+  </g>
+
+  <!-- Fish -->
+  <g class="fi">
+    <path d="M401,180 Q419,163 434,180 Q419,197 401,180Z"/>
+    <path d="M401,180 L389,170 L385,180 L389,190Z"/>
+  </g>
+  <circle class="fid" cx="427" cy="176" r="2.5"/>
+
+  <!-- ── ROW 3 ── Camera (60,300) · Onion (180,300) · Mushroom (300,300) · Fridge (420,300) -->
+
+  <!-- Camera / photo frame -->
+  <g class="fi">
+    <rect x="36" y="285" width="48" height="32" rx="5"/>
+    <circle cx="60" cy="301" r="11"/>
+    <circle cx="60" cy="301" r="5"/>
+    <path d="M52,285 L55,277 L65,277 L68,285"/>
+  </g>
+
+  <!-- Onion -->
+  <g class="fi">
+    <path d="M180,272 C163,278 157,298 162,310 C167,322 174,326 180,326 C186,326 193,322 198,310 C203,298 197,278 180,272Z"/>
+    <path d="M168,287 C172,299 178,310 180,326"/>
+    <path d="M192,287 C188,299 182,310 180,326"/>
+    <line x1="180" y1="272" x2="180" y2="264"/>
+    <path d="M175,273 C173,265 170,260 172,257"/>
+    <path d="M185,273 C187,265 190,260 188,257"/>
+  </g>
+
+  <!-- Mushroom -->
+  <g class="fi">
+    <rect x="296" y="298" width="8" height="19" rx="2"/>
+    <path d="M286,298 Q285,272 300,268 Q315,272 314,298Z"/>
+  </g>
+
+  <!-- Refrigerator -->
+  <g class="fi">
+    <rect x="400" y="264" width="40" height="72" rx="4"/>
+    <line x1="400" y1="294" x2="440" y2="294"/>
+    <line x1="414" y1="274" x2="414" y2="290"/>
+    <line x1="414" y1="303" x2="414" y2="326"/>
+  </g>
+</svg>

@@ -67,7 +67,16 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          background: '#0A0A0A',
+          backgroundColor: '#0A0A0A',
+          backgroundImage: [
+            'radial-gradient(ellipse 480px 420px at -8% -8%, rgba(134,239,172,0.13) 0%, transparent 70%)',
+            'radial-gradient(ellipse 320px 300px at -8% 62%, rgba(253,224,71,0.10) 0%, transparent 70%)',
+            'radial-gradient(ellipse 520px 460px at 110% 108%, rgba(252,187,0,0.12) 0%, transparent 70%)',
+            "url('/food-pattern.svg')",
+          ].join(', '),
+          backgroundSize: 'auto, auto, auto, 480px 360px',
+          backgroundRepeat: 'no-repeat, no-repeat, no-repeat, repeat',
+          backgroundAttachment: 'fixed',
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(255,255,255,0.1) transparent',
         },
