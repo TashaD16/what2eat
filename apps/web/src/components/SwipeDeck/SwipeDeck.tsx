@@ -240,15 +240,17 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 68,
                 height: 68,
                 borderRadius: '50%',
-                background: 'rgba(255,77,77,0.15)',
-                border: '2px solid rgba(255,77,77,0.65)',
+                background: 'rgba(255,77,77,0.12)',
+                border: '2px solid rgba(255,77,77,0.55)',
                 color: '#FF4D4D',
                 boxShadow: isLight
-                  ? '0 4px 20px rgba(255,77,77,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
-                  : '0 4px 20px rgba(255,77,77,0.20)',
+                  ? '0 2px 8px rgba(255,77,77,0.15), 0 0 20px rgba(255,77,77,0.10)'
+                  : '0 2px 8px rgba(255,77,77,0.12), 0 0 20px rgba(255,77,77,0.08)',
+                transition: 'box-shadow 0.35s ease, background 0.35s ease, border-color 0.35s ease',
                 '&:hover': {
-                  background: 'rgba(255,77,77,0.25)',
-                  boxShadow: '0 6px 28px rgba(255,77,77,0.40)',
+                  background: 'rgba(255,77,77,0.22)',
+                  borderColor: 'rgba(255,77,77,0.85)',
+                  boxShadow: '0 4px 16px rgba(255,77,77,0.35), 0 0 40px rgba(255,77,77,0.25), 0 0 80px rgba(255,77,77,0.10)',
                 },
               }}
             >
@@ -263,15 +265,17 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 52,
                 height: 52,
                 borderRadius: '50%',
-                background: 'rgba(168,85,247,0.15)',
-                border: '2px solid rgba(168,85,247,0.65)',
+                background: 'rgba(168,85,247,0.12)',
+                border: '2px solid rgba(168,85,247,0.55)',
                 color: '#A855F7',
                 boxShadow: isLight
-                  ? '0 4px 16px rgba(168,85,247,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
-                  : '0 4px 16px rgba(168,85,247,0.20)',
+                  ? '0 2px 8px rgba(168,85,247,0.15), 0 0 20px rgba(168,85,247,0.10)'
+                  : '0 2px 8px rgba(168,85,247,0.12), 0 0 20px rgba(168,85,247,0.08)',
+                transition: 'box-shadow 0.35s ease, background 0.35s ease, border-color 0.35s ease',
                 '&:hover': {
-                  background: 'rgba(168,85,247,0.25)',
-                  boxShadow: '0 6px 24px rgba(168,85,247,0.40)',
+                  background: 'rgba(168,85,247,0.22)',
+                  borderColor: 'rgba(168,85,247,0.85)',
+                  boxShadow: '0 4px 16px rgba(168,85,247,0.35), 0 0 40px rgba(168,85,247,0.25), 0 0 80px rgba(168,85,247,0.10)',
                 },
               }}
             >
@@ -286,15 +290,17 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 width: 68,
                 height: 68,
                 borderRadius: '50%',
-                background: 'rgba(34,197,94,0.15)',
-                border: '2px solid rgba(34,197,94,0.65)',
+                background: 'rgba(34,197,94,0.12)',
+                border: '2px solid rgba(34,197,94,0.55)',
                 color: '#22C55E',
                 boxShadow: isLight
-                  ? '0 4px 20px rgba(34,197,94,0.25), 0 0 0 1px rgba(32,201,151,0.08)'
-                  : '0 4px 20px rgba(34,197,94,0.20)',
+                  ? '0 2px 8px rgba(34,197,94,0.15), 0 0 20px rgba(34,197,94,0.10)'
+                  : '0 2px 8px rgba(34,197,94,0.12), 0 0 20px rgba(34,197,94,0.08)',
+                transition: 'box-shadow 0.35s ease, background 0.35s ease, border-color 0.35s ease',
                 '&:hover': {
-                  background: 'rgba(34,197,94,0.25)',
-                  boxShadow: '0 6px 28px rgba(34,197,94,0.40)',
+                  background: 'rgba(34,197,94,0.22)',
+                  borderColor: 'rgba(34,197,94,0.85)',
+                  boxShadow: '0 4px 16px rgba(34,197,94,0.35), 0 0 40px rgba(34,197,94,0.25), 0 0 80px rgba(34,197,94,0.10)',
                 },
               }}
             >
