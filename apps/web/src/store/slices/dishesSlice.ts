@@ -132,6 +132,28 @@ const dishesSlice = createSlice({
       state.loading = false
     },
 
+    // Batch-add multiple dishes at once — single re-render, no flicker
+    addAIDishes: (state, action: PayloadAction<{ recipe: AIRecipe; index: number }[]>) => {
+      for (const { recipe, index } of action.payload) {
+        const id = -(index + 1)
+        if (state.dishes.find((d) => d.id === id)) continue
+        state.dishes.push({
+          id,
+          name: recipe.name,
+          description: recipe.description,
+          image_url: recipe.image_url ?? null,
+          cooking_time: recipe.cooking_time,
+          difficulty: recipe.difficulty,
+          servings: 2,
+          estimated_cost: null,
+          is_vegetarian: false,
+          is_vegan: false,
+        })
+        state.aiDishRecipes[id] = recipe
+      }
+      state.loadingMore = false
+    },
+
     setLoadingMore: (state, action: PayloadAction<boolean>) => {
       state.loadingMore = action.payload
     },
@@ -210,7 +232,7 @@ const dishesSlice = createSlice({
 })
 
 export const {
-  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAIDish, finishAIRandom,
+  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAIDish, addAIDishes, finishAIRandom,
   setGlobalRecipeQueue, consumeFromGlobalQueue,
 } = dishesSlice.actions
 export type { PopularDishSuggestion }
@@ -228,42 +250,59 @@ function preloadImage(url: string): Promise<void> {
   })
 }
 
-// ─── Helper: preload image then dispatch addAIDish ─────────────────────────────
+// ─── Helper: preload image, return preloaded recipe (no dispatch) ──────────────
 
+async function preloadRecipe(
+  recipe: AIRecipe,
+  index: number,
+  skipPreload = false
+): Promise<{ recipe: AIRecipe; index: number } | null> {
+  try {
+    const clone = { ...recipe }
+    if (!clone.image_url) {
+      clone.image_url = await generateDishPhoto(clone.name)
+    }
+    if (!clone.image_url) return null
+    if (!skipPreload) await preloadImage(clone.image_url)
+    return { recipe: clone, index }
+  } catch {
+    return null
+  }
+}
+
+/** Preload first card and dispatch immediately (shows SwipeDeck). */
 async function dispatchWithPreload(
   recipe: AIRecipe,
   index: number,
   dispatch: (action: unknown) => void,
   skipPreload = false
 ): Promise<boolean> {
-  try {
-    const clone = { ...recipe }
-    if (!clone.image_url) {
-      clone.image_url = await generateDishPhoto(clone.name)
-    }
-    if (!clone.image_url) return false
-    if (!skipPreload) await preloadImage(clone.image_url)
-    dispatch(addAIDish({ recipe: clone, index }))
-    return true
-  } catch {
-    return false
-  }
+  const result = await preloadRecipe(recipe, index, skipPreload)
+  if (!result) return false
+  dispatch(addAIDish({ recipe: result.recipe, index: result.index }))
+  return true
 }
 
-// ─── Load-more helper (used by generatePhotosForRecipes) ──────────────────────
+// ─── Batch preload helper — preloads all in parallel, dispatches ONE action ────
 
-async function generatePhotosForRecipes(
+async function batchPreloadAndDispatch(
   recipes: AIRecipe[],
   dispatch: (action: unknown) => void,
   indexOffset = 0
-): Promise<{ successCount: number }> {
+): Promise<number> {
   const results = await Promise.allSettled(
-    recipes.map((recipe, i) => dispatchWithPreload(recipe, indexOffset + i, dispatch))
+    recipes.map((recipe, i) => preloadRecipe(recipe, indexOffset + i))
   )
-  const successCount = results.filter(
-    (r) => r.status === 'fulfilled' && r.value
-  ).length
-  return { successCount }
+  const ready = results
+    .filter((r): r is PromiseFulfilledResult<{ recipe: AIRecipe; index: number }> =>
+      r.status === 'fulfilled' && r.value !== null
+    )
+    .map((r) => r.value)
+
+  if (ready.length > 0) {
+    dispatch(addAIDishes(ready))
+  }
+  return ready.length
 }
 
 // ─── Progressive AI randomizer thunk ──────────────────────────────────────────
@@ -307,13 +346,11 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (dispat
     // First card: preload image so it shows without flicker
     await dispatchWithPreload(recipes[0], 0, dispatch)
 
-    // Remaining: preload in background
+    // Remaining: preload all in parallel, then dispatch in one batch (no flicker)
     if (recipes.length > 1) {
       dispatch(setLoadingMore(true))
-      await Promise.allSettled(
-        recipes.slice(1).map((recipe, i) => dispatchWithPreload(recipe, i + 1, dispatch))
-      )
-      dispatch(setLoadingMore(false))
+      await batchPreloadAndDispatch(recipes.slice(1), dispatch, 1)
+      // setLoadingMore(false) is handled inside addAIDishes reducer
     }
 
     dispatch(finishAIRandom(null))
@@ -323,13 +360,11 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (dispat
 
     if (cached.length > 0) {
       dispatch(setLoadingStep('photos'))
-      await dispatchWithPreload(cached[0], 0, dispatch, true)
+      await dispatchWithPreload(cached[0], 0, dispatch)
       if (cached.length > 1) {
         dispatch(setLoadingMore(true))
-        await Promise.allSettled(
-          cached.slice(1).map((recipe, i) => dispatchWithPreload(recipe, i + 1, dispatch))
-        )
-        dispatch(setLoadingMore(false))
+        await batchPreloadAndDispatch(cached.slice(1), dispatch, 1)
+        // setLoadingMore(false) handled inside addAIDishes reducer
       }
       dispatch(finishAIRandom(null))
     } else {
@@ -383,12 +418,12 @@ export const loadMoreWebDishes = () => async (
       const nextIds = globalRecipeQueue.slice(0, 5)
       dispatch(consumeFromGlobalQueue(5))
       const recipes = await getGlobalRecipesByIds(nextIds)
-      await generatePhotosForRecipes(recipes, dispatch, currentCount)
+      await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     } else if (globalRecipesExhausted || !isSupabaseConfigured()) {
       // ── Fallback: TheMealDB + GPT → save back to grow the pool ─────────
       const recipes = await fetchRecipesFromWeb(5)
       await Promise.allSettled(recipes.map((r) => saveGlobalRecipe(r)))
-      await generatePhotosForRecipes(recipes, dispatch, currentCount)
+      await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     }
   } catch {
     // Silently fail — user still has existing cards to swipe
