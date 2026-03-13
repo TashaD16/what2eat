@@ -109,7 +109,7 @@ function App() {
 
   const handlePhotoSelected = useCallback(() => {
     setPhotoActive(true)
-    setFiltersOpen(false)
+    setFiltersOpen(true)
   }, [])
 
   const handlePhotoDetected = useCallback((ids: number[]) => {
