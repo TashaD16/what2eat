@@ -123,6 +123,7 @@ function App() {
     dispatch(clearPhoto())
     setPhotoActive(false)
     setPhotoKey((k) => k + 1)
+    setFiltersOpen(false)
   }, [dispatch])
 
   // Close ingredient selector when clicking outside
