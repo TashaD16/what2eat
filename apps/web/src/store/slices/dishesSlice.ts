@@ -166,6 +166,32 @@ const dishesSlice = createSlice({
       state.loadingMore = false
     },
 
+    /** Заменить список блюд полным результатом поиска (после подгрузки остальных) */
+    replaceAIDishes: (state, action: PayloadAction<Array<{ recipe: AIRecipe; index: number; missingIngredientNames?: string[] }>>) => {
+      state.dishes = []
+      state.aiDishRecipes = {}
+      for (const { recipe, index, missingIngredientNames } of action.payload) {
+        const id = -(index + 1)
+        const missing = (missingIngredientNames ?? []).map((name) => ({ id: 0, name, category: 'other' as const, image_url: null }))
+        state.dishes.push({
+          id,
+          name: recipe.name,
+          description: recipe.description,
+          image_url: recipe.image_url ?? null,
+          cooking_time: recipe.cooking_time,
+          difficulty: recipe.difficulty,
+          servings: 2,
+          estimated_cost: null,
+          is_vegetarian: false,
+          is_vegan: false,
+          missing_ingredients: missing.length ? missing : undefined,
+        })
+        state.aiDishRecipes[id] = recipe
+      }
+      state.loading = false
+      state.loadingMore = false
+    },
+
     clearSuggestedDishNames: (state) => {
       state.suggestedDishNames = []
     },
@@ -328,7 +354,7 @@ export const generateSuggestedRecipesByAI = createAsyncThunk(
 )
 
 export const {
-  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, setLoading, addAIDish, addAIDishes, finishAIRandom,
+  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, setLoading, addAIDish, addAIDishes, replaceAIDishes, finishAIRandom,
   setGlobalRecipeQueue, consumeFromGlobalQueue, clearSuggestedDishNames,
 } = dishesSlice.actions
 export type { PopularDishSuggestion }

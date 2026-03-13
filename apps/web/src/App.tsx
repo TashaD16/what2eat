@@ -4,7 +4,7 @@ import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt } from 
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { clearPhoto } from './store/slices/photoSlice'
-import { findDishes, generateAIRandomDishes, addAIDishes, setLoading } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDishes, replaceAIDishes, setLoading } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { setLang } from './store/slices/langSlice'
@@ -202,19 +202,18 @@ function App() {
         dispatch(setLoading(false))
         return
       }
-      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
+      const opts = {
         strictOnlySelectedAndSpices: !filters.allowMissing,
         spiceNames,
         lang,
         vegetarianOnly: filters.vegetarianOnly,
         veganOnly: filters.veganOnly,
         cuisine: filters.cuisine,
-      })
-
-      if (globalRecipes.length > 0) {
-        const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
-        const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
-        const withMissing = globalRecipes.map((recipe) => {
+      }
+      const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
+      const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
+      const buildPayload = (recipes: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>) => {
+        const withMissing = recipes.map((recipe) => {
           const missing = filters.allowMissing
             ? (recipe.ingredients ?? [])
                 .filter((ing) => {
@@ -228,21 +227,38 @@ function App() {
         const sorted = filters.allowMissing
           ? [...withMissing].sort((a, b) => a.missing.length - b.missing.length)
           : withMissing
-        dispatch(addAIDishes(sorted.map(({ recipe, missing }, i) => ({ recipe, index: i, missingIngredientNames: missing }))))
+        return sorted.map(({ recipe, missing }, i) => ({ recipe, index: i, missingIngredientNames: missing }))
+      }
+
+      const firstBatch = await searchGlobalRecipesByIngredients(selectedNames, {
+        ...opts,
+        dbLimit: 80,
+        maxResults: 5,
+      })
+
+      if (firstBatch.length > 0) {
+        dispatch(addAIDishes(buildPayload(firstBatch)))
         dispatch(setLoading(false))
+        const fullBatch = await searchGlobalRecipesByIngredients(selectedNames, { ...opts })
+        if (fullBatch.length > firstBatch.length) {
+          dispatch(replaceAIDishes(buildPayload(fullBatch)))
+        }
       } else {
-        // Nothing in DB — generate via TheMealDB + GPT and save back
-        try {
-          const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
-          if (generated.length > 0) {
-            // Save to DB in background (no await — don't block UI), also save translated version
-            generated.forEach((r) => {
-              saveGlobalRecipe(r)
-              translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
-            })
-            dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
-          }
-        } catch { /* silently fail — show empty state */ }
+        const fullBatch = await searchGlobalRecipesByIngredients(selectedNames, { ...opts })
+        if (fullBatch.length > 0) {
+          dispatch(addAIDishes(buildPayload(fullBatch)))
+        } else {
+          try {
+            const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
+            if (generated.length > 0) {
+              generated.forEach((r) => {
+                saveGlobalRecipe(r)
+                translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+              })
+              dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
+            }
+          } catch { /* empty state */ }
+        }
         dispatch(setLoading(false))
       }
     } else {

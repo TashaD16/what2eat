@@ -89,6 +89,10 @@ export interface SearchGlobalRecipesOptions {
   veganOnly?: boolean
   /** Кухня: russian, italian, asian, american — фильтр по названию/описанию */
   cuisine?: string | null
+  /** Лимит строк из БД (для быстрой первой порции — меньше = быстрее) */
+  dbLimit?: number
+  /** Максимум рецептов в ответе (для первой порции — 5, потом подгрузка) */
+  maxResults?: number
 }
 
 // Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
@@ -159,12 +163,15 @@ export async function searchGlobalRecipesByIngredients(
     vegetarianOnly = false,
     veganOnly = false,
     cuisine = null,
+    dbLimit: optionDbLimit,
+    maxResults = 20,
   } = options
   const lowerNames = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
   const allowedLower = new Set([...lowerNames, ...lowerSpice])
 
-  const fetchLimit = vegetarianOnly || veganOnly ? 1500 : 500
+  const fetchLimit =
+    optionDbLimit ?? (vegetarianOnly || veganOnly ? 1500 : 500)
   const { data, error } = await supabase
     .from('global_recipes')
     .select('*')
@@ -226,7 +233,7 @@ export async function searchGlobalRecipesByIngredients(
 
   filtered.sort((a, b) => b.score - a.score)
 
-  return filtered.slice(0, 20).map(({ r }) => ({
+  return filtered.slice(0, maxResults).map(({ r }) => ({
     ...mapRow(r),
     source_ingredients: ingredientNames,
   }))
