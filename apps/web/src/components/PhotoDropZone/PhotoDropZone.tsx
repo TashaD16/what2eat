@@ -1,6 +1,6 @@
 import { useRef, useCallback, useMemo, useState } from 'react'
-import { Box, Typography, CircularProgress, Alert, Chip } from '@mui/material'
-import { CameraAlt, CheckCircle } from '@mui/icons-material'
+import { Box, Typography, CircularProgress, Alert } from '@mui/material'
+import { CameraAlt } from '@mui/icons-material'
 import { useTheme } from '@mui/material/styles'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { analyzeIngredients, clearPhoto } from '../../store/slices/photoSlice'
@@ -102,13 +102,6 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
             <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.45)', gap: 1.5 }}>
               <CircularProgress size={32} sx={{ color: '#20C997' }} />
               <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>Анализирую фото...</Typography>
-            </Box>
-          )}
-          {status === 'done' && detectedCount !== null && detectedCount > 0 && (
-            <Box sx={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)' }}>
-              <Chip icon={<CheckCircle sx={{ fontSize: '16px !important' }} />}
-                label={`Найдено ${detectedCount} продуктов`} color="success" size="small"
-                sx={{ fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }} />
             </Box>
           )}
           {!isAnalyzing && (
