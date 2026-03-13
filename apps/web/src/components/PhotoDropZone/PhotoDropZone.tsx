@@ -185,13 +185,13 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
         }}
       >
         <Box sx={{
-          width: 36, height: 36, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
+          width: 34, height: 34, borderRadius: '50%',
+          border: '1.5px solid rgba(32,201,151,0.55)',
+          bgcolor: 'rgba(32,201,151,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
-          boxShadow: '0 2px 10px rgba(32,201,151,0.40)',
         }}>
-          <CameraAlt sx={{ fontSize: 18, color: 'white' }} />
+          <CameraAlt sx={{ fontSize: 17, color: '#20C997' }} />
         </Box>
         <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F9B6E' }}>
           Сфотографировать
