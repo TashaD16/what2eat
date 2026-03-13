@@ -158,6 +158,10 @@ const dishesSlice = createSlice({
       state.loadingMore = action.payload
     },
 
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload
+    },
+
     // Called when all loading is done (or failed)
     finishAIRandom: (state, action: PayloadAction<string | null>) => {
       state.loading = false
@@ -232,7 +236,7 @@ const dishesSlice = createSlice({
 })
 
 export const {
-  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, addAIDish, addAIDishes, finishAIRandom,
+  clearDishes, startAIRandom, setLoadingStep, setLoadingMore, setLoading, addAIDish, addAIDishes, finishAIRandom,
   setGlobalRecipeQueue, consumeFromGlobalQueue,
 } = dishesSlice.actions
 export type { PopularDishSuggestion }

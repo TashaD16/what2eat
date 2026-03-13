@@ -47,6 +47,7 @@ export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> 
     cooking_time: number
     difficulty: 'easy' | 'medium' | 'hard'
     image_url: string | null
+    youtube_url?: string | null
     source_ingredients?: string[]
     created_at?: string
   }) => ({
@@ -58,6 +59,7 @@ export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> 
     cooking_time: r.cooking_time ?? 30,
     difficulty: r.difficulty ?? 'medium',
     image_url: r.image_url ?? undefined,
+    youtube_url: r.youtube_url ?? undefined,
     source_ingredients: r.source_ingredients ?? [],
     created_at: r.created_at,
   })) as AIRecipe[]
@@ -93,6 +95,14 @@ export async function searchGlobalRecipesByIngredients(
   if (error || !data) return []
 
   const scored = data
+    .filter((r) => {
+      // Only show complete recipes: must have photo, ingredients and instructions
+      if (!r.image_url) return false
+      const ings = r.ingredients
+      if (!Array.isArray(ings) || ings.length === 0) return false
+      const instr = parseInstructions(r.instructions)
+      return instr.length > 0
+    })
     .map((r) => {
       const ingText = JSON.stringify(r.ingredients ?? []).toLowerCase()
       const score = lowerNames.filter((n) => ingText.includes(n)).length
@@ -122,6 +132,7 @@ export async function searchGlobalRecipesByIngredients(
     cooking_time: r.cooking_time ?? 30,
     difficulty: r.difficulty ?? 'medium',
     image_url: r.image_url ?? undefined,
+    youtube_url: (r as { youtube_url?: string | null }).youtube_url ?? undefined,
     source_ingredients: ingredientNames,
     created_at: r.created_at,
   })) as AIRecipe[]
@@ -150,9 +161,10 @@ export async function getGlobalRecipeById(id: string): Promise<AIRecipe | null> 
   return recipes[0] ?? null
 }
 
-/** Saves a new OpenAI-generated recipe to the global pool. */
+/** Saves a new recipe to the global pool (upserts by mealdb_id to avoid duplicates). */
 export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Promise<void> {
   if (!isSupabaseConfigured()) return
+  const resolvedMealdbId = mealdbId ?? recipe.mealdb_id ?? null
   await supabase.from('global_recipes').upsert(
     {
       name: recipe.name,
@@ -162,8 +174,9 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
       cooking_time: recipe.cooking_time,
       difficulty: recipe.difficulty,
       image_url: recipe.image_url ?? null,
-      mealdb_id: mealdbId ?? null,
-      source: 'openai',
+      youtube_url: recipe.youtube_url ?? null,
+      mealdb_id: resolvedMealdbId,
+      source: 'mealdb',
     },
     { onConflict: 'mealdb_id', ignoreDuplicates: true },
   )

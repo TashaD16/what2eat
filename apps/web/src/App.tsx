@@ -3,13 +3,14 @@ import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, Inp
 import { Casino, CameraAlt, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSlice'
-import { findDishes, generateAIRandomDishes, addAIDish, setLoadingMore } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDish, addAIDishes, setLoadingMore, setLoading } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
-import { searchGlobalRecipesByIngredients, searchGlobalRecipesByName, getGlobalRecipeById } from './services/globalRecipes'
+import { searchGlobalRecipesByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe } from './services/globalRecipes'
+import { searchRecipesByIngredients } from './services/aiRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
 import RecipeView from './components/RecipeView'
@@ -140,7 +141,7 @@ function App() {
   const handleFindDishes = async () => {
     if (selectedIngredients.length === 0) return
     dispatch(resetSwipe())
-    dispatchFindDishes(selectedIngredients)
+    dispatch(setLoading(true))
     setView('dishes')
 
     if (isSupabaseConfigured()) {
@@ -152,18 +153,25 @@ function App() {
         strictOnlySelectedAndSpices: !filters.allowMissing,
         spiceNames,
       })
+
       if (globalRecipes.length > 0) {
-        dispatch(addAIDish({ recipe: globalRecipes[0], index: 10000 }))
-        if (globalRecipes.length > 1) {
-          dispatch(setLoadingMore(true))
-          requestAnimationFrame(() => {
-            for (let i = 1; i < globalRecipes.length; i++) {
-              dispatch(addAIDish({ recipe: globalRecipes[i], index: 10000 + i }))
-            }
-            dispatch(setLoadingMore(false))
-          })
-        }
+        // Found in DB — show immediately
+        dispatch(addAIDishes(globalRecipes.map((recipe, i) => ({ recipe, index: i }))))
+        dispatch(setLoading(false))
+      } else {
+        // Nothing in DB — generate via TheMealDB + GPT and save back
+        try {
+          const generated = await searchRecipesByIngredients(selectedNames, 5)
+          if (generated.length > 0) {
+            // Save to DB in background (no await — don't block UI)
+            generated.forEach((r) => saveGlobalRecipe(r))
+            dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
+          }
+        } catch { /* silently fail — show empty state */ }
+        dispatch(setLoading(false))
       }
+    } else {
+      dispatchFindDishes(selectedIngredients)
     }
   }
 

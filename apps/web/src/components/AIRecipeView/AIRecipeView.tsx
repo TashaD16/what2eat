@@ -1,5 +1,5 @@
-import { Box, Typography, Button, Chip, CircularProgress, Alert, Divider, List, ListItem, Paper, IconButton } from '@mui/material'
-import { ArrowBack, AutoAwesome, Save, AccessTime, People, FiberManualRecord, Favorite, Close, Add, Remove } from '@mui/icons-material'
+import { Box, Typography, Button, Chip, CircularProgress, Alert, Divider, List, ListItem, Paper, IconButton, Collapse } from '@mui/material'
+import { ArrowBack, AutoAwesome, Save, AccessTime, People, FiberManualRecord, Favorite, Close, Add, Remove, PlayCircleOutline, ExpandMore, ExpandLess } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearAIRecipe, saveGeneratedRecipe } from '../../store/slices/aiRecipeSlice'
@@ -22,6 +22,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   const userId = user?.id
   const [saved, setSaved] = useState(false)
   const [servings, setServings] = useState<number | null>(null)
+  const [videoOpen, setVideoOpen] = useState(false)
 
   const isLiked = dishId !== null && likedDishIds.includes(dishId)
   const isDisliked = dishId !== null && dislikedDishIds.includes(dishId)
@@ -77,6 +78,12 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   if (!generatedRecipe) return null
 
   const recipe = generatedRecipe
+
+  const getYoutubeEmbedUrl = (url: string): string | null => {
+    const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+    return m ? `https://www.youtube.com/embed/${m[1]}?rel=0&modestbranding=1` : null
+  }
+
   const baseServings = 2
   const currentServings = servings ?? baseServings
   const servingsScale = currentServings / baseServings
@@ -237,6 +244,57 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
           )}
         </Box>
       )}
+
+      {/* ── Video section ── */}
+      {recipe.youtube_url && (() => {
+        const embedUrl = getYoutubeEmbedUrl(recipe.youtube_url)
+        if (!embedUrl) return null
+        return (
+          <Box sx={{ mb: 3 }}>
+            <Button
+              variant="outlined"
+              startIcon={<PlayCircleOutline />}
+              endIcon={videoOpen ? <ExpandLess /> : <ExpandMore />}
+              onClick={() => setVideoOpen((v) => !v)}
+              sx={{
+                mb: 1.5,
+                borderColor: 'rgba(255,0,0,0.4)',
+                color: '#e53935',
+                '&:hover': { borderColor: 'rgba(255,0,0,0.7)', bgcolor: 'rgba(255,0,0,0.06)' },
+              }}
+            >
+              Видео приготовления
+            </Button>
+            <Collapse in={videoOpen}>
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingTop: '56.25%', // 16:9
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+                }}
+              >
+                <Box
+                  component="iframe"
+                  src={embedUrl}
+                  title="Видео приготовления"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  sx={{
+                    position: 'absolute',
+                    top: 0, left: 0,
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                  }}
+                />
+              </Box>
+            </Collapse>
+          </Box>
+        )
+      })()}
 
       {/* ── 30% / 70% columns ── */}
       <Box sx={{ display: 'flex', gap: 2.5, flexDirection: { xs: 'column', md: 'row' }, alignItems: 'stretch' }}>

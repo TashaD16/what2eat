@@ -19,6 +19,7 @@ export interface AIRecipeIngredient {
 
 export interface AIRecipe {
   id?: string
+  mealdb_id?: string            // TheMealDB idMeal — used for dedup in global_recipes
   name: string
   description: string
   instructions: RecipeStep[]
@@ -27,6 +28,7 @@ export interface AIRecipe {
   difficulty: 'easy' | 'medium' | 'hard'
   source_ingredients: string[]
   image_url?: string
+  youtube_url?: string          // TheMealDB strYoutube (may be absent)
   created_at?: string
 }
 
@@ -100,7 +102,10 @@ ${ingredientLines}
     instructions: RecipeStep[]
   }
 
+  const youtubeUrl = (meal.strYoutube ?? '').trim() || undefined
+
   return {
+    mealdb_id: meal.idMeal,
     name: parsed.name,
     description: parsed.description,
     ingredients: parsed.ingredients,
@@ -108,6 +113,7 @@ ${ingredientLines}
     cooking_time: meta.cooking_time,
     difficulty: meta.difficulty,
     image_url: meal.strMealThumb,   // real TheMealDB photo — permanent URL
+    youtube_url: youtubeUrl,
     source_ingredients: [],
   }
 }
@@ -269,6 +275,31 @@ export async function generateDishPhoto(dishName: string): Promise<string> {
   // This stub exists so dishesSlice doesn't need changes.
   // In practice, recipes from TheMealDB always have image_url set.
   return `https://source.unsplash.com/featured/1024x1024/?food,${encodeURIComponent(dishName)}`
+}
+
+/**
+ * Searches TheMealDB by Russian ingredient names (translates first),
+ * then translates found meals to Russian.
+ * Used as fallback when global_recipes has no matches.
+ * Only returns complete recipes (image + ingredients + instructions).
+ */
+export async function searchRecipesByIngredients(
+  ingredientNamesRu: string[],
+  count = 5
+): Promise<AIRecipe[]> {
+  if (ingredientNamesRu.length === 0) return []
+  const namesEn = await translateIngredientsToEnglish(ingredientNamesRu)
+  const validEn = namesEn.filter(Boolean)
+  if (validEn.length === 0) return []
+
+  const meals = await findMealsByIngredients(validEn, count)
+  if (meals.length === 0) return []
+
+  const results = await Promise.allSettled(meals.map((m) => translateMealToRussian(m)))
+  return results
+    .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
+    .map((r) => { r.value.source_ingredients = ingredientNamesRu; return r.value })
+    .filter((r) => r.image_url && r.ingredients.length > 0 && r.instructions.length > 0)
 }
 
 export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<string | null> {
