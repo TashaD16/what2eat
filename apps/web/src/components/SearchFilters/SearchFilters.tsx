@@ -31,14 +31,23 @@ export default function SearchFilters() {
     { value: 'american', label: t.american },
   ] as const
 
-  const noMeat = vegetarianOnly || veganOnly
+  const NUTRITION_OPTIONS = [
+    { value: 'any' as const, label: t.nutritionAny },
+    { value: 'vegetarian' as const, label: t.vegetarianFilter },
+    { value: 'vegan' as const, label: t.veganFilter },
+  ]
 
-  const handleNoMeatToggle = () => {
-    if (noMeat) {
+  const nutritionValue = veganOnly ? 'vegan' : vegetarianOnly ? 'vegetarian' : 'any'
+
+  const handleNutritionChange = (value: 'any' | 'vegetarian' | 'vegan') => {
+    if (value === 'vegan') {
+      if (!veganOnly) dispatch(toggleVegan())
+    } else if (value === 'vegetarian') {
+      if (veganOnly) dispatch(toggleVegan())
+      if (!vegetarianOnly) dispatch(toggleVegetarian())
+    } else {
       if (veganOnly) dispatch(toggleVegan())
       if (vegetarianOnly) dispatch(toggleVegetarian())
-    } else {
-      dispatch(toggleVegetarian())
     }
   }
 
@@ -70,30 +79,33 @@ export default function SearchFilters() {
         </Box>
       </Box>
 
-      {/* Питание + Бюджет в одну строку */}
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-        {/* Питание */}
-        <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-            {t.nutrition}
-          </Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={noMeat}
-                onChange={handleNoMeatToggle}
-                size="small"
-                color="success"
-              />
-            }
-            label={
-              <Typography variant="body2" sx={{ color: noMeat ? '#81c784' : 'text.secondary', fontSize: '0.82rem' }}>
-                {t.noMeat}
-              </Typography>
-            }
-          />
+      {/* Питание: Любое | Вегетарианское | Веганское */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
+          {t.nutrition}
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+          {NUTRITION_OPTIONS.map((opt) => (
+            <Chip
+              key={opt.value}
+              label={opt.label}
+              size="small"
+              clickable
+              onClick={() => handleNutritionChange(opt.value)}
+              variant={nutritionValue === opt.value ? 'filled' : 'outlined'}
+              sx={{
+                fontSize: '0.78rem',
+                ...(nutritionValue === opt.value
+                  ? { bgcolor: 'rgba(29,78,216,0.12)', color: '#1d4ed8', borderColor: 'rgba(29,78,216,0.35)' }
+                  : { color: 'text.secondary', borderColor: 'rgba(0,0,0,0.15)' }),
+              }}
+            />
+          ))}
         </Box>
+      </Box>
+
+      {/* Бюджет в одну строку */}
+      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
         {/* Бюджет */}
         <Box>

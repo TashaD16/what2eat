@@ -192,14 +192,23 @@ function App() {
     setView('dishes')
 
     if (isSupabaseConfigured()) {
+      const selectedIds = new Set(selectedIngredients.map(Number))
       const selectedNames = ingredients
-        .filter((i) => selectedIngredients.includes(i.id))
+        .filter((i) => selectedIds.has(Number(i.id)))
         .map((i) => i.name)
-      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name)
+        .filter(Boolean)
+      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
+      if (selectedNames.length === 0) {
+        dispatch(setLoading(false))
+        return
+      }
       const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
         strictOnlySelectedAndSpices: !filters.allowMissing,
         spiceNames,
         lang,
+        vegetarianOnly: filters.vegetarianOnly,
+        veganOnly: filters.veganOnly,
+        cuisine: filters.cuisine,
       })
 
       if (globalRecipes.length > 0) {

@@ -83,6 +83,51 @@ export interface SearchGlobalRecipesOptions {
   spiceNames?: string[]
   /** Language filter — only return recipes in this language */
   lang?: 'ru' | 'en'
+  /** Только вегетарианские (без мяса/рыбы) */
+  vegetarianOnly?: boolean
+  /** Только веганские (без мяса/рыбы/молочки/яиц) */
+  veganOnly?: boolean
+  /** Кухня: russian, italian, asian, american — фильтр по названию/описанию */
+  cuisine?: string | null
+}
+
+// Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en)
+const MEAT_FISH_KEYWORDS = new Set([
+  'мясо', 'говядина', 'свинина', 'баранина', 'курица', 'индейка', 'утка', 'фарш', 'бекон', 'колбаса', 'сосиски',
+  'рыба', 'лосось', 'треска', 'сельдь', 'тунец', 'креветки', 'кальмар', 'мидии', 'моллюск',
+  'meat', 'beef', 'pork', 'lamb', 'chicken', 'turkey', 'duck', 'minced', 'bacon', 'sausage', 'fish',
+  'salmon', 'cod', 'herring', 'tuna', 'shrimp', 'prawn', 'squid', 'mussel', 'seafood',
+])
+// Дополнительно для вегана: молочка, яйца
+const VEGAN_EXCLUDE_KEYWORDS = new Set([
+  ...MEAT_FISH_KEYWORDS,
+  'молоко', 'сливки', 'сыр', 'творог', 'сметана', 'масло сливочное', 'яйцо', 'яйца', 'мёд',
+  'milk', 'cream', 'cheese', 'butter', 'egg', 'eggs', 'honey', 'yogurt', 'yoghurt',
+])
+
+function recipeHasIngredientKeyword(
+  ingredients: Array<{ name?: string }>,
+  keywords: Set<string>
+): boolean {
+  const text = ingredients
+    .map((ing) => (ing.name ?? '').trim().toLowerCase())
+    .join(' ')
+  return [...keywords].some((kw) => text.includes(kw))
+}
+
+function recipeMatchesCuisine(recipe: { name: string; description?: string }, cuisine: string): boolean {
+  const c = cuisine.toLowerCase()
+  const name = (recipe.name ?? '').toLowerCase()
+  const desc = (recipe.description ?? '').toLowerCase()
+  const combined = `${name} ${desc}`
+  const map: Record<string, string[]> = {
+    russian: ['русск', 'russian', 'борщ', 'блин', 'пельмен', 'солянк', 'окрошк', 'гречк', 'каша'],
+    italian: ['итальян', 'italian', 'паста', 'pasta', 'пицц', 'pizza', 'ризотто', 'ризотто'],
+    asian: ['азиат', 'asian', 'суши', 'sushi', 'рис', 'rice', 'лапша', 'noodle', 'соус соев', 'soy'],
+    american: ['америк', 'american', 'бургер', 'burger', 'стейк', 'steak', 'барбекю', 'bbq'],
+  }
+  const terms = map[c] ?? [c]
+  return terms.some((t) => combined.includes(t))
 }
 
 /**
@@ -95,9 +140,16 @@ export async function searchGlobalRecipesByIngredients(
 ): Promise<AIRecipe[]> {
   if (!isSupabaseConfigured() || ingredientNames.length === 0) return []
 
-  const { strictOnlySelectedAndSpices = false, spiceNames = [], lang = 'ru' } = options
-  const lowerNames = ingredientNames.map((n) => n.toLowerCase())
-  const lowerSpice = spiceNames.map((n) => n.toLowerCase())
+  const {
+    strictOnlySelectedAndSpices = false,
+    spiceNames = [],
+    lang = 'ru',
+    vegetarianOnly = false,
+    veganOnly = false,
+    cuisine = null,
+  } = options
+  const lowerNames = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
+  const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
   const allowedLower = new Set([...lowerNames, ...lowerSpice])
 
   const { data, error } = await supabase
@@ -118,8 +170,13 @@ export async function searchGlobalRecipesByIngredients(
       return instr.length > 0
     })
     .map((r) => {
-      const ingText = JSON.stringify(r.ingredients ?? []).toLowerCase()
-      const score = lowerNames.filter((n) => ingText.includes(n)).length
+      const ings = (r.ingredients ?? []) as Array<{ name?: string }>
+      const ingText = JSON.stringify(ings).toLowerCase()
+      // Считаем совпадения: имя ингредиента в рецепте содержит выбранное имя или наоборот
+      const score = lowerNames.filter((n) => {
+        if (!n) return false
+        return ingText.includes(n) || ings.some((ing) => (ing.name ?? '').toLowerCase().includes(n))
+      }).length
       return { r, score }
     })
     .filter(({ score }) => score > 0)
@@ -130,9 +187,20 @@ export async function searchGlobalRecipesByIngredients(
       const ings = (r.ingredients ?? []) as Array<{ name?: string }>
       return ings.every((ing) => {
         const name = (ing.name ?? '').trim().toLowerCase()
-        return name === '' || allowedLower.has(name)
+        if (!name) return true
+        if (allowedLower.has(name)) return true
+        // Допускаем подвариант: "куриная грудка" при выбранном "курица"
+        return [...allowedLower].some((a) => name.includes(a))
       })
     })
+  }
+
+  if (vegetarianOnly || veganOnly) {
+    const keywords = veganOnly ? VEGAN_EXCLUDE_KEYWORDS : MEAT_FISH_KEYWORDS
+    filtered = filtered.filter(({ r }) => !recipeHasIngredientKeyword((r.ingredients ?? []) as Array<{ name?: string }>, keywords))
+  }
+  if (cuisine && cuisine.trim()) {
+    filtered = filtered.filter(({ r }) => recipeMatchesCuisine(r, cuisine.trim()))
   }
 
   filtered.sort((a, b) => b.score - a.score)
