@@ -203,8 +203,23 @@ function App() {
       })
 
       if (globalRecipes.length > 0) {
-        // Found in DB — show immediately
-        dispatch(addAIDishes(globalRecipes.map((recipe, i) => ({ recipe, index: i }))))
+        const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
+        const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
+        const withMissing = globalRecipes.map((recipe) => {
+          const missing = filters.allowMissing
+            ? (recipe.ingredients ?? [])
+                .filter((ing) => {
+                  const name = (ing.name ?? '').trim().toLowerCase()
+                  return name && !selectedLower.has(name) && !spiceLower.has(name)
+                })
+                .map((ing) => ing.name)
+            : []
+          return { recipe, missing }
+        })
+        const sorted = filters.allowMissing
+          ? [...withMissing].sort((a, b) => a.missing.length - b.missing.length)
+          : withMissing
+        dispatch(addAIDishes(sorted.map(({ recipe, missing }, i) => ({ recipe, index: i, missingIngredientNames: missing }))))
         dispatch(setLoading(false))
       } else {
         // Nothing in DB — generate via TheMealDB + GPT and save back

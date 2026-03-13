@@ -3,13 +3,21 @@ import { Dish } from '@what2eat/types'
 import * as dishesService from '../../services/dishes'
 import { FindDishesOptions } from '../../services/dishes'
 import { suggestDishesByIngredients, fetchPopularDishes, PopularDishSuggestion } from '../../services/openai'
-import { fetchRecipesFromWeb, fetchRecipesProgressively, generateDishPhoto, AIRecipe } from '../../services/aiRecipes'
+import {
+  fetchRecipesFromWeb,
+  fetchRecipesProgressively,
+  generateDishPhoto,
+  AIRecipe,
+  searchRecipesByDishNames,
+  translateRecipeToOtherLanguage,
+} from '../../services/aiRecipes'
 import { loadSeedFromCache, saveSeedToCache, SEED_COUNT } from '../../services/seedRecipes'
 import { isSupabaseConfigured } from '../../services/supabase'
 import {
   getShuffledGlobalRecipeIds,
   getGlobalRecipesByIds,
   saveGlobalRecipe,
+  searchGlobalRecipesByNames,
 } from '../../services/globalRecipes'
 
 // Max dishes shown in ingredient search results
@@ -110,11 +118,12 @@ const dishesSlice = createSlice({
       state.loadingStep = action.payload
     },
 
-    // Called as each dish becomes ready — shows SwipeDeck after the first one
-    addAIDish: (state, action: PayloadAction<{ recipe: AIRecipe; index: number }>) => {
-      const { recipe, index } = action.payload
+    /** Optional missingIngredientNames: when "Buy missing" is on, list of ingredients to buy per dish. */
+    addAIDish: (state, action: PayloadAction<{ recipe: AIRecipe; index: number; missingIngredientNames?: string[] }>) => {
+      const { recipe, index, missingIngredientNames } = action.payload
       const id = -(index + 1)
-      if (state.dishes.find((d) => d.id === id)) return // dedupe
+      if (state.dishes.find((d) => d.id === id)) return
+      const missing = (missingIngredientNames ?? []).map((name) => ({ id: 0, name, category: 'other' as const, image_url: null }))
       state.dishes.push({
         id,
         name: recipe.name,
@@ -126,17 +135,17 @@ const dishesSlice = createSlice({
         estimated_cost: null,
         is_vegetarian: false,
         is_vegan: false,
+        missing_ingredients: missing.length ? missing : undefined,
       })
       state.aiDishRecipes[id] = recipe
-      // As soon as first dish is ready, hide the full-page spinner
       state.loading = false
     },
 
-    // Batch-add multiple dishes at once — single re-render, no flicker
-    addAIDishes: (state, action: PayloadAction<{ recipe: AIRecipe; index: number }[]>) => {
-      for (const { recipe, index } of action.payload) {
+    addAIDishes: (state, action: PayloadAction<Array<{ recipe: AIRecipe; index: number; missingIngredientNames?: string[] }>>) => {
+      for (const { recipe, index, missingIngredientNames } of action.payload) {
         const id = -(index + 1)
         if (state.dishes.find((d) => d.id === id)) continue
+        const missing = (missingIngredientNames ?? []).map((name) => ({ id: 0, name, category: 'other' as const, image_url: null }))
         state.dishes.push({
           id,
           name: recipe.name,
@@ -148,10 +157,16 @@ const dishesSlice = createSlice({
           estimated_cost: null,
           is_vegetarian: false,
           is_vegan: false,
+          missing_ingredients: missing.length ? missing : undefined,
         })
         state.aiDishRecipes[id] = recipe
       }
+      state.loading = false
       state.loadingMore = false
+    },
+
+    clearSuggestedDishNames: (state) => {
+      state.suggestedDishNames = []
     },
 
     setLoadingMore: (state, action: PayloadAction<boolean>) => {
@@ -235,9 +250,46 @@ const dishesSlice = createSlice({
   },
 })
 
+/** Load AI-suggested dish names: first from global_recipes, then from internet (TheMealDB) if none found. */
+export const loadSuggestedRecipesByNames = createAsyncThunk(
+  'dishes/loadSuggestedByNames',
+  async (
+    { names, lang }: { names: string[]; lang: 'ru' | 'en' },
+    { dispatch }
+  ) => {
+    if (names.length === 0) return
+    dispatch(setLoading(true))
+    try {
+      let recipes: AIRecipe[] = []
+      if (isSupabaseConfigured()) {
+        recipes = await searchGlobalRecipesByNames(names, lang)
+      }
+      if (recipes.length === 0) {
+        try {
+          recipes = await searchRecipesByDishNames(names, 5, lang)
+          if (recipes.length > 0 && isSupabaseConfigured()) {
+            recipes.forEach((r) => {
+              saveGlobalRecipe(r).catch(() => {})
+              translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+            })
+          }
+        } catch {
+          // No API key or network — leave suggested list as is
+        }
+      }
+      if (recipes.length > 0) {
+        dispatch(addAIDishes(recipes.map((recipe, i) => ({ recipe, index: i }))))
+        dispatch(dishesSlice.actions.clearSuggestedDishNames())
+      }
+    } finally {
+      dispatch(setLoading(false))
+    }
+  }
+)
+
 export const {
   clearDishes, startAIRandom, setLoadingStep, setLoadingMore, setLoading, addAIDish, addAIDishes, finishAIRandom,
-  setGlobalRecipeQueue, consumeFromGlobalQueue,
+  setGlobalRecipeQueue, consumeFromGlobalQueue, clearSuggestedDishNames,
 } = dishesSlice.actions
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer

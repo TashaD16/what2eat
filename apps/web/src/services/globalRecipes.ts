@@ -161,6 +161,42 @@ export async function searchGlobalRecipesByName(query: string, lang?: 'ru' | 'en
   return (data ?? []).map((r: { id: string; name: string }) => ({ id: r.id, name: r.name }))
 }
 
+/**
+ * Ищет рецепты по списку названий (для подстановки AI-предложений в свайп).
+ * Возвращает полные рецепты, подходящие под любое из названий (ilike).
+ */
+export async function searchGlobalRecipesByNames(
+  names: string[],
+  lang: 'ru' | 'en' = 'ru'
+): Promise<AIRecipe[]> {
+  if (!isSupabaseConfigured() || names.length === 0) return []
+  const trimmed = names.map((n) => n.trim()).filter(Boolean)
+  if (trimmed.length === 0) return []
+  const orFilter = trimmed.map((n) => `name.ilike.%${n}%`).join(',')
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('*')
+    .eq('language', lang)
+    .or(orFilter)
+    .not('image_url', 'is', null)
+    .limit(50)
+  if (error) {
+    console.error('searchGlobalRecipesByNames:', error)
+    return []
+  }
+  const rows = (data ?? []) as RawRecipeRow[]
+  const seen = new Set<string>()
+  const result: AIRecipe[] = []
+  for (const r of rows) {
+    if (seen.has(r.id)) continue
+    seen.add(r.id)
+    if (Array.isArray(r.ingredients) && r.ingredients.length > 0 && parseInstructions(r.instructions).length > 0) {
+      result.push(mapRow(r))
+    }
+  }
+  return result
+}
+
 /** Загрузка одного рецепта по UUID (для открытия из поиска по названию). */
 export async function getGlobalRecipeById(id: string): Promise<AIRecipe | null> {
   if (!isSupabaseConfigured() || !id) return null

@@ -6,6 +6,7 @@ import {
   getMealsByArea,
   getMealById,
   findMealsByIngredients,
+  searchMealsByName,
   cuisineToMealDbAreas,
   extractIngredients,
   estimateMeta,
@@ -332,6 +333,46 @@ export async function generateDishPhoto(dishName: string): Promise<string> {
   // This stub exists so dishesSlice doesn't need changes.
   // In practice, recipes from TheMealDB always have image_url set.
   return `https://source.unsplash.com/featured/1024x1024/?food,${encodeURIComponent(dishName)}`
+}
+
+/**
+ * Searches the internet (TheMealDB) by dish names — e.g. AI-suggested names when not in DB.
+ * Translates names to English, searches search.php?s=, returns up to maxCount recipes in requested language.
+ */
+export async function searchRecipesByDishNames(
+  dishNamesRu: string[],
+  maxCount = 5,
+  lang: 'ru' | 'en' = 'ru'
+): Promise<AIRecipe[]> {
+  if (dishNamesRu.length === 0) return []
+  const namesEn =
+    lang === 'en'
+      ? dishNamesRu.filter(Boolean)
+      : await translateIngredientsToEnglish(dishNamesRu)
+  const validEn = namesEn.filter(Boolean).slice(0, 8)
+  if (validEn.length === 0) return []
+
+  const seenIds = new Set<string>()
+  const meals: MealDBMeal[] = []
+  for (const nameEn of validEn) {
+    if (meals.length >= maxCount) break
+    const found = await searchMealsByName(nameEn)
+    for (const m of found) {
+      if (m && m.idMeal && !seenIds.has(m.idMeal)) {
+        seenIds.add(m.idMeal)
+        meals.push(m)
+        if (meals.length >= maxCount) break
+      }
+    }
+  }
+
+  if (meals.length === 0) return []
+  const transform = lang === 'en' ? (m: MealDBMeal) => Promise.resolve(mealToEnglishRecipe(m)) : translateMealToRussian
+  const results = await Promise.allSettled(meals.map((m) => transform(m)))
+  return results
+    .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .filter((r) => r.image_url && r.ingredients.length > 0 && r.instructions.length > 0)
 }
 
 /**

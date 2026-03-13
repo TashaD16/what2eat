@@ -42,6 +42,15 @@ export async function getMealById(id: string): Promise<MealDBMeal | null> {
   return data?.meals?.[0] ?? null
 }
 
+/** Search meals by name (TheMealDB search.php?s=). Returns full meal details. */
+export async function searchMealsByName(nameEn: string): Promise<MealDBMeal[]> {
+  if (!nameEn.trim()) return []
+  const data = await apiFetch<{ meals: MealDBMeal[] | null }>(
+    `search.php?s=${encodeURIComponent(nameEn.trim())}`
+  )
+  return data?.meals ?? []
+}
+
 export async function getMealIdsByIngredient(ingredientEn: string): Promise<string[]> {
   const data = await apiFetch<{ meals: MealListItem[] | null }>(
     `filter.php?i=${encodeURIComponent(ingredientEn)}`

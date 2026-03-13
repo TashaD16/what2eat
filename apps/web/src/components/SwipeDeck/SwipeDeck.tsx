@@ -18,7 +18,7 @@ import {
 import { Dish } from '@what2eat/types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
-import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
+import { fetchSuggestedDishes, loadMoreWebDishes, loadSuggestedRecipesByNames } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
 import { useT } from '../../i18n/useT'
 const btnContainerVariants = {
@@ -44,10 +44,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const userId = useAppSelector((state) => state.auth.user?.id)
+  const lang = useAppSelector((state) => state.lang.lang)
   const t = useT()
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
   const [popularExpanded, setPopularExpanded] = useState(false)
   const [infoDish, setInfoDish] = useState<typeof dishes[0] | null>(null)
+  const suggestedLoadStartedRef = useRef(false)
 
   const selectedNamesKey = ingredients
     .filter((i) => selectedIngredients.includes(i.id))
@@ -63,6 +65,15 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
       dispatch(fetchSuggestedDishes(selectedNames))
     }
   }, [dishes.length, selectedNamesKey, dispatch, suggestedDishNames.length])
+
+  // When AI suggested dish names appear and we still have no dishes, load those recipes from DB and show in swipe
+  useEffect(() => {
+    if (dishes.length === 0 && suggestedDishNames.length > 0 && !suggestedLoadStartedRef.current) {
+      suggestedLoadStartedRef.current = true
+      dispatch(loadSuggestedRecipesByNames({ names: suggestedDishNames, lang }))
+    }
+    if (dishes.length > 0) suggestedLoadStartedRef.current = false
+  }, [dishes.length, suggestedDishNames.length, suggestedDishNames, lang, dispatch])
 
   // Auto-load 5 more recipes from TheMealDB when ≤3 cards remain in randomizer mode
   useEffect(() => {
