@@ -16,6 +16,7 @@ import { ArrowBack, ShoppingCart, ContentCopy, Check } from '@mui/icons-material
 import { useAppSelector } from '../../hooks/redux'
 import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
 import { Ingredient } from '@what2eat/types'
+import { useT } from '../../i18n/useT'
 
 const STORAGE_KEY = 'what2eat_shopping_checked'
 
@@ -28,6 +29,7 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
   const { likedDishIds } = useAppSelector((state) => state.swipe)
   const { dishes } = useAppSelector((state) => state.dishes)
   const { selectedIngredients } = useAppSelector((state) => state.ingredients)
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const sourceDishIds = plannerDishIds ?? likedDishIds
@@ -91,7 +93,7 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
   }
 
   const copyToClipboard = () => {
-    const lines: string[] = ['Список покупок:\n']
+    const lines: string[] = [t.shoppingListHeader]
     for (const [category, items] of grouped.entries()) {
       const label = INGREDIENT_CATEGORIES[category as keyof typeof INGREDIENT_CATEGORIES] ?? category
       lines.push(`${label}:`)
@@ -108,16 +110,16 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />}>
-          Назад
+          {t.back}
         </Button>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ShoppingCart color="primary" />
           <Typography variant="h5">
-            {plannerDishIds ? 'Покупки на неделю' : 'Список покупок'}
+            {plannerDishIds ? t.weeklyShoppingList : t.shoppingListTitle}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip title={copied ? 'Скопировано!' : 'Скопировать список'}>
+          <Tooltip title={copied ? t.copied : t.copyList}>
             <Button
               variant="text"
               size="small"
@@ -126,18 +128,18 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
               startIcon={copied ? <Check /> : <ContentCopy />}
               color={copied ? 'success' : 'inherit'}
             >
-              {copied ? 'Готово' : 'Копировать'}
+              {copied ? t.doneButton : t.copy}
             </Button>
           </Tooltip>
           <Button variant="text" size="small" color="secondary" onClick={clearChecked}>
-            Сбросить
+            {t.reset}
           </Button>
         </Box>
       </Box>
 
       {shoppingItems.length === 0 ? (
         <Alert severity="info">
-          Список покупок пуст. Понравьтесь блюда с режимом «Немного докупить» или c учётом имеющихся ингредиентов.
+          {t.emptyShoppingList}
         </Alert>
       ) : (
         <Box>
@@ -169,7 +171,7 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
             </Paper>
           ))}
           <Typography variant="caption" color="text.secondary">
-            Куплено: {checked.size} из {shoppingItems.length}
+            {t.boughtOf(checked.size, shoppingItems.length)}
           </Typography>
         </Box>
       )}

@@ -14,6 +14,7 @@ import { motion } from 'framer-motion'
 import { Dish, Difficulty } from '@what2eat/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
 import { getDishImageUrl } from '../../utils/imageUtils'
+import { useT } from '../../i18n/useT'
 
 interface DishCardProps {
   dish: Dish
@@ -22,6 +23,7 @@ interface DishCardProps {
 }
 
 export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
+  const t = useT()
   const getDifficultyColor = (difficulty: Difficulty) => {
     return DIFFICULTY_COLORS[difficulty] || DIFFICULTY_COLORS.easy
   }
@@ -37,7 +39,7 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
     >
       <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         {onRemove && (
-          <Tooltip title="Убрать из списка" placement="top">
+          <Tooltip title={t.removeFromList} placement="top">
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); onRemove(dish.id) }}
@@ -77,13 +79,13 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
           <Box sx={{ display: 'flex', gap: 0.75, mb: 2, flexWrap: 'wrap' }}>
             <Chip
               icon={<AccessTime sx={{ fontSize: '14px !important' }} />}
-              label={`${dish.cooking_time} мин`}
+              label={t.min(dish.cooking_time)}
               size="small"
               variant="outlined"
             />
             <Chip
               icon={<People sx={{ fontSize: '14px !important' }} />}
-              label={`${dish.servings} порц.`}
+              label={t.servingsShort(dish.servings)}
               size="small"
               variant="outlined"
             />
@@ -105,15 +107,15 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
               />
             )}
             {dish.is_vegan && (
-              <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
+              <Chip label={t.vegan} size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
             )}
             {!dish.is_vegan && dish.is_vegetarian && (
-              <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(217,119,6,0.08)', color: '#b45309', border: '1px solid rgba(217,119,6,0.20)' }} />
+              <Chip label={t.vegetarian} size="small" sx={{ bgcolor: 'rgba(217,119,6,0.08)', color: '#b45309', border: '1px solid rgba(217,119,6,0.20)' }} />
             )}
           </Box>
           {dish.match_count !== undefined && (
             <Typography variant="caption" sx={{ color: 'text.disabled', mb: 1, display: 'block' }}>
-              Совпадений: {dish.match_count}
+              {t.matches(dish.match_count!)}
             </Typography>
           )}
           {dish.missing_ingredients && dish.missing_ingredients.length > 0 && (
@@ -132,7 +134,7 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
             >
               <ShoppingCart sx={{ fontSize: 13, color: '#b45309' }} />
               <Typography variant="caption" sx={{ color: '#b45309', fontWeight: 500 }}>
-                Докупить: {dish.missing_ingredients.map(i => i.name).join(', ')}
+                {t.toBuy(dish.missing_ingredients.map(i => i.name).join(', '))}
               </Typography>
             </Box>
           )}
@@ -142,7 +144,7 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
             onClick={() => onSelect(dish.id)}
             sx={{ mt: 'auto' }}
           >
-            Посмотреть рецепт
+            {t.viewRecipe}
           </Button>
         </CardContent>
       </Card>

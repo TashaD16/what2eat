@@ -17,17 +17,7 @@ import {
 import { ArrowBack, Add, Delete, MenuBook, ShoppingCart } from '@mui/icons-material'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { assignDishToDay, removeDishFromDay, DayOfWeek } from '../../store/slices/weeklyPlannerSlice'
-
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  mon: 'Пн',
-  tue: 'Вт',
-  wed: 'Ср',
-  thu: 'Чт',
-  fri: 'Пт',
-  sat: 'Сб',
-  sun: 'Вс',
-}
-const DAYS = Object.keys(DAY_LABELS) as DayOfWeek[]
+import { useT } from '../../i18n/useT'
 
 interface WeeklyPlannerProps {
   onDishSelect: (dishId: number) => void
@@ -37,6 +27,12 @@ interface WeeklyPlannerProps {
 
 export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: WeeklyPlannerProps) {
   const dispatch = useAppDispatch()
+  const t = useT()
+  const DAY_LABELS: Record<DayOfWeek, string> = {
+    mon: t.mon, tue: t.tue, wed: t.wed,
+    thu: t.thu, fri: t.fri, sat: t.sat, sun: t.sun,
+  }
+  const DAYS = Object.keys(DAY_LABELS) as DayOfWeek[]
   const { plan } = useAppSelector((state) => state.weeklyPlanner)
   const { dishes } = useAppSelector((state) => state.dishes)
   const { likedDishIds } = useAppSelector((state) => state.swipe)
@@ -70,9 +66,9 @@ export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: 
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />}>
-          Назад
+          {t.back}
         </Button>
-        <Typography variant="h5" sx={{ flexGrow: 1 }}>Планировщик недели</Typography>
+        <Typography variant="h5" sx={{ flexGrow: 1 }}>{t.weeklyPlannerTitle}</Typography>
         {onShoppingList && (
           <Button
             variant="outlined"
@@ -84,7 +80,7 @@ export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: 
             }}
             disabled={DAYS.every((d) => plan[d] == null)}
           >
-            Список покупок
+            {t.shoppingList}
           </Button>
         )}
       </Box>
@@ -142,18 +138,18 @@ export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: 
       </Grid>
 
       <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false, day: null })}>
-        <DialogTitle>Выбрать блюдо</DialogTitle>
+        <DialogTitle>{t.chooseDish}</DialogTitle>
         <DialogContent sx={{ minWidth: 280, pt: 2 }}>
           {availableDishes.length === 0 ? (
             <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
-              Сначала выберите понравившиеся блюда через свайп
+              {t.swipeFirstHint}
             </Typography>
           ) : (
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Блюдо</InputLabel>
+              <InputLabel>{t.dish}</InputLabel>
               <Select
                 value={selectedDishId}
-                label="Блюдо"
+                label={t.dish}
                 onChange={(e) => setSelectedDishId(e.target.value as number)}
               >
                 {availableDishes.map((d) => (
@@ -170,7 +166,7 @@ export default function WeeklyPlanner({ onDishSelect, onBack, onShoppingList }: 
             onClick={handleAdd}
             disabled={selectedDishId === '' || availableDishes.length === 0}
           >
-            Добавить
+            {t.add}
           </Button>
         </DialogContent>
       </Dialog>

@@ -24,6 +24,7 @@ import PhotoUpload from './components/PhotoUpload'
 import AuthModal from './components/Auth'
 import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
+import { useT } from './i18n/useT'
 
 type View = 'ingredients' | 'photo' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
 
@@ -47,13 +48,14 @@ function App() {
   const { likedDishIds, dislikedDishIds, likedDishes } = useAppSelector((state) => state.swipe)
   const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
   const lang = useAppSelector((state) => state.lang.lang)
+  const t = useT()
 
   useEffect(() => {
     let cancelled = false
     const initializeApp = async () => {
       try {
         if (!isSupabaseConfigured()) {
-          if (!cancelled) setAppError('Настройте Supabase (VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY). Ингредиенты и рецепты загружаются из Supabase.')
+          if (!cancelled) setAppError(t.supabaseError)
           return
         }
         dispatch(initAuth())
@@ -61,12 +63,13 @@ function App() {
         if (!cancelled) setAppReady(true)
       } catch (error) {
         if (!cancelled) {
-          setAppError(`Не удалось загрузить данные: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}. Проверьте Supabase и выполните скрипт supabase-ingredients.sql.`)
+          setAppError(t.loadError(error instanceof Error ? error.message : 'Unknown error'))
         }
       }
     }
     initializeApp()
     return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch])
 
   // Listen to auth state changes from Supabase
@@ -325,7 +328,7 @@ function App() {
             </Badge>
             <TextField
               fullWidth
-              placeholder="Найти рецепт по названию..."
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => handleSearchQueryChange(e.target.value)}
               size="small"
@@ -375,7 +378,7 @@ function App() {
                 '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' },
               }}
             >
-              Загрузить фото
+              {t.uploadPhoto}
             </Button>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
               <Button
@@ -390,7 +393,7 @@ function App() {
                   '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
                 }}
               >
-                Рандомайзер
+                {t.randomizer}
               </Button>
               <Button
                 variant="outlined"
@@ -407,7 +410,7 @@ function App() {
                   '&.Mui-disabled': { borderColor: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.25)' },
                 }}
               >
-                AI-рецепт
+                {t.aiRecipe}
               </Button>
             </Box>
           </Box>
@@ -426,8 +429,8 @@ function App() {
             }}
           >
             {selectedIngredients.length > 0
-              ? `Продукты (${selectedIngredients.length})`
-              : 'Выбрать продукты'}
+              ? t.productsCount(selectedIngredients.length)
+              : t.selectProducts}
           </Button>
 
           {/* === Чипы выбранных ингредиентов === */}
@@ -465,7 +468,7 @@ function App() {
               '&:hover': { boxShadow: '0 8px 40px rgba(32,201,151,0.65)' },
             }}
           >
-            Найти блюда
+            {t.findDishes}
           </Button>
 
           {/* === Bottom Drawer === */}
@@ -477,9 +480,9 @@ function App() {
           >
             <Box sx={{ p: 2, pb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Выберите продукты</Typography>
+                <Typography variant="h6">{t.choosProducts}</Typography>
                 <Button onClick={() => setDrawerOpen(false)} variant="contained" size="small">
-                  Готово{selectedIngredients.length > 0 ? ` (${selectedIngredients.length})` : ''}
+                  {t.done(selectedIngredients.length)}
                 </Button>
               </Box>
               <IngredientSelector />
@@ -501,12 +504,10 @@ function App() {
             <CircularProgress size={56} sx={{ color: '#20C997' }} />
             <Box sx={{ textAlign: 'center' }}>
               <Typography sx={{ color: 'text.primary', fontWeight: 600, mb: 0.5 }}>
-                {loadingStep === 'search' ? 'Загружаем рецепты...' : 'Переводим и готовим блюда...'}
+                {loadingStep === 'search' ? t.loadingRecipes : t.translatingRecipes}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {loadingStep === 'search'
-                  ? 'Получаем рецепты из открытых источников'
-                  : 'Первое блюдо появится через несколько секунд'}
+                {loadingStep === 'search' ? t.fetchingFromSources : t.firstDishSoon}
               </Typography>
             </Box>
           </Box>
@@ -518,10 +519,10 @@ function App() {
               onClick={handleRandomize}
               sx={{ mr: 2 }}
             >
-              Попробовать снова
+              {t.tryAgain}
             </Button>
             <Button variant="outlined" onClick={() => setView('ingredients')}>
-              На главную
+              {t.toHome}
             </Button>
           </Box>
         ) : (

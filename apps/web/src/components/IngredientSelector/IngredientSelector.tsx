@@ -17,6 +17,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { toggleIngredient } from '../../store/slices/ingredientsSlice'
 import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
 import { IngredientCategory } from '@what2eat/types'
+import { useT } from '../../i18n/useT'
 
 export default function IngredientSelector() {
   const dispatch = useAppDispatch()
@@ -25,6 +26,7 @@ export default function IngredientSelector() {
   )
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
+  const t = useT()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<IngredientCategory | 'all'>('all')
 
@@ -58,7 +60,7 @@ export default function IngredientSelector() {
     <Box>
       <TextField
         fullWidth
-        placeholder="Поиск ингредиентов..."
+        placeholder={t.searchIngredients}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{ mb: 2 }}
@@ -78,7 +80,7 @@ export default function IngredientSelector() {
         variant="scrollable"
         scrollButtons="auto"
       >
-        <Tab label="Все" value="all" />
+        <Tab label={t.all} value="all" />
         {Object.entries(INGREDIENT_CATEGORIES).map(([key, label]) => (
           <Tab key={key} label={label} value={key} />
         ))}
@@ -87,7 +89,7 @@ export default function IngredientSelector() {
       {selectedIngredientNames.length > 0 && (
         <Box sx={{ mb: 2.5 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1, display: 'block' }}>
-            Выбрано: {selectedIngredientNames.length}
+            {t.selectedCount(selectedIngredientNames.length)}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {selectedIngredientNames.map((name) => {
@@ -159,7 +161,7 @@ export default function IngredientSelector() {
 
       {filteredIngredients.length === 0 && (
         <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', mt: 6 }}>
-          Ингредиенты не найдены
+          {t.notFound}
         </Typography>
       )}
     </Box>

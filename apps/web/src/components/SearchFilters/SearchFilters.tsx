@@ -16,19 +16,20 @@ import {
   setBudgetLimit,
   setCuisine,
 } from '../../store/slices/filtersSlice'
-
-const CUISINE_OPTIONS = [
-  { value: null, label: 'Все' },
-  { value: 'russian', label: 'Русская' },
-  { value: 'italian', label: 'Итальянская' },
-  { value: 'asian', label: 'Азиатская' },
-  { value: 'american', label: 'Американская' },
-] as const
+import { useT } from '../../i18n/useT'
 
 export default function SearchFilters() {
   const dispatch = useAppDispatch()
+  const t = useT()
   const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine } =
     useAppSelector((state) => state.filters)
+  const CUISINE_OPTIONS = [
+    { value: null, label: t.allCuisines },
+    { value: 'russian', label: t.russian },
+    { value: 'italian', label: t.italian },
+    { value: 'asian', label: t.asian },
+    { value: 'american', label: t.american },
+  ] as const
 
   const noMeat = vegetarianOnly || veganOnly
 
@@ -47,7 +48,7 @@ export default function SearchFilters() {
       {/* Кухня */}
       <Box>
         <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
-          Кухня
+          {t.cuisine}
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
           {CUISINE_OPTIONS.map((opt) => (
@@ -75,7 +76,7 @@ export default function SearchFilters() {
         {/* Питание */}
         <Box>
           <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-            Питание
+            {t.nutrition}
           </Typography>
           <FormControlLabel
             control={
@@ -88,7 +89,7 @@ export default function SearchFilters() {
             }
             label={
               <Typography variant="body2" sx={{ color: noMeat ? '#81c784' : 'text.secondary', fontSize: '0.82rem' }}>
-                Без мяса
+                {t.noMeat}
               </Typography>
             }
           />
@@ -97,7 +98,7 @@ export default function SearchFilters() {
         {/* Бюджет */}
         <Box>
           <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-            Бюджет
+            {t.budget}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <FormControlLabel
@@ -111,7 +112,7 @@ export default function SearchFilters() {
               }
               label={
                 <Typography variant="body2" sx={{ color: allowMissing ? '#ffb74d' : 'text.secondary', fontSize: '0.82rem' }}>
-                  Докупить
+                  {t.buyMissing}
                 </Typography>
               }
             />
@@ -126,7 +127,7 @@ export default function SearchFilters() {
               }
               label={
                 <Typography variant="body2" sx={{ color: budgetEnabled ? '#ce93d8' : 'text.secondary', fontSize: '0.82rem' }}>
-                  Лимит
+                  {t.limit}
                 </Typography>
               }
             />
@@ -134,7 +135,7 @@ export default function SearchFilters() {
               <TextField
                 size="small"
                 type="number"
-                placeholder="Сумма"
+                placeholder={t.sum}
                 value={budgetLimit ?? ''}
                 onChange={(e) => dispatch(setBudgetLimit(e.target.value ? Number(e.target.value) : null))}
                 InputProps={{ endAdornment: <InputAdornment position="end">₽</InputAdornment> }}

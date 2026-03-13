@@ -5,8 +5,8 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearAIRecipe, saveGeneratedRecipe } from '../../store/slices/aiRecipeSlice'
 import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice'
 import { useState } from 'react'
+import { useT } from '../../i18n/useT'
 
-const DIFFICULTY_LABELS_LOCAL = { easy: 'Просто', medium: 'Средне', hard: 'Сложно' }
 const DIFFICULTY_COLORS_LOCAL = { easy: '#16a34a', medium: '#D97706', hard: '#dc2626' } as const
 
 interface AIRecipeViewProps {
@@ -20,6 +20,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
   const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
   const { user } = useAppSelector((state) => state.auth)
   const userId = user?.id
+  const t = useT()
   const [saved, setSaved] = useState(false)
   const [servings, setServings] = useState<number | null>(null)
   const [videoOpen, setVideoOpen] = useState(false)
@@ -57,8 +58,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
         <CircularProgress size={48} />
-        <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-          Ищем рецепт в открытых источниках<br />и переводим на русский...
+        <Typography color="text.secondary" sx={{ textAlign: 'center', whiteSpace: 'pre-line' }}>
+          {t.searchingRecipe}
         </Typography>
       </Box>
     )
@@ -132,12 +133,12 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             size="small"
             sx={{ mb: 1.5, color: recipe.image_url ? 'rgba(255,255,255,0.7)' : 'text.secondary', '&:hover': { color: recipe.image_url ? 'white' : 'text.primary' } }}
           >
-            Назад
+            {t.nazad}
           </Button>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
             <AutoAwesome sx={{ color: '#20C997', fontSize: 16 }} />
             <Typography variant="caption" sx={{ color: '#20C997', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Рецепт из открытых источников
+              {t.recipeSource}
             </Typography>
           </Box>
           <Typography
@@ -225,10 +226,10 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
           )}
           {user && !saved && (
             <Button variant="outlined" startIcon={<Save />} onClick={handleSave} size="small">
-              Сохранить
+              {t.save}
             </Button>
           )}
-          {saved && <Chip label="Сохранено" color="success" size="small" />}
+          {saved && <Chip label={t.saved} color="success" size="small" />}
         </Box>
       )}
 
@@ -237,10 +238,10 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           {!saved ? (
             <Button variant="outlined" startIcon={<Save />} onClick={handleSave} size="small">
-              Сохранить
+              {t.save}
             </Button>
           ) : (
-            <Chip label="Сохранено" color="success" size="small" />
+            <Chip label={t.saved} color="success" size="small" />
           )}
         </Box>
       )}
@@ -263,7 +264,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                 '&:hover': { borderColor: 'rgba(255,0,0,0.7)', bgcolor: 'rgba(255,0,0,0.06)' },
               }}
             >
-              Видео приготовления
+              {t.videoButton}
             </Button>
             <Collapse in={videoOpen}>
               <Box
@@ -279,7 +280,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                 <Box
                   component="iframe"
                   src={embedUrl}
-                  title="Видео приготовления"
+                  title={t.videoButton}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   sx={{
@@ -318,12 +319,12 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
               <Chip
                 icon={<AccessTime sx={{ fontSize: '14px !important', color: '#0F9B6E !important' }} />}
-                label={`${recipe.cooking_time} мин`}
+                label={t.min(recipe.cooking_time)}
                 size="small"
                 sx={{ bgcolor: 'rgba(32,201,151,0.15)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.30)', fontWeight: 600 }}
               />
               <Chip
-                label={DIFFICULTY_LABELS_LOCAL[recipe.difficulty]}
+                label={{ easy: t.easy, medium: t.medium, hard: t.hard }[recipe.difficulty]}
                 size="small"
                 sx={{ bgcolor: DIFFICULTY_COLORS_LOCAL[recipe.difficulty], color: 'white', fontWeight: 600 }}
               />
@@ -341,11 +342,11 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
               <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Add sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>порц.</Typography>
+              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>{t.servings}</Typography>
             </Box>
 
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
-              Ингредиенты
+              {t.ingredients}
             </Typography>
             <List dense disablePadding>
               {recipe.ingredients.map((ing, i) => (
@@ -404,12 +405,12 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-              Приготовление
+              {t.cooking}
             </Typography>
             <Divider sx={{ mb: 2.5 }} />
             {recipe.instructions.length === 0 && (
               <Typography variant="body2" color="text.secondary">
-                Инструкции для этого рецепта недоступны.
+                {t.noInstructions}
               </Typography>
             )}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>

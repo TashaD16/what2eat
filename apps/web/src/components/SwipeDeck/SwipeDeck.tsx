@@ -20,6 +20,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
 import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
+import { useT } from '../../i18n/useT'
 const btnContainerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.09, delayChildren: 0.7 } },
@@ -43,6 +44,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const userId = useAppSelector((state) => state.auth.user?.id)
+  const t = useT()
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
   const [popularExpanded, setPopularExpanded] = useState(false)
   const [infoDish, setInfoDish] = useState<typeof dishes[0] | null>(null)
@@ -130,12 +132,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
     return (
       <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
         <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 2 }}>
-          В базе нет подходящих блюд
+          {t.noDisheFound}
         </Typography>
         {suggestedDishNames.length > 0 && (
           <Box sx={{ mb: 3, textAlign: 'left', maxWidth: 360, mx: 'auto' }}>
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Restaurant fontSize="small" /> ИИ предлагает приготовить:
+              <Restaurant fontSize="small" /> {t.aiSuggests}
             </Typography>
             <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.primary' }}>
               {suggestedDishNames.map((name) => (
@@ -145,7 +147,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           </Box>
         )}
         <Button variant="outlined" onClick={onBack} startIcon={<ArrowBack />} sx={{ mt: 1 }}>
-          Изменить ингредиенты
+          {t.changeIngredients}
         </Button>
       </Box>
     )
@@ -167,7 +169,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
       >
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />} size="small">
-          Назад
+          {t.back}
         </Button>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography
@@ -180,19 +182,19 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               textTransform: 'uppercase',
             }}
           >
-            {remaining > 0 ? `${remaining} блюд осталось` : 'Все просмотрены'}
+            {remaining > 0 ? t.dishesLeft(remaining) : t.allSeen}
           </Typography>
           {loadingMore && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <CircularProgress size={12} sx={{ color: '#20C997' }} />
               <Typography variant="caption" sx={{ color: '#20C997', fontSize: '0.65rem' }}>
-                +ещё
+                {t.loadingMore}
               </Typography>
             </Box>
           )}
         </Box>
         <Button variant="text" onClick={handleReset} size="small" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>
-          Сначала
+          {t.fromStart}
         </Button>
       </Box>
       </motion.div>
@@ -272,10 +274,10 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             }}
           >
             <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 3 }}>
-              Вы просмотрели все блюда!
+              {t.allDishesViewed}
             </Typography>
             <Button variant="contained" onClick={onComplete} size="large" sx={{ px: 4 }}>
-              Посмотреть результаты
+              {t.viewResults}
             </Button>
           </Box>
         ) : (
@@ -439,21 +441,21 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
                 <Chip
                   icon={<AccessTime sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
-                  label={`${infoDish.cooking_time} мин`}
+                  label={t.min(infoDish.cooking_time)}
                   size="small"
                   sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
                 />
                 <Chip
                   icon={<People sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
-                  label={`${infoDish.servings} порц.`}
+                  label={t.servingsShort(infoDish.servings)}
                   size="small"
                   sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
                 />
                 {infoDish.is_vegan && (
-                  <Chip label="Веган" size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
+                  <Chip label={t.vegan} size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
                 )}
                 {!infoDish.is_vegan && infoDish.is_vegetarian && (
-                  <Chip label="Вегетар." size="small" sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.2)' }} />
+                  <Chip label={t.vegetarian} size="small" sx={{ bgcolor: 'rgba(180,83,9,0.08)', color: '#b45309', border: '1px solid rgba(180,83,9,0.2)' }} />
                 )}
               </Box>
 
@@ -461,7 +463,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               {infoDish.ingredients && infoDish.ingredients.length > 0 && (
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, display: 'block', mb: 1 }}>
-                    Основные ингредиенты
+                    {t.mainIngredients}
                   </Typography>
                   <List dense disablePadding>
                     {infoDish.ingredients.slice(0, 6).map((ing) => (
@@ -472,7 +474,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                     ))}
                     {infoDish.ingredients.length > 6 && (
                       <Typography variant="caption" sx={{ color: 'text.disabled', pl: 2.5 }}>
-                        и ещё {infoDish.ingredients.length - 6}...
+                        {t.andMore(infoDish.ingredients.length - 6)}
                       </Typography>
                     )}
                   </List>
@@ -486,7 +488,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 onClick={() => { setInfoDish(null); onDishSelect(infoDish.id) }}
                 sx={{ mt: 2.5, py: 1.25, fontWeight: 700 }}
               >
-                Открыть полный рецепт
+                {t.openFullRecipe}
               </Button>
             </DialogContent>
           </>
@@ -516,7 +518,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           >
             <Restaurant sx={{ fontSize: 18 }} />
             <Typography variant="body2" sx={{ fontWeight: 600, flexGrow: 1, textAlign: 'left', color: '#b45309' }}>
-              Популярные рецепты из интернета
+              {t.popularInternetRecipes}
             </Typography>
             {popularExpanded ? <ExpandLess sx={{ fontSize: 18 }} /> : <ExpandMore sx={{ fontSize: 18 }} />}
           </Box>
@@ -555,7 +557,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                         '&:hover': { textDecoration: 'underline' },
                       }}
                     >
-                      Найти рецепт
+                      {t.findRecipe}
                       <OpenInNew sx={{ fontSize: 12 }} />
                     </Box>
                   </Box>

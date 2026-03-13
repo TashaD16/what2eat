@@ -5,6 +5,7 @@ import { AccessTime, AttachMoney, ShoppingCart } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
 import { getDishImageUrl } from '../../utils/imageUtils'
+import { useT } from '../../i18n/useT'
 
 interface SwipeCardProps {
   dish: Dish
@@ -17,6 +18,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false)
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
+  const t = useT()
 
   return (
     <Box
@@ -104,7 +106,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: dish.missing_ingredients?.length ? 1.5 : 0 }}>
           <Chip
             icon={<AccessTime sx={{ color: 'white !important', fontSize: 14 }} />}
-            label={`${dish.cooking_time} мин`}
+            label={t.min(dish.cooking_time)}
             size="small"
             sx={{
               bgcolor: 'rgba(255,255,255,0.15)',
@@ -134,14 +136,14 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
           )}
           {dish.is_vegan && (
             <Chip
-              label="Веган"
+              label={t.vegan}
               size="small"
               sx={{ bgcolor: 'rgba(34,197,94,0.25)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.35)' }}
             />
           )}
           {!dish.is_vegan && dish.is_vegetarian && (
             <Chip
-              label="Вегетар."
+              label={t.vegetarian}
               size="small"
               sx={{ bgcolor: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
             />
@@ -163,7 +165,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
           >
             <ShoppingCart sx={{ fontSize: 14, color: '#fbbf24' }} />
             <Typography variant="caption" sx={{ color: '#fbbf24', fontWeight: 500 }}>
-              Докупить: {dish.missing_ingredients.map(i => i.name).join(', ')}
+              {t.toBuy(dish.missing_ingredients.map(i => i.name).join(', '))}
             </Typography>
           </Box>
         )}
@@ -186,7 +188,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
           }}
         >
           <Typography sx={{ color: '#22C55E', fontWeight: 900, fontSize: 28, letterSpacing: 3, lineHeight: 1 }}>
-            ДА!
+            {t.yes}
           </Typography>
         </Box>
       )}
@@ -208,7 +210,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
           }}
         >
           <Typography sx={{ color: '#FF4D4D', fontWeight: 900, fontSize: 28, letterSpacing: 3, lineHeight: 1 }}>
-            НЕТ
+            {t.no}
           </Typography>
         </Box>
       )}

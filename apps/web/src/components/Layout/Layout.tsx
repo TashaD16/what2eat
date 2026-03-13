@@ -2,6 +2,7 @@ import { Box, AppBar, Toolbar, Typography, Container, Button, IconButton, Badge,
 import { CalendarMonth, RestaurantMenu, Login, Logout, DarkMode, LightMode } from '@mui/icons-material'
 import { ReactNode } from 'react'
 import { useThemeMode } from '../../contexts/ThemeContext'
+import { useT } from '../../i18n/useT'
 
 interface LayoutProps {
   children: ReactNode
@@ -18,6 +19,7 @@ interface LayoutProps {
 
 export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut, lang = 'ru', onLangToggle }: LayoutProps) {
   const { mode, toggleMode } = useThemeMode()
+  const t = useT()
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'transparent' }}>
@@ -45,7 +47,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
           {likedCount != null && likedCount > 0 && onFavoritesClick && (
             <IconButton
               onClick={onFavoritesClick}
-              aria-label="Избранные блюда"
+              aria-label={t.favorites}
               sx={{
                 color: 'text.secondary',
                 mr: 0.5,
@@ -70,12 +72,12 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
                 '&:hover': { color: 'text.primary', background: 'rgba(32,201,151,0.10)' },
               }}
             >
-              Планировщик
+              {t.planner}
             </Button>
           )}
 
           {onLangToggle && (
-            <Tooltip title={lang === 'ru' ? 'Switch to English' : 'Переключить на русский'}>
+            <Tooltip title={lang === 'ru' ? t.switchToEn : t.switchToRu}>
               <Button
                 onClick={onLangToggle}
                 size="small"
@@ -100,7 +102,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
             </Tooltip>
           )}
 
-          <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>
+          <Tooltip title={mode === 'dark' ? t.lightTheme : t.darkTheme}>
             <IconButton
               onClick={toggleMode}
               size="small"
@@ -115,7 +117,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
           </Tooltip>
 
           {user ? (
-            <Tooltip title={user.email ?? 'Аккаунт'}>
+            <Tooltip title={user.email ?? t.account}>
               <IconButton onClick={onSignOut} size="small" sx={{ ml: 0.5 }}>
                 <Avatar sx={{ width: 32, height: 32, bgcolor: '#20C997', fontSize: '0.85rem' }}>
                   {user.email?.[0]?.toUpperCase() ?? '?'}
@@ -126,7 +128,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
             <IconButton
               onClick={onAuthClick}
               size="small"
-              aria-label="Войти"
+              aria-label={t.signIn}
               sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
             >
               <Login />
@@ -134,7 +136,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
           )}
 
           {user && (
-            <Tooltip title="Выйти">
+            <Tooltip title={t.signOut}>
               <IconButton
                 onClick={onSignOut}
                 size="small"

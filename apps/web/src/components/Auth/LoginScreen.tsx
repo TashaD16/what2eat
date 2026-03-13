@@ -5,9 +5,11 @@ import {
 import { Google } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, clearError } from '../../store/slices/authSlice'
+import { useT } from '../../i18n/useT'
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch()
+  const t = useT()
   const { loading, error } = useAppSelector((state) => state.auth)
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
@@ -26,7 +28,7 @@ export default function LoginScreen() {
     } else {
       const result = await dispatch(signUpWithEmail({ email, password }))
       if (signUpWithEmail.fulfilled.match(result)) {
-        setSuccessMsg('Проверьте почту для подтверждения регистрации')
+        setSuccessMsg(t.checkEmail)
       }
     }
   }
@@ -58,7 +60,7 @@ export default function LoginScreen() {
             what2eat
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Планировщик блюд для двоих
+            {t.appSubtitle}
           </Typography>
         </Box>
 
@@ -73,7 +75,7 @@ export default function LoginScreen() {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 2.5 }}>
-            {mode === 'signin' ? 'Вход в аккаунт' : 'Регистрация'}
+            {mode === 'signin' ? t.signInTitle : t.registerTitle}
           </Typography>
 
           {error && (
@@ -107,18 +109,18 @@ export default function LoginScreen() {
               },
             }}
           >
-            Войти через Google
+            {t.signInWithGoogle}
           </Button>
 
           <Divider sx={{ mb: 2.5 }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-              или email
+              {t.orEmail}
             </Typography>
           </Divider>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <TextField
-              label="Email"
+              label={t.email}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -129,7 +131,7 @@ export default function LoginScreen() {
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
             <TextField
-              label="Пароль"
+              label={t.password}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -149,9 +151,9 @@ export default function LoginScreen() {
               {loading ? (
                 <CircularProgress size={20} color="inherit" />
               ) : mode === 'signin' ? (
-                'Войти'
+                t.signInButton
               ) : (
-                'Зарегистрироваться'
+                t.registerButton
               )}
             </Button>
           </Box>
@@ -163,7 +165,7 @@ export default function LoginScreen() {
               onClick={switchMode}
               sx={{ color: 'text.secondary', textDecoration: 'none', '&:hover': { color: 'primary.main' } }}
             >
-              {mode === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+              {mode === 'signin' ? t.noAccount : t.haveAccount}
             </Link>
           </Box>
         </Box>

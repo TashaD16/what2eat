@@ -19,16 +19,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { resetSwipe, unlikeDish } from '../../store/slices/swipeSlice'
 import { assignDishToDay, DayOfWeek } from '../../store/slices/weeklyPlannerSlice'
 import DishCard from '../DishList/DishCard'
-
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  mon: 'Понедельник',
-  tue: 'Вторник',
-  wed: 'Среда',
-  thu: 'Четверг',
-  fri: 'Пятница',
-  sat: 'Суббота',
-  sun: 'Воскресенье',
-}
+import { useT } from '../../i18n/useT'
 
 interface SwipeResultsProps {
   onDishSelect: (dishId: number) => void
@@ -39,8 +30,13 @@ interface SwipeResultsProps {
 
 export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppingList }: SwipeResultsProps) {
   const dispatch = useAppDispatch()
+  const t = useT()
   const { likedDishes: storedLikedDishes } = useAppSelector((state) => state.swipe)
   const userId = useAppSelector((state) => state.auth.user?.id)
+  const DAY_LABELS: Record<DayOfWeek, string> = {
+    mon: t.monday, tue: t.tuesday, wed: t.wednesday,
+    thu: t.thursday, fri: t.friday, sat: t.saturday, sun: t.sunday,
+  }
   const [planDialog, setPlanDialog] = useState<{ open: boolean; dishId: number | null }>({
     open: false,
     dishId: null,
@@ -88,12 +84,12 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1 }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />}>
-          Назад
+          {t.back}
         </Button>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <FavoriteBorder sx={{ color: '#FF4D4D', fontSize: 22 }} />
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Понравившиеся блюда
+            {t.likedDishes}
           </Typography>
           {likedDishes.length > 0 && (
             <Chip
@@ -111,10 +107,10 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
             disabled={likedDishes.length === 0}
             size="small"
           >
-            Список покупок
+            {t.shoppingList}
           </Button>
           <Button variant="outlined" startIcon={<Refresh />} onClick={handleRepeat} size="small">
-            Повторить
+            {t.repeat}
           </Button>
         </Box>
       </Box>
@@ -132,13 +128,13 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
         >
           <FavoriteBorder sx={{ fontSize: 52, color: 'rgba(0,0,0,0.15)', mb: 2 }} />
           <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
-            Нет понравившихся блюд
+            {t.noLikedDishes}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.disabled', mb: 3 }}>
-            Свайпайте вправо, чтобы сохранить блюдо
+            {t.swipeRightHint}
           </Typography>
           <Button variant="contained" onClick={handleRepeat} startIcon={<Refresh />}>
-            Начать поиск
+            {t.startSearch}
           </Button>
         </Box>
       ) : (
@@ -155,7 +151,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
                   variant="outlined"
                   color="secondary"
                 >
-                  В планировщик
+                  {t.toWeeklyPlanner}
                 </Button>
               </Box>
             </Grid>
@@ -165,13 +161,13 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
 
       {/* Planner dialog */}
       <Dialog open={planDialog.open} onClose={() => setPlanDialog({ open: false, dishId: null })}>
-        <DialogTitle>Добавить в планировщик</DialogTitle>
+        <DialogTitle>{t.addToPlanner}</DialogTitle>
         <DialogContent sx={{ minWidth: 280, pt: 2 }}>
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>День недели</InputLabel>
+            <InputLabel>{t.dayOfWeek}</InputLabel>
             <Select
               value={selectedDay}
-              label="День недели"
+              label={t.dayOfWeek}
               onChange={(e) => setSelectedDay(e.target.value as DayOfWeek)}
             >
               {(Object.entries(DAY_LABELS) as [DayOfWeek, string][]).map(([key, label]) => (
@@ -182,7 +178,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
             </Select>
           </FormControl>
           <Button variant="contained" fullWidth onClick={handleAddToPlan}>
-            Добавить
+            {t.add}
           </Button>
         </DialogContent>
       </Dialog>
@@ -192,7 +188,7 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
         open={removedSnack}
         autoHideDuration={2500}
         onClose={() => setRemovedSnack(false)}
-        message="Блюдо удалено из избранного"
+        message={t.removedFromFavorites}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>
