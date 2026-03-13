@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Drawer, Collapse, IconButton } from '@mui/material'
+import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton } from '@mui/material'
 import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
@@ -40,8 +40,9 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ id: string | number; name: string }>>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectorOpen, setSelectorOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const selectorRef = useRef<HTMLDivElement>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
@@ -106,9 +107,27 @@ function App() {
   const handlePhotoDetected = useCallback((ids: number[]) => {
     if (ids.length > 0) {
       dispatch(setSelectedIngredients(ids))
-      setDrawerOpen(true)
     }
   }, [dispatch])
+
+  // Close ingredient selector when clicking outside
+  useEffect(() => {
+    if (!selectorOpen) return
+    const handler = (e: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) {
+        setSelectorOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [selectorOpen])
+
+  useEffect(() => {
+    if (!selectorOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectorOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [selectorOpen])
 
   const activeFilterCount = [
     filters.vegetarianOnly || filters.veganOnly,
@@ -371,27 +390,55 @@ function App() {
             </Box>
           </Box>
 
-          {/* === Кнопка открытия Drawer === */}
-          <Button
-            variant="outlined"
-            fullWidth
-            onClick={() => setDrawerOpen(true)}
-            startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
-            sx={{
-              mb: selectedIngredients.length > 0 ? 1 : 2,
-              borderColor: 'rgba(32,201,151,0.35)',
-              color: 'text.primary',
-              '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
-            }}
-          >
-            {selectedIngredients.length > 0
-              ? t.productsCount(selectedIngredients.length)
-              : t.selectProducts}
-          </Button>
+          {/* === Выбор продуктов: кнопка + инлайн-панель === */}
+          <Box ref={selectorRef} sx={{ mb: selectedIngredients.length > 0 ? 1 : 2 }}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={() => setSelectorOpen((v) => !v)}
+              startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
+              sx={{
+                borderColor: selectorOpen ? 'rgba(32,201,151,0.60)' : 'rgba(32,201,151,0.35)',
+                color: 'text.primary',
+                bgcolor: selectorOpen ? 'rgba(204,251,241,0.35)' : 'transparent',
+                '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
+              }}
+            >
+              {selectedIngredients.length > 0
+                ? t.productsCount(selectedIngredients.length)
+                : t.selectProducts}
+            </Button>
+
+            <Collapse in={selectorOpen} unmountOnExit>
+              <Box
+                sx={{
+                  mt: 1,
+                  p: 2,
+                  border: '1.5px solid rgba(32,201,151,0.25)',
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">{t.choosProducts}</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Button onClick={() => setSelectorOpen(false)} variant="contained" size="small">
+                      {t.done(selectedIngredients.length)}
+                    </Button>
+                    <IconButton size="small" onClick={() => setSelectorOpen(false)} sx={{ color: 'text.secondary' }}>
+                      <Close fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+                <IngredientSelector />
+              </Box>
+            </Collapse>
+          </Box>
 
           {/* === Чипы выбранных ингредиентов === */}
           {selectedIngredients.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2, alignItems: 'center' }}>
               {selectedIngredientObjects.map((ing) => (
                 <Chip
                   key={ing.id}
@@ -407,6 +454,21 @@ function App() {
                   variant="outlined"
                 />
               ))}
+              <Chip
+                icon={<Add sx={{ fontSize: '14px !important' }} />}
+                label={t.addProducts}
+                size="small"
+                onClick={() => setSelectorOpen(true)}
+                variant="outlined"
+                sx={{
+                  cursor: 'pointer',
+                  borderStyle: 'dashed',
+                  borderColor: 'rgba(32,201,151,0.40)',
+                  color: '#0F9B6E',
+                  '& .MuiChip-icon': { color: '#0F9B6E' },
+                  '&:hover': { bgcolor: 'rgba(32,201,151,0.08)', borderColor: 'rgba(32,201,151,0.65)' },
+                }}
+              />
             </Box>
           )}
 
@@ -427,23 +489,6 @@ function App() {
             {t.findDishes}
           </Button>
 
-          {/* === Bottom Drawer === */}
-          <Drawer
-            anchor="bottom"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            PaperProps={{ sx: { borderRadius: '16px 16px 0 0', maxHeight: '80vh' } }}
-          >
-            <Box sx={{ p: 2, pb: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">{t.choosProducts}</Typography>
-                <Button onClick={() => setDrawerOpen(false)} variant="contained" size="small">
-                  {t.done(selectedIngredients.length)}
-                </Button>
-              </Box>
-              <IngredientSelector />
-            </Box>
-          </Drawer>
         </Box>
       )}
 
