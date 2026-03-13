@@ -239,6 +239,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               sx={{
                 width: 68,
                 height: 68,
+                borderRadius: '50%',
                 background: 'rgba(255,77,77,0.15)',
                 border: '2px solid rgba(255,77,77,0.65)',
                 color: '#FF4D4D',
@@ -261,6 +262,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               sx={{
                 width: 52,
                 height: 52,
+                borderRadius: '50%',
                 background: 'rgba(168,85,247,0.15)',
                 border: '2px solid rgba(168,85,247,0.65)',
                 color: '#A855F7',
@@ -283,6 +285,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               sx={{
                 width: 68,
                 height: 68,
+                borderRadius: '50%',
                 background: 'rgba(34,197,94,0.15)',
                 border: '2px solid rgba(34,197,94,0.65)',
                 color: '#22C55E',

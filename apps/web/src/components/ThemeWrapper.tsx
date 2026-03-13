@@ -8,7 +8,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
     mode,
     background: {
       default: 'transparent',
-      paper: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(15,23,42,0.88)',
+      paper: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
     },
     primary: {
       main: '#20C997',
@@ -17,7 +17,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#FFB74D',
+      main: '#FB923C',
       contrastText: '#0a0a0a',
     },
     success: { main: '#22C55E' },
@@ -26,17 +26,18 @@ const buildTheme = (mode: ThemeMode) => createTheme({
     error: { main: '#ef4444' },
     text: {
       primary: mode === 'light' ? '#0F172A' : '#E2E8F0',
-      secondary: mode === 'light' ? '#475569' : '#94A3B8',
+      secondary: mode === 'light' ? '#475569' : '#8B9CB8',
     },
   },
   typography: {
-    fontFamily: "'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif",
-    h1: { fontWeight: 900, letterSpacing: '-0.02em' },
-    h2: { fontWeight: 800, letterSpacing: '-0.02em' },
-    h3: { fontWeight: 700, letterSpacing: '-0.01em' },
+    fontFamily: "'Plus Jakarta Sans', Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif",
+    h1: { fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.02em' },
+    h2: { fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 800, letterSpacing: '-0.02em' },
+    h3: { fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', fontWeight: 700, letterSpacing: '-0.01em' },
     h4: { fontWeight: 700, letterSpacing: '-0.01em' },
     h5: { fontWeight: 700 },
     h6: { fontWeight: 600 },
+    body1: { lineHeight: 1.65 },
   },
   shape: { borderRadius: 16 },
   components: {
@@ -44,19 +45,16 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         body: {
           backgroundImage: mode === 'dark'
-            ? "linear-gradient(rgba(5,10,20,0.78), rgba(5,10,20,0.78)), url('/desktop.png')"
-            : "url('/desktop.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
+            ? 'radial-gradient(ellipse 120% 80% at 50% -10%, #022C22 0%, #0C1F1A 40%, #0F172A 100%)'
+            : 'radial-gradient(ellipse 120% 80% at 50% -10%, #CFFAEA 0%, #ECFDF5 40%, #F0FDF4 100%)',
           backgroundAttachment: 'fixed',
-          backgroundRepeat: 'no-repeat',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(32,201,151,0.25) transparent',
+          scrollbarColor: 'rgba(32,201,151,0.40) transparent',
         },
         '*::-webkit-scrollbar': { width: '6px' },
         '*::-webkit-scrollbar-track': { background: 'transparent' },
         '*::-webkit-scrollbar-thumb': {
-          background: mode === 'light' ? 'rgba(32,201,151,0.25)' : 'rgba(32,201,151,0.20)',
+          background: 'rgba(32,201,151,0.40)',
           borderRadius: '3px',
         },
       },
@@ -67,7 +65,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
           background: mode === 'light' ? 'rgba(236,253,245,0.90)' : 'rgba(10,18,35,0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(32,201,151,0.18)',
+          borderBottom: mode === 'light' ? '2px solid rgba(32,201,151,0.35)' : 'none',
           boxShadow: mode === 'dark' ? '0 1px 0 rgba(32,201,151,0.10)' : 'none',
         },
       },
@@ -76,10 +74,10 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(15,23,42,0.88)',
+          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(32,201,151,0.15)',
+          border: mode === 'light' ? '1px solid rgba(32,201,151,0.15)' : '1px solid rgba(255,255,255,0.07)',
         },
         outlined: {
           background: mode === 'light' ? 'rgba(204,251,241,0.55)' : 'rgba(20,35,60,0.70)',
@@ -129,7 +127,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: 8, fontWeight: 500 },
+        root: { borderRadius: 20, fontWeight: 500, paddingLeft: 4, paddingRight: 4 },
         outlined: {
           borderColor: mode === 'light' ? 'rgba(32,201,151,0.25)' : 'rgba(32,201,151,0.30)',
         },
@@ -139,10 +137,10 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(15,23,42,0.88)',
+          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(32,201,151,0.15)',
+          border: mode === 'light' ? '1px solid rgba(32,201,151,0.15)' : '1px solid rgba(255,255,255,0.07)',
           borderRadius: 20,
         },
       },
@@ -204,6 +202,8 @@ const buildTheme = (mode: ThemeMode) => createTheme({
         paper: {
           background: mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(10,18,35,0.97)',
           border: '1px solid rgba(32,201,151,0.22)',
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
         },
       },
     },

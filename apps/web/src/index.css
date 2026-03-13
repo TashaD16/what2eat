@@ -9,7 +9,7 @@
   --color-primary:    #20C997;
   --color-primary-dk: #18B383;
   --color-primary-lt: #38D9A9;
-  --color-secondary:  #FFB74D;
+  --color-secondary:  #FB923C;
 
   /* Actions */
   --color-like:       #22c55e;
@@ -42,6 +42,6 @@ body {
 *::-webkit-scrollbar { width: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(32, 201, 151, 0.40);
   border-radius: 3px;
 }
