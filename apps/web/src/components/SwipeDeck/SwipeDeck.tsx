@@ -215,31 +215,46 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           overflow: 'visible',
         }}
       >
-        {/* Ambient glow behind card */}
+        {/* Ambient glow — slow radial bloom spreading outward from card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: [0, 0.9, 0.6], scale: [0.5, 1.08, 1.0] }}
-          transition={{ duration: 1.1, ease: 'easeOut', times: [0, 0.55, 1], delay: 0.18 }}
+          initial={{ opacity: 0, scale: 0.3 }}
+          animate={{ opacity: [0, 0, 0.75, 0.5], scale: [0.3, 0.6, 1.15, 1.0] }}
+          transition={{ duration: 3.0, ease: [0.16, 1, 0.3, 1], times: [0, 0.25, 0.75, 1], delay: 0.2 }}
           style={{
             position: 'absolute',
-            inset: '-28px',
-            borderRadius: '36px',
-            background: 'radial-gradient(ellipse at 50% 65%, rgba(32,201,151,0.28) 0%, rgba(32,201,151,0.08) 55%, transparent 75%)',
-            filter: 'blur(28px)',
+            inset: '-60px',
+            borderRadius: '48px',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.32) 0%, rgba(32,201,151,0.10) 45%, transparent 70%)',
+            filter: 'blur(40px)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        {/* Outer halo — even slower, wider spread */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.2 }}
+          animate={{ opacity: [0, 0, 0.35, 0.22], scale: [0.2, 0.4, 1.3, 1.1] }}
+          transition={{ duration: 3.2, ease: [0.16, 1, 0.3, 1], times: [0, 0.2, 0.75, 1], delay: 0.35 }}
+          style={{
+            position: 'absolute',
+            inset: '-90px',
+            borderRadius: '60px',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.18) 0%, rgba(32,201,151,0.05) 50%, transparent 70%)',
+            filter: 'blur(56px)',
             pointerEvents: 'none',
             zIndex: 0,
           }}
         />
         {/* Continuous pulse */}
         <motion.div
-          animate={{ opacity: [0.3, 0.55, 0.3], scale: [0.97, 1.04, 0.97] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+          animate={{ opacity: [0.25, 0.48, 0.25], scale: [0.96, 1.05, 0.96] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 3.4 }}
           style={{
             position: 'absolute',
-            inset: '-16px',
-            borderRadius: '32px',
-            background: 'radial-gradient(ellipse at 50% 65%, rgba(32,201,151,0.16) 0%, rgba(32,201,151,0.04) 55%, transparent 75%)',
-            filter: 'blur(20px)',
+            inset: '-50px',
+            borderRadius: '44px',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.18) 0%, rgba(32,201,151,0.05) 50%, transparent 70%)',
+            filter: 'blur(32px)',
             pointerEvents: 'none',
             zIndex: 0,
           }}
