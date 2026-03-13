@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Typography,
@@ -39,8 +39,7 @@ interface SwipeResultsProps {
 
 export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppingList }: SwipeResultsProps) {
   const dispatch = useAppDispatch()
-  const { likedDishIds } = useAppSelector((state) => state.swipe)
-  const { dishes } = useAppSelector((state) => state.dishes)
+  const { likedDishes: storedLikedDishes } = useAppSelector((state) => state.swipe)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [planDialog, setPlanDialog] = useState<{ open: boolean; dishId: number | null }>({
     open: false,
@@ -49,10 +48,19 @@ export default function SwipeResults({ onDishSelect, onBack, onRepeat, onShoppin
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('mon')
   const [removedSnack, setRemovedSnack] = useState(false)
 
-  const likedDishes = useMemo(
-    () => dishes.filter((d) => likedDishIds.includes(d.id)),
-    [dishes, likedDishIds]
-  )
+  // Convert StoredDish → Dish shape expected by DishCard
+  const likedDishes = storedLikedDishes.map((d) => ({
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    image_url: d.image_url,
+    cooking_time: d.cooking_time,
+    difficulty: d.difficulty,
+    servings: d.servings,
+    estimated_cost: d.estimated_cost,
+    is_vegetarian: d.is_vegetarian,
+    is_vegan: d.is_vegan,
+  }))
 
   const handleRepeat = () => {
     dispatch(resetSwipe())

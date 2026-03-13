@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSlice'
 import { findDishes, generateAIRandomDishes, addAIDish, setLoadingMore } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
-import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites } from './store/slices/swipeSlice'
+import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
@@ -42,7 +42,7 @@ function App() {
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
-  const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
+  const { likedDishIds, dislikedDishIds, likedDishes } = useAppSelector((state) => state.swipe)
   const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
@@ -76,6 +76,7 @@ function App() {
           dispatch(migrateLocalFavorites({ userId: session.user.id, localIds }))
         }
         dispatch(syncFavoritesFromSupabase(session.user.id))
+        dispatch(loadFavoritesFromSupabase(session.user.id))
       }
     })
     return () => subscription.unsubscribe()
@@ -286,7 +287,7 @@ function App() {
     <Layout
       onHomeClick={() => setView('ingredients')}
       onPlannerClick={() => setView('weekly_planner')}
-      likedCount={likedDishIds.length}
+      likedCount={likedDishes.length}
       onFavoritesClick={() => setView('swipe_results')}
       user={user}
       onAuthClick={() => setAuthModalOpen(true)}

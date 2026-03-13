@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
-import { swipeDish, markSessionComplete, resetSwipe } from '../../store/slices/swipeSlice'
+import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
 import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
 
@@ -35,7 +35,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
   const { currentIndex } = useAppSelector((state) => state.swipe)
-  const { suggestedDishNames, popularSuggestions, aiRandomMode } = useAppSelector((state) => state.dishes)
+  const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [swipeDirection, setSwipeDirection] = useState<Record<number, 'left' | 'right'>>({})
@@ -74,10 +74,27 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   const handleSwipe = useCallback(
     (direction: string, dishId: number) => {
       const dir = direction === 'right' ? 'right' : 'left'
-      dispatch(swipeDish({ dishId, direction: dir, userId }))
+      const currentDish = dishes.find((d) => d.id === dishId)
+      const aiRecipe = aiDishRecipes[dishId]
+      const storedDish: StoredDish | undefined = currentDish
+        ? {
+            id: dishId,
+            recipeId: aiRecipe?.id,
+            name: currentDish.name,
+            description: currentDish.description,
+            image_url: currentDish.image_url,
+            cooking_time: currentDish.cooking_time,
+            difficulty: currentDish.difficulty,
+            servings: currentDish.servings,
+            estimated_cost: currentDish.estimated_cost,
+            is_vegetarian: currentDish.is_vegetarian,
+            is_vegan: currentDish.is_vegan,
+          }
+        : undefined
+      dispatch(swipeDish({ dishId, direction: dir, userId, dish: storedDish }))
       setSwipeDirection(prev => ({ ...prev, [dishId]: dir }))
     },
-    [dispatch, userId]
+    [dispatch, userId, dishes, aiDishRecipes]
   )
 
   const handleCardLeft = useCallback(
