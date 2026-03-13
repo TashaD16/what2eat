@@ -176,8 +176,8 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
       <Box
         onClick={() => cameraInputRef.current?.click()}
         sx={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 1, py: 2.5, px: 2, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 1.25, py: 1.25, px: 2, cursor: 'pointer',
           transition: 'background 0.18s ease',
           '&:hover': {
             bgcolor: isLight ? 'rgba(32,201,151,0.10)' : 'rgba(32,201,151,0.12)',
@@ -185,18 +185,16 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
         }}
       >
         <Box sx={{
-          width: 64, height: 64, borderRadius: '50%',
+          width: 36, height: 36, borderRadius: '50%',
           background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(32,201,151,0.40)',
+          flexShrink: 0,
+          boxShadow: '0 2px 10px rgba(32,201,151,0.40)',
         }}>
-          <CameraAlt sx={{ fontSize: 30, color: 'white' }} />
+          <CameraAlt sx={{ fontSize: 18, color: 'white' }} />
         </Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F9B6E', letterSpacing: '-0.01em' }}>
+        <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F9B6E' }}>
           Сфотографировать
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.disabled', mt: -0.5 }}>
-          Наведите камеру на продукты
         </Typography>
       </Box>
 
@@ -212,15 +210,15 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
         onClick={() => galleryInputRef.current?.click()}
         sx={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 1, py: 1.5, px: 2, cursor: 'pointer',
+          gap: 1, py: 1, px: 2, cursor: 'pointer',
           transition: 'background 0.18s ease',
           '&:hover': {
             bgcolor: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
           },
         }}
       >
-        <CloudUpload sx={{ fontSize: 18, color: 'text.disabled' }} />
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        <CloudUpload sx={{ fontSize: 16, color: 'text.disabled' }} />
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           загрузить из галереи
         </Typography>
       </Box>
