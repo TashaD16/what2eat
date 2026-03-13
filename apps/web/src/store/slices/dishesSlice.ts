@@ -325,12 +325,16 @@ async function batchPreloadAndDispatch(
  *
  * When ≤3 cards remain, SwipeDeck auto-dispatches loadMoreWebDishes.
  */
-export const generateAIRandomDishes = (cuisine?: string | null) => async (dispatch: (action: unknown) => void) => {
+export const generateAIRandomDishes = (cuisine?: string | null) => async (
+  dispatch: (action: unknown) => void,
+  getState: () => { lang?: { lang: 'ru' | 'en' } }
+) => {
   dispatch(startAIRandom())
+  const lang = getState().lang?.lang ?? 'ru'
 
   if (isSupabaseConfigured()) {
     // ── Scenario A: Supabase global_recipes (no OpenAI cost) ───────────────
-    const ids = await getShuffledGlobalRecipeIds()
+    const ids = await getShuffledGlobalRecipeIds(lang)
     dispatch(setGlobalRecipeQueue(ids))
 
     if (ids.length === 0) {
@@ -383,7 +387,7 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (dispat
           } else {
             dispatchWithPreload(recipe, i, dispatch, false)
           }
-        }, cuisine)
+        }, cuisine, lang)
       } catch (e) {
         dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
         return
@@ -410,9 +414,10 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (dispat
  */
 export const loadMoreWebDishes = () => async (
   dispatch: (action: unknown) => void,
-  getState: () => { dishes: DishesState }
+  getState: () => { dishes: DishesState; lang?: { lang: 'ru' | 'en' } }
 ) => {
   const { globalRecipeQueue, globalRecipesExhausted } = getState().dishes
+  const lang = getState().lang?.lang ?? 'ru'
   const currentCount = getState().dishes.dishes.length
   dispatch(setLoadingMore(true))
 
@@ -425,7 +430,7 @@ export const loadMoreWebDishes = () => async (
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     } else if (globalRecipesExhausted || !isSupabaseConfigured()) {
       // ── Fallback: TheMealDB + GPT → save back to grow the pool ─────────
-      const recipes = await fetchRecipesFromWeb(5)
+      const recipes = await fetchRecipesFromWeb(5, lang)
       await Promise.allSettled(recipes.map((r) => saveGlobalRecipe(r)))
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     }

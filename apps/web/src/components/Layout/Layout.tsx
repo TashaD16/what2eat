@@ -12,9 +12,11 @@ interface LayoutProps {
   user?: { email?: string } | null
   onAuthClick?: () => void
   onSignOut?: () => void
+  lang?: 'ru' | 'en'
+  onLangToggle?: () => void
 }
 
-export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut }: LayoutProps) {
+export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut, lang = 'ru', onLangToggle }: LayoutProps) {
   const { mode, toggleMode } = useThemeMode()
 
   return (
@@ -70,6 +72,32 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
             >
               Планировщик
             </Button>
+          )}
+
+          {onLangToggle && (
+            <Tooltip title={lang === 'ru' ? 'Switch to English' : 'Переключить на русский'}>
+              <Button
+                onClick={onLangToggle}
+                size="small"
+                sx={{
+                  minWidth: 0,
+                  px: 1.25,
+                  py: 0.4,
+                  ml: 0.5,
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.04em',
+                  borderRadius: 2,
+                  border: '1.5px solid',
+                  borderColor: lang === 'en' ? '#20C997' : 'rgba(0,0,0,0.15)',
+                  color: lang === 'en' ? '#20C997' : 'text.secondary',
+                  bgcolor: lang === 'en' ? 'rgba(32,201,151,0.08)' : 'transparent',
+                  '&:hover': { borderColor: '#20C997', color: '#20C997', bgcolor: 'rgba(32,201,151,0.10)' },
+                }}
+              >
+                {lang === 'ru' ? 'EN' : 'RU'}
+              </Button>
+            </Tooltip>
           )}
 
           <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>

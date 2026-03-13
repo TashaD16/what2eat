@@ -6,6 +6,7 @@ import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSl
 import { findDishes, generateAIRandomDishes, addAIDish, addAIDishes, setLoadingMore, setLoading } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
+import { setLang } from './store/slices/langSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
@@ -45,6 +46,7 @@ function App() {
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds, dislikedDishIds, likedDishes } = useAppSelector((state) => state.swipe)
   const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
+  const lang = useAppSelector((state) => state.lang.lang)
 
   useEffect(() => {
     let cancelled = false
@@ -152,6 +154,7 @@ function App() {
       const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
         strictOnlySelectedAndSpices: !filters.allowMissing,
         spiceNames,
+        lang,
       })
 
       if (globalRecipes.length > 0) {
@@ -161,7 +164,7 @@ function App() {
       } else {
         // Nothing in DB — generate via TheMealDB + GPT and save back
         try {
-          const generated = await searchRecipesByIngredients(selectedNames, 5)
+          const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
           if (generated.length > 0) {
             // Save to DB in background (no await — don't block UI)
             generated.forEach((r) => saveGlobalRecipe(r))
@@ -300,6 +303,8 @@ function App() {
       user={user}
       onAuthClick={() => setAuthModalOpen(true)}
       onSignOut={handleSignOut}
+      lang={lang}
+      onLangToggle={() => dispatch(setLang(lang === 'ru' ? 'en' : 'ru'))}
     >
       {view === 'ingredients' && (
         <Box>

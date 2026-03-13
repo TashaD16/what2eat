@@ -29,7 +29,55 @@ export interface AIRecipe {
   source_ingredients: string[]
   image_url?: string
   youtube_url?: string          // TheMealDB strYoutube (may be absent)
+  language?: 'ru' | 'en'       // recipe language (default 'ru')
   created_at?: string
+}
+
+/** Splits raw TheMealDB instruction text into structured steps. */
+function parseInstructionSteps(text: string): RecipeStep[] {
+  // Try numbered steps "1. ..." or "1) ..."
+  const numbered = text.match(/(?:^|\r?\n)\s*\d+[.)]\s*.+/g)
+  if (numbered && numbered.length >= 3) {
+    return numbered.map((s, i) => ({
+      step: i + 1,
+      description: s.replace(/^\s*\d+[.)]\s*/, '').trim(),
+    }))
+  }
+  // Split by newlines
+  const lines = text.split(/\r?\n+/).map((s) => s.trim()).filter((s) => s.length > 20)
+  if (lines.length >= 2) {
+    return lines.map((line, i) => ({ step: i + 1, description: line }))
+  }
+  // Split by sentences
+  const sentences = text.split(/\.\s+/).filter((s) => s.trim().length > 20)
+  return sentences.map((s, i) => ({ step: i + 1, description: s.trim() + '.' }))
+}
+
+/**
+ * Converts a TheMealDB meal to an English AIRecipe without any translation.
+ * Used when the app is in English mode.
+ */
+export function mealToEnglishRecipe(meal: MealDBMeal): AIRecipe {
+  const ings = extractIngredients(meal).map((i) => ({
+    name: i.nameEn,
+    quantity: i.measure.replace(/[^\d./]/g, '').trim() || '1',
+    unit: i.measure.replace(/[\d./\s]/g, '').trim() || '',
+  }))
+  const meta = estimateMeta(meal)
+  const youtubeUrl = (meal.strYoutube ?? '').trim() || undefined
+  return {
+    mealdb_id: meal.idMeal,
+    name: meal.strMeal,
+    description: `${meal.strMeal} is a ${(meal.strCategory ?? '').toLowerCase()} dish from ${meal.strArea ?? 'international'} cuisine.`,
+    ingredients: ings,
+    instructions: parseInstructionSteps(meal.strInstructions ?? ''),
+    cooking_time: meta.cooking_time,
+    difficulty: meta.difficulty,
+    image_url: meal.strMealThumb,
+    youtube_url: youtubeUrl,
+    source_ingredients: [],
+    language: 'en',
+  }
 }
 
 function getApiKey(): string {
@@ -115,6 +163,7 @@ ${ingredientLines}
     image_url: meal.strMealThumb,   // real TheMealDB photo — permanent URL
     youtube_url: youtubeUrl,
     source_ingredients: [],
+    language: 'ru',
   }
 }
 
@@ -206,18 +255,21 @@ async function generateRecipeWithGPT(ingredientNames: string[], cuisine: string 
  * Real food photos included — no DALL-E, no web search.
  * Called by the randomizer thunk for progressive loading.
  */
-export async function fetchRecipesFromWeb(count = 5): Promise<AIRecipe[]> {
+export async function fetchRecipesFromWeb(count = 5, lang: 'ru' | 'en' = 'ru'): Promise<AIRecipe[]> {
   const meals = await getRandomMeals(count)
   if (meals.length === 0) throw new Error('TheMealDB недоступен. Проверьте интернет-соединение.')
 
-  // Translate all meals in parallel
-  const results = await Promise.allSettled(meals.map((m) => translateMealToRussian(m)))
+  const transform = lang === 'en'
+    ? (m: MealDBMeal) => Promise.resolve(mealToEnglishRecipe(m))
+    : translateMealToRussian
+
+  const results = await Promise.allSettled(meals.map((m) => transform(m)))
 
   const successful = results
     .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
     .map((r) => r.value)
 
-  if (successful.length === 0) throw new Error('Не удалось перевести рецепты')
+  if (successful.length === 0) throw new Error('Не удалось загрузить рецепты')
   return successful
 }
 
@@ -229,7 +281,8 @@ export async function fetchRecipesFromWeb(count = 5): Promise<AIRecipe[]> {
 export async function fetchRecipesProgressively(
   count: number,
   onRecipe: (recipe: AIRecipe, index: number) => void,
-  cuisine?: string | null
+  cuisine?: string | null,
+  lang: 'ru' | 'en' = 'ru'
 ): Promise<AIRecipe[]> {
   let meals: MealDBMeal[]
   const areas = cuisineToMealDbAreas(cuisine ?? null)
@@ -253,10 +306,14 @@ export async function fetchRecipesProgressively(
 
   const successful: AIRecipe[] = []
 
+  const transform = lang === 'en'
+    ? (m: MealDBMeal) => Promise.resolve(mealToEnglishRecipe(m))
+    : translateMealToRussian
+
   await Promise.allSettled(
     meals.map(async (meal, i) => {
       try {
-        const recipe = await translateMealToRussian(meal)
+        const recipe = await transform(meal)
         onRecipe(recipe, i)
         successful.push(recipe)
       } catch {
@@ -285,17 +342,29 @@ export async function generateDishPhoto(dishName: string): Promise<string> {
  */
 export async function searchRecipesByIngredients(
   ingredientNamesRu: string[],
-  count = 5
+  count = 5,
+  lang: 'ru' | 'en' = 'ru'
 ): Promise<AIRecipe[]> {
   if (ingredientNamesRu.length === 0) return []
-  const namesEn = await translateIngredientsToEnglish(ingredientNamesRu)
-  const validEn = namesEn.filter(Boolean)
+
+  // For English mode ingredient names are already in English, skip translation
+  let validEn: string[]
+  if (lang === 'en') {
+    validEn = ingredientNamesRu.filter(Boolean)
+  } else {
+    const namesEn = await translateIngredientsToEnglish(ingredientNamesRu)
+    validEn = namesEn.filter(Boolean)
+  }
   if (validEn.length === 0) return []
 
   const meals = await findMealsByIngredients(validEn, count)
   if (meals.length === 0) return []
 
-  const results = await Promise.allSettled(meals.map((m) => translateMealToRussian(m)))
+  const transform = lang === 'en'
+    ? (m: MealDBMeal) => Promise.resolve(mealToEnglishRecipe(m))
+    : translateMealToRussian
+
+  const results = await Promise.allSettled(meals.map((m) => transform(m)))
   return results
     .filter((r): r is PromiseFulfilledResult<AIRecipe> => r.status === 'fulfilled')
     .map((r) => { r.value.source_ingredients = ingredientNamesRu; return r.value })

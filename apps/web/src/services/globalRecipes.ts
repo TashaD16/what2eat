@@ -11,10 +11,13 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-/** Loads all global recipe IDs and returns them shuffled. */
-export async function getShuffledGlobalRecipeIds(): Promise<string[]> {
+/** Loads all global recipe IDs for the given language and returns them shuffled. */
+export async function getShuffledGlobalRecipeIds(lang: 'ru' | 'en' = 'ru'): Promise<string[]> {
   if (!isSupabaseConfigured()) return []
-  const { data, error } = await supabase.from('global_recipes').select('id')
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('id')
+    .eq('language', lang)
   if (error || !data) return []
   return shuffle(data.map((r: { id: string }) => r.id))
 }
@@ -70,6 +73,8 @@ export interface SearchGlobalRecipesOptions {
   strictOnlySelectedAndSpices?: boolean
   /** Названия специй (категория spices) — при strictOnlySelectedAndSpices не требуют выбора */
   spiceNames?: string[]
+  /** Language filter — only return recipes in this language */
+  lang?: 'ru' | 'en'
 }
 
 /**
@@ -82,7 +87,7 @@ export async function searchGlobalRecipesByIngredients(
 ): Promise<AIRecipe[]> {
   if (!isSupabaseConfigured() || ingredientNames.length === 0) return []
 
-  const { strictOnlySelectedAndSpices = false, spiceNames = [] } = options
+  const { strictOnlySelectedAndSpices = false, spiceNames = [], lang = 'ru' } = options
   const lowerNames = ingredientNames.map((n) => n.toLowerCase())
   const lowerSpice = spiceNames.map((n) => n.toLowerCase())
   const allowedLower = new Set([...lowerNames, ...lowerSpice])
@@ -90,6 +95,7 @@ export async function searchGlobalRecipesByIngredients(
   const { data, error } = await supabase
     .from('global_recipes')
     .select('*')
+    .eq('language', lang)
     .limit(500)
 
   if (error || !data) return []
@@ -176,6 +182,7 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
       image_url: recipe.image_url ?? null,
       youtube_url: recipe.youtube_url ?? null,
       mealdb_id: resolvedMealdbId,
+      language: recipe.language ?? 'ru',
       source: 'mealdb',
     },
     { onConflict: 'mealdb_id', ignoreDuplicates: true },
