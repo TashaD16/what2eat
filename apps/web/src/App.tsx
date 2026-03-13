@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton } from '@mui/material'
-import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
+import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton, Tooltip } from '@mui/material'
+import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, DeleteOutline } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { findDishes, generateAIRandomDishes, addAIDishes, setLoading } from './store/slices/dishesSlice'
@@ -392,22 +392,40 @@ function App() {
 
           {/* === Выбор продуктов: кнопка + инлайн-панель === */}
           <Box ref={selectorRef} sx={{ mb: selectedIngredients.length > 0 ? 1 : 2 }}>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => setSelectorOpen((v) => !v)}
-              startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
-              sx={{
-                borderColor: selectorOpen ? 'rgba(32,201,151,0.60)' : 'rgba(32,201,151,0.35)',
-                color: 'text.primary',
-                bgcolor: selectorOpen ? 'rgba(204,251,241,0.35)' : 'transparent',
-                '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
-              }}
-            >
-              {selectedIngredients.length > 0
-                ? t.productsCount(selectedIngredients.length)
-                : t.selectProducts}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => setSelectorOpen((v) => !v)}
+                startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
+                sx={{
+                  borderColor: selectorOpen ? 'rgba(32,201,151,0.60)' : 'rgba(32,201,151,0.35)',
+                  color: 'text.primary',
+                  bgcolor: selectorOpen ? 'rgba(204,251,241,0.35)' : 'transparent',
+                  '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
+                }}
+              >
+                {selectedIngredients.length > 0
+                  ? t.productsCount(selectedIngredients.length)
+                  : t.selectProducts}
+              </Button>
+              {selectedIngredients.length > 0 && (
+                <Tooltip title={t.clearAll}>
+                  <IconButton
+                    onClick={() => dispatch(setSelectedIngredients([]))}
+                    sx={{
+                      border: '1px solid rgba(0,0,0,0.15)',
+                      borderRadius: 1,
+                      color: 'text.secondary',
+                      flexShrink: 0,
+                      '&:hover': { color: '#f44336', borderColor: 'rgba(244,67,54,0.4)', bgcolor: 'rgba(244,67,54,0.05)' },
+                    }}
+                  >
+                    <DeleteOutline sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
 
             <Collapse in={selectorOpen} unmountOnExit>
               <Box
