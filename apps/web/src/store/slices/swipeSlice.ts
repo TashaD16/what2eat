@@ -8,7 +8,7 @@ import {
   removeFavoriteGlobalRecipe,
   getUserFavoriteGlobalRecipeIds,
 } from '../../services/favorites'
-import { getGlobalRecipesByIds } from '../../services/globalRecipes'
+import { getGlobalRecipesInLanguage } from '../../services/globalRecipes'
 import { Difficulty } from '@what2eat/types'
 
 const STORAGE_KEY_LIKED = 'w2e_liked_dish_ids'
@@ -19,6 +19,7 @@ const STORAGE_KEY_LIKED_DISHES = 'w2e_liked_dishes'
 export interface StoredDish {
   id: number
   recipeId?: string  // UUID from global_recipes (for Supabase sync)
+  mealdb_id?: string // TheMealDB idMeal — used for cross-language lookup
   name: string
   description: string | null
   image_url: string | null
@@ -103,16 +104,17 @@ export const migrateLocalFavorites = createAsyncThunk(
   }
 )
 
-// Load full dish data for favorites from Supabase (by UUID)
+// Load full dish data for favorites from Supabase (by UUID), in the given language
 export const loadFavoritesFromSupabase = createAsyncThunk(
   'swipe/loadFavorites',
-  async (userId: string): Promise<StoredDish[]> => {
+  async ({ userId, lang = 'ru' }: { userId: string; lang?: 'ru' | 'en' }): Promise<StoredDish[]> => {
     const recipeIds = await getUserFavoriteGlobalRecipeIds(userId)
     if (recipeIds.length === 0) return []
-    const recipes = await getGlobalRecipesByIds(recipeIds)
+    const recipes = await getGlobalRecipesInLanguage(recipeIds, lang)
     return recipes.map((recipe, i): StoredDish => ({
       id: -(10000 + i),
       recipeId: recipe.id,
+      mealdb_id: recipe.mealdb_id,
       name: recipe.name,
       description: recipe.description ?? null,
       image_url: recipe.image_url ?? null,

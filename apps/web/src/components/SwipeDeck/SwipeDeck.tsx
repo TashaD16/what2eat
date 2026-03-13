@@ -87,6 +87,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         ? {
             id: dishId,
             recipeId: aiRecipe?.id,
+            mealdb_id: aiRecipe?.mealdb_id,
             name: currentDish.name,
             description: currentDish.description,
             image_url: currentDish.image_url,

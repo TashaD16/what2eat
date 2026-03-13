@@ -85,6 +85,19 @@ export const translations = {
     noInstructions: 'Инструкции для этого рецепта недоступны.',
     nazad: 'Назад',
 
+    // PhotoDropZone
+    analyzingPhoto: 'Анализирую фото...',
+    tapToRetake: 'Нажмите, чтобы переснять',
+    noProductsFound: 'Продукты не распознаны. Попробуйте другое фото.',
+    takePhoto: 'Сфотографировать',
+    takeOrUpload: 'Сфотографировать или загрузить',
+
+    // RecipeView / DishList
+    recipeNotFound: 'Рецепт не найден',
+    foundDishes: 'Найдено блюд',
+    recommendedDishes: 'Рекомендуемые блюда',
+    noDishesByIngredients: 'Блюда с выбранными ингредиентами не найдены. Попробуйте выбрать другие ингредиенты.',
+
     // IngredientSelector
     searchIngredients: 'Поиск ингредиентов...',
     all: 'Все',
@@ -225,6 +238,19 @@ export const translations = {
     cooking: 'Instructions',
     noInstructions: 'Instructions for this recipe are unavailable.',
     nazad: 'Back',
+
+    // PhotoDropZone
+    analyzingPhoto: 'Analysing photo...',
+    tapToRetake: 'Tap to retake',
+    noProductsFound: 'No products detected. Try another photo.',
+    takePhoto: 'Take photo',
+    takeOrUpload: 'Take or upload photo',
+
+    // RecipeView / DishList
+    recipeNotFound: 'Recipe not found',
+    foundDishes: 'Dishes found',
+    recommendedDishes: 'Recommended dishes',
+    noDishesByIngredients: 'No dishes found with the selected ingredients. Try different ones.',
 
     // IngredientSelector
     searchIngredients: 'Search ingredients...',

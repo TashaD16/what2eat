@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { analyzeIngredients, clearPhoto } from '../../store/slices/photoSlice'
 import { prepareImageForApi, convertHeicToJpegFile, isHeic } from '../../utils/imageUtils'
+import { useT } from '../../i18n/useT'
 
 interface PhotoDropZoneProps {
   onDetected: (ids: number[]) => void
@@ -26,6 +27,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
   const isMobile = useIsMobile()
+  const t = useT()
   const { status, error } = useAppSelector((state) => state.photo)
   const { ingredients } = useAppSelector((state) => state.ingredients)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -103,18 +105,18 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
           {isAnalyzing && (
             <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.45)', gap: 1.5 }}>
               <CircularProgress size={32} sx={{ color: '#20C997' }} />
-              <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>Анализирую фото...</Typography>
+              <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>{t.analyzingPhoto}</Typography>
             </Box>
           )}
           {!isAnalyzing && (
             <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.35)', py: 0.6, gap: 0.75 }}>
               <CameraAlt sx={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }} />
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.7rem' }}>Нажмите, чтобы переснять</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.7rem' }}>{t.tapToRetake}</Typography>
             </Box>
           )}
         </Box>
         {status === 'error' && error && <Alert severity="error" sx={{ mt: 1, py: 0.5, fontSize: '0.8rem' }}>{error}</Alert>}
-        {status === 'done' && detectedCount === 0 && <Alert severity="warning" sx={{ mt: 1, py: 0.5, fontSize: '0.8rem' }}>Продукты не распознаны. Попробуйте другое фото.</Alert>}
+        {status === 'done' && detectedCount === 0 && <Alert severity="warning" sx={{ mt: 1, py: 0.5, fontSize: '0.8rem' }}>{t.noProductsFound}</Alert>}
       </Box>
     )
   }
@@ -147,7 +149,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
           <CameraAlt sx={{ fontSize: 16, color: '#20C997' }} />
         </Box>
         <Typography variant="body2" sx={{ fontWeight: 600, color: '#0F9B6E' }}>
-          {isMobile ? 'Сфотографировать' : 'Сфотографировать или загрузить'}
+          {isMobile ? t.takePhoto : t.takeOrUpload}
         </Typography>
       </Box>
     </Box>

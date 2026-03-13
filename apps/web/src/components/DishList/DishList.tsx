@@ -5,6 +5,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { findDishes, clearDishes } from '../../store/slices/dishesSlice'
 import { clearSelection } from '../../store/slices/ingredientsSlice'
 import DishCard from './DishCard'
+import { useT } from '../../i18n/useT'
 
 interface DishListProps {
   onDishSelect: (dishId: number) => void
@@ -13,6 +14,7 @@ interface DishListProps {
 
 export default function DishList({ onDishSelect, onBack }: DishListProps) {
   const dispatch = useAppDispatch()
+  const t = useT()
   const { dishes, loading, error } = useAppSelector((state) => state.dishes)
   const { selectedIngredients } = useAppSelector((state) => state.ingredients)
   const lastSearchedRef = useRef<string>('')
@@ -43,10 +45,10 @@ export default function DishList({ onDishSelect, onBack }: DishListProps) {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5">
-          {selectedIngredients.length > 0 ? 'Найдено блюд' : 'Рекомендуемые блюда'}: {dishes.length}
+          {selectedIngredients.length > 0 ? t.foundDishes : t.recommendedDishes}: {dishes.length}
         </Typography>
         <Button variant="outlined" onClick={handleBack} startIcon={<ArrowBack />}>
-          Назад
+          {t.nazad}
         </Button>
       </Box>
 
@@ -74,7 +76,7 @@ export default function DishList({ onDishSelect, onBack }: DishListProps) {
 
       {!loading && dishes.length === 0 && !error && (
         <Alert severity="info">
-          Блюда с выбранными ингредиентами не найдены. Попробуйте выбрать другие ингредиенты.
+          {t.noDishesByIngredients}
         </Alert>
       )}
     </Box>

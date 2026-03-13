@@ -12,7 +12,7 @@ import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
 import { searchGlobalRecipesByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe } from './services/globalRecipes'
-import { searchRecipesByIngredients } from './services/aiRecipes'
+import { searchRecipesByIngredients, translateRecipeToOtherLanguage } from './services/aiRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
 import RecipeView from './components/RecipeView'
@@ -86,7 +86,7 @@ function App() {
           dispatch(migrateLocalFavorites({ userId: session.user.id, localIds }))
         }
         dispatch(syncFavoritesFromSupabase(session.user.id))
-        dispatch(loadFavoritesFromSupabase(session.user.id))
+        dispatch(loadFavoritesFromSupabase({ userId: session.user.id, lang }))
       }
     })
     return () => subscription.unsubscribe()
@@ -211,8 +211,11 @@ function App() {
         try {
           const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
           if (generated.length > 0) {
-            // Save to DB in background (no await — don't block UI)
-            generated.forEach((r) => saveGlobalRecipe(r))
+            // Save to DB in background (no await — don't block UI), also save translated version
+            generated.forEach((r) => {
+              saveGlobalRecipe(r)
+              translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+            })
             dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
           }
         } catch { /* silently fail — show empty state */ }
@@ -250,9 +253,9 @@ function App() {
       return
     }
     if (!isSupabaseConfigured()) return
-    const results = await searchGlobalRecipesByName(query.trim())
+    const results = await searchGlobalRecipesByName(query.trim(), lang)
     setSearchResults(results.slice(0, 6).map((r) => ({ id: r.id, name: r.name })))
-  }, [])
+  }, [lang])
 
   const handleSearchSelect = async (id: string | number) => {
     setSearchQuery('')
@@ -314,7 +317,11 @@ function App() {
       onAuthClick={() => setAuthModalOpen(true)}
       onSignOut={handleSignOut}
       lang={lang}
-      onLangToggle={() => dispatch(setLang(lang === 'ru' ? 'en' : 'ru'))}
+      onLangToggle={() => {
+        const newLang = lang === 'ru' ? 'en' : 'ru'
+        dispatch(setLang(newLang))
+        if (user) dispatch(loadFavoritesFromSupabase({ userId: user.id, lang: newLang }))
+      }}
     >
       {view === 'ingredients' && (
         <Box>

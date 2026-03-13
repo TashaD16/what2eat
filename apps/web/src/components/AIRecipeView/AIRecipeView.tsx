@@ -69,7 +69,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
     return (
       <Box>
         <Button onClick={handleBack} startIcon={<ArrowBack />} sx={{ mb: 2 }}>
-          Назад
+          {t.nazad}
         </Button>
         <Alert severity="error">{error}</Alert>
       </Box>

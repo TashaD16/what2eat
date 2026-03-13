@@ -5,7 +5,7 @@ export type Lang = 'ru' | 'en'
 const STORAGE_KEY = 'w2e_lang'
 
 function loadLang(): Lang {
-  try { return (localStorage.getItem(STORAGE_KEY) as Lang) ?? 'ru' } catch { return 'ru' }
+  try { return (localStorage.getItem(STORAGE_KEY) as Lang) ?? 'en' } catch { return 'en' }
 }
 
 const langSlice = createSlice({

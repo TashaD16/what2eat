@@ -11,13 +11,14 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-/** Loads all global recipe IDs for the given language and returns them shuffled. */
+/** Loads all global recipe IDs for the given language and returns them shuffled. Only returns recipes with an image. */
 export async function getShuffledGlobalRecipeIds(lang: 'ru' | 'en' = 'ru'): Promise<string[]> {
   if (!isSupabaseConfigured()) return []
   const { data, error } = await supabase
     .from('global_recipes')
     .select('id')
     .eq('language', lang)
+    .not('image_url', 'is', null)
   if (error || !data) return []
   return shuffle(data.map((r: { id: string }) => r.id))
 }
@@ -32,28 +33,23 @@ function parseInstructions(raw: unknown): RecipeStep[] {
   return []
 }
 
-/** Fetches full recipes by UUID list (up to 20 at a time). */
-export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> {
-  if (!isSupabaseConfigured() || ids.length === 0) return []
-  const { data, error } = await supabase
-    .from('global_recipes')
-    .select('*')
-    .in('id', ids)
-  if (error || !data) return []
+type RawRecipeRow = {
+  id: string
+  name: string
+  description: string
+  instructions: unknown
+  ingredients: AIRecipe['ingredients']
+  cooking_time: number
+  difficulty: 'easy' | 'medium' | 'hard'
+  image_url: string | null
+  youtube_url?: string | null
+  mealdb_id?: string | null
+  source_ingredients?: string[]
+  created_at?: string
+}
 
-  return data.map((r: {
-    id: string
-    name: string
-    description: string
-    instructions: unknown
-    ingredients: AIRecipe['ingredients']
-    cooking_time: number
-    difficulty: 'easy' | 'medium' | 'hard'
-    image_url: string | null
-    youtube_url?: string | null
-    source_ingredients?: string[]
-    created_at?: string
-  }) => ({
+function mapRow(r: RawRecipeRow): AIRecipe {
+  return {
     id: r.id,
     name: r.name,
     description: r.description ?? '',
@@ -63,9 +59,21 @@ export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> 
     difficulty: r.difficulty ?? 'medium',
     image_url: r.image_url ?? undefined,
     youtube_url: r.youtube_url ?? undefined,
+    mealdb_id: r.mealdb_id ?? undefined,
     source_ingredients: r.source_ingredients ?? [],
     created_at: r.created_at,
-  })) as AIRecipe[]
+  }
+}
+
+/** Fetches full recipes by UUID list (up to 20 at a time). */
+export async function getGlobalRecipesByIds(ids: string[]): Promise<AIRecipe[]> {
+  if (!isSupabaseConfigured() || ids.length === 0) return []
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('*')
+    .in('id', ids)
+  if (error || !data) return []
+  return (data as RawRecipeRow[]).map(mapRow)
 }
 
 export interface SearchGlobalRecipesOptions {
@@ -100,7 +108,7 @@ export async function searchGlobalRecipesByIngredients(
 
   if (error || !data) return []
 
-  const scored = data
+  const scored = (data as RawRecipeRow[])
     .filter((r) => {
       // Only show complete recipes: must have photo, ingredients and instructions
       if (!r.image_url) return false
@@ -130,29 +138,22 @@ export async function searchGlobalRecipesByIngredients(
   filtered.sort((a, b) => b.score - a.score)
 
   return filtered.slice(0, 20).map(({ r }) => ({
-    id: r.id,
-    name: r.name,
-    description: r.description ?? '',
-    instructions: parseInstructions(r.instructions),
-    ingredients: r.ingredients ?? [],
-    cooking_time: r.cooking_time ?? 30,
-    difficulty: r.difficulty ?? 'medium',
-    image_url: r.image_url ?? undefined,
-    youtube_url: (r as { youtube_url?: string | null }).youtube_url ?? undefined,
+    ...mapRow(r),
     source_ingredients: ingredientNames,
-    created_at: r.created_at,
-  })) as AIRecipe[]
+  }))
 }
 
 /** Поиск рецептов по названию (для строки поиска в шапке). */
-export async function searchGlobalRecipesByName(query: string): Promise<Array<{ id: string; name: string }>> {
+export async function searchGlobalRecipesByName(query: string, lang?: 'ru' | 'en'): Promise<Array<{ id: string; name: string }>> {
   if (!isSupabaseConfigured() || !query.trim()) return []
-  const { data, error } = await supabase
+  let q = supabase
     .from('global_recipes')
     .select('id, name')
     .ilike('name', `%${query.trim()}%`)
     .limit(10)
     .order('name')
+  if (lang) q = q.eq('language', lang)
+  const { data, error } = await q
   if (error) {
     console.error('searchGlobalRecipesByName:', error)
     return []
@@ -167,12 +168,26 @@ export async function getGlobalRecipeById(id: string): Promise<AIRecipe | null> 
   return recipes[0] ?? null
 }
 
-/** Saves a new recipe to the global pool (upserts by mealdb_id to avoid duplicates). */
-export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Promise<void> {
-  if (!isSupabaseConfigured()) return
+/** Saves a new recipe to the global pool using check-then-insert to avoid duplicates per (mealdb_id, language). */
+export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null
   const resolvedMealdbId = mealdbId ?? recipe.mealdb_id ?? null
-  await supabase.from('global_recipes').upsert(
-    {
+  const lang = recipe.language ?? 'ru'
+
+  // Check for existing record by (mealdb_id, language) to avoid duplicates
+  if (resolvedMealdbId) {
+    const { data: existing } = await supabase
+      .from('global_recipes')
+      .select('id')
+      .eq('mealdb_id', resolvedMealdbId)
+      .eq('language', lang)
+      .maybeSingle()
+    if (existing?.id) return existing.id as string
+  }
+
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .insert({
       name: recipe.name,
       description: recipe.description,
       instructions: recipe.instructions,
@@ -182,9 +197,69 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
       image_url: recipe.image_url ?? null,
       youtube_url: recipe.youtube_url ?? null,
       mealdb_id: resolvedMealdbId,
-      language: recipe.language ?? 'ru',
+      language: lang,
       source: 'mealdb',
-    },
-    { onConflict: 'mealdb_id', ignoreDuplicates: true },
-  )
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('saveGlobalRecipe insert error:', error)
+    return null
+  }
+  return (data?.id as string) ?? null
+}
+
+/**
+ * Loads recipes by UUID and returns them in the requested language.
+ * For recipes with a mealdb_id, looks up the translated version in global_recipes.
+ * For missing translations, triggers background translation+save and returns originals.
+ */
+export async function getGlobalRecipesInLanguage(
+  recipeIds: string[],
+  lang: 'ru' | 'en'
+): Promise<AIRecipe[]> {
+  if (!isSupabaseConfigured() || recipeIds.length === 0) return []
+
+  const originals = await getGlobalRecipesByIds(recipeIds)
+  if (originals.length === 0) return []
+
+  const withMealdbId = originals.filter((r) => r.mealdb_id)
+  const withoutMealdbId = originals.filter((r) => !r.mealdb_id)
+
+  if (withMealdbId.length === 0) return originals
+
+  const mealdbIds = withMealdbId.map((r) => r.mealdb_id!)
+
+  // Find existing translated versions in the target language
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('*')
+    .in('mealdb_id', mealdbIds)
+    .eq('language', lang)
+
+  const translatedByMealdbId = new Map<string, AIRecipe>()
+  if (!error && data) {
+    for (const r of data as RawRecipeRow[]) {
+      if (r.mealdb_id) translatedByMealdbId.set(r.mealdb_id, mapRow(r))
+    }
+  }
+
+  // For missing translations, trigger background translation+save
+  const missingMealdbIds = mealdbIds.filter((id) => !translatedByMealdbId.has(id))
+  if (missingMealdbIds.length > 0) {
+    // Dynamic import to avoid potential circular dependency at load time
+    import('./aiRecipes').then(({ translateRecipeToOtherLanguage }) => {
+      for (const orig of withMealdbId.filter((r) => missingMealdbIds.includes(r.mealdb_id!))) {
+        translateRecipeToOtherLanguage(orig)
+          .then((other) => saveGlobalRecipe(other))
+          .catch(() => {})
+      }
+    }).catch(() => {})
+  }
+
+  return [
+    ...withMealdbId.map((orig) => translatedByMealdbId.get(orig.mealdb_id!) ?? orig),
+    ...withoutMealdbId,
+  ]
 }

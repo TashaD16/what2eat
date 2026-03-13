@@ -371,6 +371,54 @@ export async function searchRecipesByIngredients(
     .filter((r) => r.image_url && r.ingredients.length > 0 && r.instructions.length > 0)
 }
 
+/**
+ * Translates a recipe to the other language.
+ * - If mealdb_id is set: fetches the meal from TheMealDB and converts directly (free, no GPT for EN direction).
+ * - If no mealdb_id: uses GPT-4o-mini to translate the recipe structure.
+ */
+export async function translateRecipeToOtherLanguage(recipe: AIRecipe): Promise<AIRecipe> {
+  const otherLang: 'ru' | 'en' = recipe.language === 'ru' ? 'en' : 'ru'
+
+  if (recipe.mealdb_id) {
+    const meal = await getMealById(recipe.mealdb_id)
+    if (meal) {
+      const translated = otherLang === 'en'
+        ? mealToEnglishRecipe(meal)
+        : await translateMealToRussian(meal)
+      translated.source_ingredients = recipe.source_ingredients
+      return translated
+    }
+  }
+
+  // GPT fallback: translate the full recipe text
+  const targetLangName = otherLang === 'ru' ? 'русский' : 'English'
+  const prompt = `Translate this recipe to ${targetLangName}. Return ONLY JSON (no explanation):
+{
+  "name": "<name>",
+  "description": "<description>",
+  "ingredients": [{"name": "<name>", "quantity": "<qty>", "unit": "<unit>"}],
+  "instructions": [{"step": 1, "description": "<step>"}]
+}
+
+Recipe:
+${JSON.stringify({ name: recipe.name, description: recipe.description, ingredients: recipe.ingredients, instructions: recipe.instructions })}`
+
+  const text = await callOpenAIMini(prompt)
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error(`Failed to translate recipe "${recipe.name}"`)
+
+  const parsed = JSON.parse(match[0]) as Pick<AIRecipe, 'name' | 'description' | 'ingredients' | 'instructions'>
+  return {
+    ...recipe,
+    id: undefined,
+    name: parsed.name,
+    description: parsed.description,
+    ingredients: parsed.ingredients,
+    instructions: parsed.instructions,
+    language: otherLang,
+  }
+}
+
 export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<string | null> {
   if (!isSupabaseConfigured()) return null
   const { data, error } = await supabase

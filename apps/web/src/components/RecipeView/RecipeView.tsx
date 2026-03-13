@@ -20,6 +20,7 @@ import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice
 import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
 import { Difficulty } from '@what2eat/types'
 import { getDishImageUrl } from '../../utils/imageUtils'
+import { useT } from '../../i18n/useT'
 
 interface RecipeViewProps {
   onBack: () => void
@@ -31,6 +32,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   const { likedDishIds, dislikedDishIds } = useAppSelector((state) => state.swipe)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [servings, setServings] = useState<number | null>(null)
+  const t = useT()
 
   const handleBack = () => {
     dispatch(clearRecipe())
@@ -54,7 +56,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
       <Box>
         <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         <Button variant="outlined" onClick={handleBack} startIcon={<ArrowBack />}>
-          Назад
+          {t.nazad}
         </Button>
       </Box>
     )
@@ -63,9 +65,9 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
   if (!currentRecipe) {
     return (
       <Box>
-        <Alert severity="info">Рецепт не найден</Alert>
+        <Alert severity="info">{t.recipeNotFound}</Alert>
         <Button variant="outlined" onClick={handleBack} startIcon={<ArrowBack />} sx={{ mt: 2 }}>
-          Назад
+          {t.nazad}
         </Button>
       </Box>
     )
@@ -131,7 +133,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             size="small"
             sx={{ mb: 1.5, color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }}
           >
-            Назад
+            {t.nazad}
           </Button>
           <Typography
             variant="h3"
@@ -230,7 +232,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
               <Chip
                 icon={<AccessTime sx={{ fontSize: '14px !important', color: '#0F9B6E !important' }} />}
-                label={`${currentRecipe.cooking_time} мин`}
+                label={t.min(currentRecipe.cooking_time)}
                 size="small"
                 sx={{ bgcolor: 'rgba(32,201,151,0.15)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.30)', fontWeight: 600 }}
               />
@@ -253,11 +255,11 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
               <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Add sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>порц.</Typography>
+              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>{t.servings}</Typography>
             </Box>
 
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
-              Ингредиенты
+              {t.ingredients}
             </Typography>
             <List dense disablePadding>
               {currentRecipe.ingredients.map((ing, index) => (
@@ -316,7 +318,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-              Приготовление
+              {t.cooking}
             </Typography>
             <Divider sx={{ mb: 2.5 }} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
