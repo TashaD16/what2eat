@@ -8,7 +8,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
     mode,
     background: {
       default: 'transparent',
-      paper: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
+      paper: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
     },
     primary: {
       main: '#20C997',
@@ -77,7 +77,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
+          background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: mode === 'light' ? '1px solid rgba(32,201,151,0.15)' : '1px solid rgba(255,255,255,0.07)',
@@ -111,11 +111,11 @@ const buildTheme = (mode: ThemeMode) => createTheme({
         outlined: {
           color: mode === 'light' ? '#0F172A' : '#E2E8F0',
           borderColor: 'rgba(32,201,151,0.35)',
-          background: mode === 'light' ? 'rgba(204,251,241,0.35)' : 'rgba(32,201,151,0.08)',
+          background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
           backdropFilter: 'blur(8px)',
           '&:hover': {
             borderColor: 'rgba(32,201,151,0.65)',
-            background: mode === 'light' ? 'rgba(204,251,241,0.65)' : 'rgba(32,201,151,0.15)',
+            background: mode === 'light' ? 'rgba(224,253,244,0.99)' : 'rgba(12,26,48,0.97)',
           },
           '&.Mui-disabled': {
             borderColor: 'rgba(32,201,151,0.12)',
@@ -140,7 +140,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          background: mode === 'light' ? 'rgba(236,253,245,0.82)' : 'rgba(10,16,32,0.93)',
+          background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: mode === 'light' ? '1px solid rgba(32,201,151,0.15)' : '1px solid rgba(255,255,255,0.07)',
@@ -152,7 +152,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            background: mode === 'light' ? 'rgba(204,251,241,0.30)' : 'rgba(10,18,35,0.55)',
+            background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
             backdropFilter: 'blur(8px)',
             '& fieldset': {
               borderColor: mode === 'light' ? 'rgba(32,201,151,0.30)' : 'rgba(32,201,151,0.22)',

@@ -8,6 +8,7 @@ import {
   Paper,
   Tabs,
   Tab,
+  useTheme,
 } from '@mui/material'
 import { Search } from '@mui/icons-material'
 import { useState, useMemo } from 'react'
@@ -22,6 +23,8 @@ export default function IngredientSelector() {
   const { ingredients, selectedIngredients } = useAppSelector(
     (state) => state.ingredients
   )
+  const theme = useTheme()
+  const isLight = theme.palette.mode === 'light'
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<IngredientCategory | 'all'>('all')
 
@@ -122,13 +125,17 @@ export default function IngredientSelector() {
                   sx={{
                     p: 1.5,
                     cursor: 'pointer',
-                    border: isSelected ? '1.5px solid rgba(32,201,151,0.6)' : '1px solid rgba(15,23,42,0.10)',
-                    bgcolor: isSelected ? 'rgba(32,201,151,0.12)' : 'rgba(204,251,241,0.40)',
+                    border: isSelected ? '1.5px solid rgba(32,201,151,0.6)' : `1px solid ${isLight ? 'rgba(32,201,151,0.15)' : 'rgba(255,255,255,0.07)'}`,
+                    bgcolor: isSelected
+                      ? (isLight ? 'rgba(32,201,151,0.12)' : 'rgba(32,201,151,0.15)')
+                      : (isLight ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)'),
                     boxShadow: isSelected ? '0 0 16px rgba(32,201,151,0.20)' : 'none',
                     transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: isSelected ? 'rgba(32,201,151,0.18)' : 'rgba(204,251,241,0.75)',
-                      border: isSelected ? '1.5px solid rgba(32,201,151,0.7)' : '1px solid rgba(15,23,42,0.18)',
+                      bgcolor: isSelected
+                        ? (isLight ? 'rgba(32,201,151,0.18)' : 'rgba(32,201,151,0.22)')
+                        : (isLight ? 'rgba(224,253,244,0.99)' : 'rgba(12,26,48,0.97)'),
+                      border: isSelected ? '1.5px solid rgba(32,201,151,0.7)' : '1px solid rgba(32,201,151,0.30)',
                     },
                   }}
                   onClick={() => handleToggle(ingredient.id)}
