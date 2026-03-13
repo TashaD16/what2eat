@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
-import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton, Tooltip } from '@mui/material'
-import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, DeleteOutline } from '@mui/icons-material'
+import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton } from '@mui/material'
+import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { clearPhoto } from './store/slices/photoSlice'
@@ -318,6 +318,38 @@ function App() {
     >
       {view === 'ingredients' && (
         <Box>
+          {/* === Начать сначала === */}
+          {(photoActive || selectedIngredients.length > 0) && (
+            <Box sx={{ mb: 1.5 }}>
+              <Button
+                size="small"
+                onClick={handleClearAll}
+                startIcon={<RestartAlt sx={{ fontSize: '18px !important', transition: 'transform 0.4s ease', '.MuiButton-root:hover &': { transform: 'rotate(-180deg)' } }} />}
+                sx={{
+                  borderRadius: '50px',
+                  border: '2px dashed rgba(255,159,64,0.55)',
+                  bgcolor: 'rgba(255,159,64,0.07)',
+                  color: '#D4740A',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  px: 1.75,
+                  py: 0.5,
+                  letterSpacing: '0.01em',
+                  textTransform: 'none',
+                  boxShadow: '0 2px 8px rgba(255,159,64,0.15)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,159,64,0.14)',
+                    borderColor: 'rgba(255,159,64,0.80)',
+                    boxShadow: '0 3px 12px rgba(255,159,64,0.25)',
+                  },
+                  '&:hover .restart-icon': { transform: 'rotate(-180deg)' },
+                }}
+              >
+                {t.startOver}
+              </Button>
+            </Box>
+          )}
+
           {/* === Поиск + кнопка фильтров === */}
           {!photoActive && <Box sx={{ display: 'flex', gap: 1, mb: 1, position: 'relative' }} ref={searchRef}>
             <Badge badgeContent={activeFilterCount || undefined} color="primary">
@@ -429,22 +461,6 @@ function App() {
                   ? t.productsCount(selectedIngredients.length)
                   : t.selectProducts}
               </Button>
-              {selectedIngredients.length > 0 && (
-                <Tooltip title={t.clearAll}>
-                  <IconButton
-                    onClick={handleClearAll}
-                    sx={{
-                      border: '1px solid rgba(0,0,0,0.15)',
-                      borderRadius: 1,
-                      color: 'text.secondary',
-                      flexShrink: 0,
-                      '&:hover': { color: '#f44336', borderColor: 'rgba(244,67,54,0.4)', bgcolor: 'rgba(244,67,54,0.05)' },
-                    }}
-                  >
-                    <DeleteOutline sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Tooltip>
-              )}
             </Box>
 
             <Collapse in={selectorOpen} unmountOnExit>
