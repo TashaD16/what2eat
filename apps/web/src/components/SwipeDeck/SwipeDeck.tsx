@@ -311,25 +311,18 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             )
           })
         )}
+      </Box>
+      </motion.div>
 
-        {/* Controls — overlaid at the bottom of the card */}
-        <AnimatePresence>
-        {remaining > 0 && (
-          <motion.div
-            variants={btnContainerVariants}
-            initial="hidden"
-            animate="visible"
-            style={{
-              position: 'absolute',
-              bottom: 20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 20,
-              alignItems: 'center',
-              zIndex: 9999,
-            }}
-          >
+      {/* Controls */}
+      <AnimatePresence>
+      {remaining > 0 && (
+        <motion.div
+          variants={btnContainerVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ display: 'flex', gap: 20, alignItems: 'center' }}
+        >
           <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('left')}
@@ -395,11 +388,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               <Favorite sx={{ fontSize: 30 }} />
             </IconButton>
           </motion.div>
-          </motion.div>
-        )}
-        </AnimatePresence>
-      </Box>
-      </motion.div>
+        </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Dish info dialog */}
       <Dialog
