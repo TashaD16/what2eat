@@ -48,7 +48,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
     .join(',')
 
   const remaining = dishes.length - currentIndex
-  const topDishIndex = dishes.length - 1 - currentIndex
+  const topDishIndex = currentIndex
 
   useEffect(() => {
     const selectedNames = selectedNamesKey.split(',').filter(Boolean)
@@ -97,15 +97,14 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
     [dispatch, userId, dishes, aiDishRecipes]
   )
 
-  const handleCardLeft = useCallback(
-    (_title: string, newIndex: number) => {
-      if (newIndex < 0) {
-        dispatch(markSessionComplete())
-        onComplete()
-      }
-    },
-    [dispatch, onComplete]
-  )
+  // Trigger completion when all cards are swiped
+  useEffect(() => {
+    if (remaining === 0 && dishes.length > 0) {
+      dispatch(markSessionComplete())
+      onComplete()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining])
 
   const swipe = (dir: 'left' | 'right') => {
     const card = cardRefsStore.current[topDishIndex]
@@ -224,12 +223,12 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   position: 'absolute',
                   width: '100%',
                   height: '100%',
+                  zIndex: dishes.length - index,
                 }}
               >
                 <TinderCard
                   ref={getCardRef(index)}
                   onSwipe={(dir) => handleSwipe(dir, dish.id)}
-                  onCardLeftScreen={(title) => handleCardLeft(title, index - currentIndex - 1)}
                   preventSwipe={['up', 'down']}
                   swipeRequirementType="position"
                   swipeThreshold={80}
