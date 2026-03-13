@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
 import { motion } from 'framer-motion'
-import { useTheme } from '@mui/material/styles'
 
 interface CardAPI {
   swipe(dir?: string): Promise<void>
@@ -32,8 +31,6 @@ interface SwipeDeckProps {
 
 export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
-  const theme = useTheme()
-  const isLight = theme.palette.mode === 'light'
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
