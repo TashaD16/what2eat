@@ -297,6 +297,19 @@ function App() {
         <Box>
           {/* === Поиск + кнопка фильтров === */}
           <Box sx={{ display: 'flex', gap: 1, mb: 1, position: 'relative' }} ref={searchRef}>
+            <Badge badgeContent={activeFilterCount || undefined} color="primary">
+              <IconButton
+                onClick={() => setFiltersOpen((v) => !v)}
+                sx={{
+                  border: '1px solid',
+                  borderColor: filtersOpen ? 'primary.main' : 'rgba(0,0,0,0.15)',
+                  borderRadius: 1,
+                  color: filtersOpen ? 'primary.main' : 'text.secondary',
+                }}
+              >
+                <Tune sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Badge>
             <TextField
               fullWidth
               placeholder="Найти рецепт по названию..."
@@ -312,21 +325,8 @@ function App() {
                 ) : undefined,
               }}
             />
-            <Badge badgeContent={activeFilterCount || undefined} color="primary">
-              <IconButton
-                onClick={() => setFiltersOpen((v) => !v)}
-                sx={{
-                  border: '1px solid',
-                  borderColor: filtersOpen ? 'primary.main' : 'rgba(0,0,0,0.15)',
-                  borderRadius: 1,
-                  color: filtersOpen ? 'primary.main' : 'text.secondary',
-                }}
-              >
-                <Tune sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Badge>
             {searchResults.length > 0 && (
-              <Paper sx={{ position: 'absolute', top: '100%', left: 0, right: 48, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
+              <Paper sx={{ position: 'absolute', top: '100%', left: 48, right: 0, zIndex: 10, mt: 0.5, maxHeight: 280, overflow: 'auto' }}>
                 <List dense disablePadding>
                   {searchResults.map((r) => (
                     <ListItemButton key={String(r.id)} onClick={() => handleSearchSelect(r.id)}>
