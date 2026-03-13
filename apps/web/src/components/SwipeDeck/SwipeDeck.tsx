@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface CardAPI {
   swipe(dir?: string): Promise<void>
@@ -20,6 +20,15 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
 import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
+
+const btnContainerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.55 } },
+}
+const btnItemVariant = {
+  hidden: { opacity: 0, y: 20, scale: 0.65 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 18 } },
+}
 
 interface SwipeDeckProps {
   dishes: Dish[]
@@ -144,8 +153,19 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   }
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 22 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+    >
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pb: 4 }}>
       {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut', delay: 0.05 }}
+        style={{ width: '100%' }}
+      >
       <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Button variant="text" onClick={onBack} startIcon={<ArrowBack />} size="small">
           Назад
@@ -176,8 +196,15 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           Сначала
         </Button>
       </Box>
+      </motion.div>
 
       {/* Card stack */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.88, y: 28 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.34, 1.4, 0.64, 1], delay: 0.12 }}
+        style={{ position: 'relative', width: '100%', maxWidth: 400 }}
+      >
       <Box
         sx={{
           position: 'relative',
@@ -185,8 +212,38 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           maxWidth: 400,
           height: 520,
           mb: 4,
+          overflow: 'visible',
         }}
       >
+        {/* Ambient glow behind card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: [0, 0.9, 0.6], scale: [0.5, 1.08, 1.0] }}
+          transition={{ duration: 1.1, ease: 'easeOut', times: [0, 0.55, 1], delay: 0.18 }}
+          style={{
+            position: 'absolute',
+            inset: '-28px',
+            borderRadius: '36px',
+            background: 'radial-gradient(ellipse at 50% 65%, rgba(32,201,151,0.28) 0%, rgba(32,201,151,0.08) 55%, transparent 75%)',
+            filter: 'blur(28px)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        {/* Continuous pulse */}
+        <motion.div
+          animate={{ opacity: [0.3, 0.55, 0.3], scale: [0.97, 1.04, 0.97] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+          style={{
+            position: 'absolute',
+            inset: '-16px',
+            borderRadius: '32px',
+            background: 'radial-gradient(ellipse at 50% 65%, rgba(32,201,151,0.16) 0%, rgba(32,201,151,0.04) 55%, transparent 75%)',
+            filter: 'blur(20px)',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
         {remaining === 0 ? (
           <Box
             sx={{
@@ -242,11 +299,18 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           })
         )}
       </Box>
+      </motion.div>
 
       {/* Controls */}
+      <AnimatePresence>
       {remaining > 0 && (
-        <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+        <motion.div
+          variants={btnContainerVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ display: 'flex', gap: 20, alignItems: 'center' }}
+        >
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('left')}
               sx={{
@@ -268,7 +332,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </IconButton>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={handleInfoClick}
               sx={{
@@ -290,7 +354,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </IconButton>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('right')}
               sx={{
@@ -311,8 +375,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               <Favorite sx={{ fontSize: 30 }} />
             </IconButton>
           </motion.div>
-        </Box>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Dish info dialog */}
       <Dialog
@@ -511,5 +576,6 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         </Box>
       )}
     </Box>
+    </motion.div>
   )
 }
