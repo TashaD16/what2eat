@@ -202,7 +202,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-        style={{ position: 'relative', width: '100%', maxWidth: 400 }}
+        style={{ position: 'relative', width: '100%', maxWidth: 400, marginBottom: 32 }}
       >
       <Box
         sx={{
@@ -210,7 +210,6 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           width: '100%',
           maxWidth: 400,
           height: 520,
-          mb: 4,
           overflow: 'visible',
         }}
       >
@@ -312,18 +311,25 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             )
           })
         )}
-      </Box>
-      </motion.div>
 
-      {/* Controls */}
-      <AnimatePresence>
-      {remaining > 0 && (
-        <motion.div
-          variants={btnContainerVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ display: 'flex', gap: 20, alignItems: 'center' }}
-        >
+        {/* Controls — overlaid at the bottom of the card */}
+        <AnimatePresence>
+        {remaining > 0 && (
+          <motion.div
+            variants={btnContainerVariants}
+            initial="hidden"
+            animate="visible"
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 20,
+              alignItems: 'center',
+              zIndex: 9999,
+            }}
+          >
           <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('left')}
@@ -389,9 +395,11 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               <Favorite sx={{ fontSize: 30 }} />
             </IconButton>
           </motion.div>
-        </motion.div>
-      )}
-      </AnimatePresence>
+          </motion.div>
+        )}
+        </AnimatePresence>
+      </Box>
+      </motion.div>
 
       {/* Dish info dialog */}
       <Dialog
