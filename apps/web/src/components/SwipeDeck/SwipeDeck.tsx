@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface CardAPI {
   swipe(dir?: string): Promise<void>
@@ -20,7 +20,14 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
 import { fetchSuggestedDishes, loadMoreWebDishes } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
-
+const btnContainerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.7 } },
+}
+const btnItemVariant = {
+  hidden: { opacity: 0, y: 24, scale: 0.6 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 380, damping: 16 } },
+}
 
 interface SwipeDeckProps {
   dishes: Dish[]
@@ -192,9 +199,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
 
       {/* Card stack */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.88, y: 28 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.34, 1.4, 0.64, 1], delay: 0.12 }}
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
         style={{ position: 'relative', width: '100%', maxWidth: 400 }}
       >
       <Box
@@ -211,7 +218,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         <motion.div
           initial={{ opacity: 0, scale: 0.3 }}
           animate={{ opacity: [0, 0, 0.75, 0.5], scale: [0.3, 0.55, 1.15, 1.0] }}
-          transition={{ duration: 5.0, ease: [0.16, 1, 0.3, 1], times: [0, 0.2, 0.78, 1], delay: 0.2 }}
+          transition={{ duration: 5.0, ease: [0.16, 1, 0.3, 1], times: [0, 0.2, 0.78, 1], delay: 0.1 }}
           style={{
             position: 'absolute',
             inset: '-60px',
@@ -226,7 +233,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         <motion.div
           initial={{ opacity: 0, scale: 0.2 }}
           animate={{ opacity: [0, 0, 0.35, 0.22], scale: [0.2, 0.35, 1.35, 1.1] }}
-          transition={{ duration: 5.5, ease: [0.16, 1, 0.3, 1], times: [0, 0.18, 0.78, 1], delay: 0.4 }}
+          transition={{ duration: 5.5, ease: [0.16, 1, 0.3, 1], times: [0, 0.18, 0.78, 1], delay: 0.1 }}
           style={{
             position: 'absolute',
             inset: '-90px',
@@ -309,9 +316,15 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
       </motion.div>
 
       {/* Controls */}
+      <AnimatePresence>
       {remaining > 0 && (
-        <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+        <motion.div
+          variants={btnContainerVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ display: 'flex', gap: 20, alignItems: 'center' }}
+        >
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('left')}
               sx={{
@@ -333,7 +346,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </IconButton>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={handleInfoClick}
               sx={{
@@ -355,7 +368,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             </IconButton>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
+          <motion.div variants={btnItemVariant} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}>
             <IconButton
               onClick={() => swipe('right')}
               sx={{
@@ -376,8 +389,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               <Favorite sx={{ fontSize: 30 }} />
             </IconButton>
           </motion.div>
-        </Box>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Dish info dialog */}
       <Dialog
