@@ -1,11 +1,16 @@
 import { useState, useRef, useCallback } from 'react'
-import { Box, Typography, CircularProgress, Alert } from '@mui/material'
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Alert,
+  Paper,
+  Chip,
+} from '@mui/material'
 import { CloudUpload, CheckCircle } from '@mui/icons-material'
-import { useTheme } from '@mui/material/styles'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { analyzeIngredients, clearPhoto } from '../../store/slices/photoSlice'
 import { prepareImageForApi, convertHeicToJpegFile, isHeic } from '../../utils/imageUtils'
-import { useT } from '../../i18n/useT'
 
 interface PhotoDropZoneProps {
   onDetected: (ids: number[]) => void
@@ -13,13 +18,10 @@ interface PhotoDropZoneProps {
 
 export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
   const dispatch = useAppDispatch()
-  const theme = useTheme()
-  const isLight = theme.palette.mode === 'light'
-  const t = useT()
   const { status, error } = useAppSelector((state) => state.photo)
   const { ingredients } = useAppSelector((state) => state.ingredients)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [detectedCount, setDetectedCount] = useState<number | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(async (file: File) => {
@@ -35,6 +37,9 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
         return
       }
     }
+
+    const url = URL.createObjectURL(fileToUse)
+    setPreviewUrl(url)
 
     let base64: string
     let mimeType: string
@@ -64,52 +69,34 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) handleFile(file)
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const isDone = status === 'done' && detectedCount !== null
-  const isAnalyzing = status === 'analyzing'
-
   return (
     <Box sx={{ mb: 1.5 }}>
-      <Box
+      <Paper
+        variant="outlined"
         onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={() => setIsDragging(false)}
-        onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
         sx={{
           border: '2px dashed',
-          borderColor: isDragging
-            ? 'rgba(168,85,247,0.7)'
-            : isDone
-            ? 'rgba(34,197,94,0.5)'
-            : 'rgba(168,85,247,0.35)',
+          borderColor: 'primary.light',
           borderRadius: 3,
-          px: 2,
-          py: 1.5,
+          p: 3,
+          mb: status === 'error' || (status === 'done' && detectedCount === 0) ? 1 : 0,
+          textAlign: 'center',
+          cursor: 'pointer',
+          bgcolor: 'grey.50',
+          '&:hover': { bgcolor: 'grey.100' },
+          minHeight: previewUrl ? 'auto' : 180,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 1.5,
-          cursor: isAnalyzing ? 'default' : 'pointer',
-          bgcolor: isDragging
-            ? 'rgba(168,85,247,0.08)'
-            : isDone
-            ? (isLight ? 'rgba(34,197,94,0.06)' : 'rgba(34,197,94,0.08)')
-            : (isLight ? 'rgba(168,85,247,0.04)' : 'rgba(168,85,247,0.06)'),
-          transition: 'all 0.2s ease',
-          '&:hover': !isAnalyzing ? {
-            borderColor: isDone ? 'rgba(34,197,94,0.65)' : 'rgba(168,85,247,0.6)',
-            bgcolor: isDone ? 'rgba(34,197,94,0.10)' : 'rgba(168,85,247,0.09)',
-          } : {},
+          gap: 2,
         }}
+        onClick={() => fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}
@@ -119,40 +106,55 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }}
         />
 
-        {isAnalyzing ? (
-          <>
-            <CircularProgress size={18} sx={{ color: '#A855F7' }} />
-            <Typography variant="body2" sx={{ color: '#A855F7', fontWeight: 500 }}>
-              Анализирую фото...
-            </Typography>
-          </>
-        ) : isDone ? (
-          <>
-            <CheckCircle sx={{ fontSize: 20, color: '#22C55E' }} />
-            <Typography variant="body2" sx={{ color: '#22C55E', fontWeight: 600 }}>
-              Найдено {detectedCount} продуктов
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.disabled', ml: 'auto' }}>
-              Нажмите, чтобы загрузить другое
-            </Typography>
-          </>
+        {previewUrl ? (
+          <Box sx={{ position: 'relative', width: '100%' }}>
+            <Box
+              component="img"
+              src={previewUrl}
+              sx={{ maxHeight: 280, maxWidth: '100%', borderRadius: 2, objectFit: 'contain', display: 'block', mx: 'auto' }}
+            />
+            {status === 'analyzing' && (
+              <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.65)', borderRadius: 2, gap: 1 }}>
+                <CircularProgress size={32} />
+                <Typography variant="body2" color="text.secondary">Анализирую фото...</Typography>
+              </Box>
+            )}
+            {status === 'done' && detectedCount !== null && detectedCount > 0 && (
+              <Chip
+                icon={<CheckCircle sx={{ fontSize: '16px !important' }} />}
+                label={`Найдено ${detectedCount} продуктов`}
+                color="success"
+                size="small"
+                sx={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', fontWeight: 600 }}
+              />
+            )}
+          </Box>
         ) : (
           <>
-            <CloudUpload sx={{ fontSize: 20, color: '#A855F7' }} />
-            <Typography variant="body2" sx={{ color: '#A855F7', fontWeight: 500 }}>
-              {t.uploadPhoto}
-            </Typography>
+            {status === 'analyzing' ? (
+              <>
+                <CircularProgress size={32} />
+                <Typography color="text.secondary">Анализирую фото...</Typography>
+              </>
+            ) : (
+              <>
+                <CloudUpload sx={{ fontSize: 48, color: 'primary.light' }} />
+                <Typography color="text.secondary">
+                  Перетащите фото сюда или нажмите для выбора
+                </Typography>
+              </>
+            )}
           </>
         )}
-      </Box>
+      </Paper>
 
       {status === 'error' && error && (
-        <Alert severity="error" sx={{ mt: 1, py: 0.5, fontSize: '0.8rem' }}>
+        <Alert severity="error" sx={{ py: 0.5, fontSize: '0.8rem' }}>
           {error}
         </Alert>
       )}
-      {isDone && detectedCount === 0 && (
-        <Alert severity="warning" sx={{ mt: 1, py: 0.5, fontSize: '0.8rem' }}>
+      {status === 'done' && detectedCount === 0 && (
+        <Alert severity="warning" sx={{ py: 0.5, fontSize: '0.8rem' }}>
           Продукты не распознаны. Попробуйте другое фото.
         </Alert>
       )}
