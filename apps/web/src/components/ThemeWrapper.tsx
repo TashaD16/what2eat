@@ -45,9 +45,12 @@ const buildTheme = (mode: ThemeMode) => createTheme({
       styleOverrides: {
         body: {
           backgroundImage: mode === 'dark'
-            ? 'radial-gradient(ellipse 120% 80% at 50% -10%, #022C22 0%, #0C1F1A 40%, #0F172A 100%)'
-            : 'radial-gradient(ellipse 120% 80% at 50% -10%, #CFFAEA 0%, #ECFDF5 40%, #F0FDF4 100%)',
+            ? "linear-gradient(rgba(5,10,20,0.78), rgba(5,10,20,0.78)), url('/desktop.png')"
+            : "url('/desktop.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
           backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(32,201,151,0.40) transparent',
         },
