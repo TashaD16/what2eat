@@ -46,7 +46,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
         body: {
           backgroundImage: mode === 'dark'
             ? "linear-gradient(rgba(5,10,20,0.78), rgba(5,10,20,0.78)), url('/desktop.png')"
-            : "url('/desktop.png')",
+            : "linear-gradient(rgba(240,250,245,0.62), rgba(240,250,245,0.62)), url('/desktop.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
           backgroundAttachment: 'fixed',
