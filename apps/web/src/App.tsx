@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Drawer, Collapse, IconButton } from '@mui/material'
-import { Casino, CameraAlt, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
+import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
-import { fetchIngredients, toggleIngredient } from './store/slices/ingredientsSlice'
-import { findDishes, generateAIRandomDishes, addAIDish, addAIDishes, setLoadingMore, setLoading } from './store/slices/dishesSlice'
+import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
+import { findDishes, generateAIRandomDishes, addAIDishes, setLoading } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { setLang } from './store/slices/langSlice'
@@ -20,13 +20,13 @@ import SwipeDeck from './components/SwipeDeck'
 import SwipeResults from './components/SwipeResults'
 import ShoppingList from './components/ShoppingList'
 import WeeklyPlanner from './components/WeeklyPlanner'
-import PhotoUpload from './components/PhotoUpload'
+import PhotoDropZone from './components/PhotoDropZone'
 import AuthModal from './components/Auth'
 import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
 import { useT } from './i18n/useT'
 
-type View = 'ingredients' | 'photo' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
+type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -102,6 +102,13 @@ function App() {
     setPrevView('ingredients')
     setView('ai_recipe')
   }
+
+  const handlePhotoDetected = useCallback((ids: number[]) => {
+    if (ids.length > 0) {
+      dispatch(setSelectedIngredients(ids))
+      setDrawerOpen(true)
+    }
+  }, [dispatch])
 
   const activeFilterCount = [
     filters.vegetarianOnly || filters.veganOnly,
@@ -228,41 +235,6 @@ function App() {
     }
   }
 
-  const handlePhotoIngredientsConfirmed = async (ids: number[]) => {
-    dispatch(resetSwipe())
-    dispatch(
-      findDishes({
-        ingredientIds: ids,
-        options: {
-          allowMissing: filters.allowMissing ? 3 : 2,
-          vegetarianOnly: filters.vegetarianOnly,
-          veganOnly: filters.veganOnly,
-          cuisine: filters.cuisine,
-        },
-      })
-    )
-    setView('dishes')
-    if (isSupabaseConfigured()) {
-      const selectedNames = ingredients.filter((i) => ids.includes(i.id)).map((i) => i.name)
-      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name)
-      const globalRecipes = await searchGlobalRecipesByIngredients(selectedNames, {
-        strictOnlySelectedAndSpices: !filters.allowMissing,
-        spiceNames,
-      })
-      if (globalRecipes.length > 0) {
-        dispatch(addAIDish({ recipe: globalRecipes[0], index: 10000 }))
-        if (globalRecipes.length > 1) {
-          dispatch(setLoadingMore(true))
-          requestAnimationFrame(() => {
-            for (let i = 1; i < globalRecipes.length; i++) {
-              dispatch(addAIDish({ recipe: globalRecipes[i], index: 10000 + i }))
-            }
-            dispatch(setLoadingMore(false))
-          })
-        }
-      }
-    }
-  }
 
   if (!appReady && !appError) {
     return (
@@ -363,23 +335,7 @@ function App() {
 
           {/* === Быстрые действия === */}
           <Box sx={{ mb: 3, mt: filtersOpen ? 0 : 2 }}>
-            <Button
-              variant="outlined"
-              fullWidth
-              size="large"
-              onClick={() => setView('photo')}
-              startIcon={<CameraAlt sx={{ fontSize: 28 }} />}
-              sx={{
-                py: 2,
-                mb: 1.5,
-                fontSize: '1.05rem',
-                borderColor: 'rgba(168,85,247,0.4)',
-                color: '#A855F7',
-                '&:hover': { borderColor: '#A855F7', bgcolor: 'rgba(168,85,247,0.08)' },
-              }}
-            >
-              {t.uploadPhoto}
-            </Button>
+            <PhotoDropZone onDetected={handlePhotoDetected} />
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
               <Button
                 variant="outlined"
@@ -489,13 +445,6 @@ function App() {
             </Box>
           </Drawer>
         </Box>
-      )}
-
-      {view === 'photo' && (
-        <PhotoUpload
-          onIngredientsConfirmed={handlePhotoIngredientsConfirmed}
-          onBack={() => setView('ingredients')}
-        />
       )}
 
       {view === 'dishes' && (
