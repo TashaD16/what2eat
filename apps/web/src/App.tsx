@@ -3,6 +3,7 @@ import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, Inp
 import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, DeleteOutline } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
+import { clearPhoto } from './store/slices/photoSlice'
 import { findDishes, generateAIRandomDishes, addAIDishes, setLoading } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
@@ -41,6 +42,8 @@ function App() {
   const [searchResults, setSearchResults] = useState<Array<{ id: string | number; name: string }>>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
+  const [photoActive, setPhotoActive] = useState(false)
+  const [photoKey, setPhotoKey] = useState(0)
   const searchRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
@@ -104,10 +107,22 @@ function App() {
     setView('ai_recipe')
   }
 
+  const handlePhotoSelected = useCallback(() => {
+    setPhotoActive(true)
+    setFiltersOpen(false)
+  }, [])
+
   const handlePhotoDetected = useCallback((ids: number[]) => {
     if (ids.length > 0) {
       dispatch(setSelectedIngredients(ids))
     }
+  }, [dispatch])
+
+  const handleClearAll = useCallback(() => {
+    dispatch(setSelectedIngredients([]))
+    dispatch(clearPhoto())
+    setPhotoActive(false)
+    setPhotoKey((k) => k + 1)
   }, [dispatch])
 
   // Close ingredient selector when clicking outside
@@ -303,7 +318,7 @@ function App() {
       {view === 'ingredients' && (
         <Box>
           {/* === Поиск + кнопка фильтров === */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 1, position: 'relative' }} ref={searchRef}>
+          {!photoActive && <Box sx={{ display: 'flex', gap: 1, mb: 1, position: 'relative' }} ref={searchRef}>
             <Badge badgeContent={activeFilterCount || undefined} color="primary">
               <IconButton
                 onClick={() => setFiltersOpen((v) => !v)}
@@ -343,7 +358,7 @@ function App() {
                 </List>
               </Paper>
             )}
-          </Box>
+          </Box>}
 
           {/* === Панель фильтров === */}
           <Collapse in={filtersOpen}>
@@ -354,8 +369,12 @@ function App() {
 
           {/* === Быстрые действия === */}
           <Box sx={{ mb: 3, mt: filtersOpen ? 0 : 2 }}>
-            <PhotoDropZone onDetected={handlePhotoDetected} />
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+            <PhotoDropZone
+              key={photoKey}
+              onDetected={handlePhotoDetected}
+              onPhotoSelected={handlePhotoSelected}
+            />
+            {!photoActive && <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
               <Button
                 variant="outlined"
                 size="large"
@@ -387,7 +406,7 @@ function App() {
               >
                 {t.aiRecipe}
               </Button>
-            </Box>
+            </Box>}
           </Box>
 
           {/* === Выбор продуктов: кнопка + инлайн-панель === */}
@@ -412,7 +431,7 @@ function App() {
               {selectedIngredients.length > 0 && (
                 <Tooltip title={t.clearAll}>
                   <IconButton
-                    onClick={() => dispatch(setSelectedIngredients([]))}
+                    onClick={handleClearAll}
                     sx={{
                       border: '1px solid rgba(0,0,0,0.15)',
                       borderRadius: 1,

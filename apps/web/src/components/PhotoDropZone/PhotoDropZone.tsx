@@ -8,6 +8,7 @@ import { prepareImageForApi, convertHeicToJpegFile, isHeic } from '../../utils/i
 
 interface PhotoDropZoneProps {
   onDetected: (ids: number[]) => void
+  onPhotoSelected?: () => void
 }
 
 /** True on phones and tablets — any device with touch + mobile UA */
@@ -20,7 +21,7 @@ function useIsMobile() {
   }, [])
 }
 
-export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
+export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDropZoneProps) {
   const dispatch = useAppDispatch()
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
@@ -33,6 +34,7 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
+    onPhotoSelected?.()
     dispatch(clearPhoto())
     setDetectedCount(null)
 
@@ -68,7 +70,7 @@ export default function PhotoDropZone({ onDetected }: PhotoDropZoneProps) {
       setDetectedCount(ids.length)
       onDetected(ids)
     }
-  }, [dispatch, ingredients, onDetected])
+  }, [dispatch, ingredients, onDetected, onPhotoSelected])
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
