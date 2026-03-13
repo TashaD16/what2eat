@@ -304,8 +304,8 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (dispat
       return
     }
 
-    // First card: skip preload so SwipeDeck opens immediately
-    await dispatchWithPreload(recipes[0], 0, dispatch, true)
+    // First card: preload image so it shows without flicker
+    await dispatchWithPreload(recipes[0], 0, dispatch)
 
     // Remaining: preload in background
     if (recipes.length > 1) {

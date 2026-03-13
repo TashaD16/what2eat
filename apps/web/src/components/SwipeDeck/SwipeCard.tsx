@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Typography, Chip } from '@mui/material'
+import { Box, Typography, Chip, Skeleton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { AccessTime, AttachMoney, ShoppingCart } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
@@ -35,6 +35,24 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         '&:active': { cursor: 'grabbing' },
       }}
     >
+      {/* Skeleton shimmer while image loads */}
+      {!imgLoaded && (
+        <Skeleton
+          variant="rectangular"
+          animation="wave"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            bgcolor: 'rgba(255,255,255,0.06)',
+            '&::after': {
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
+            },
+          }}
+        />
+      )}
+
       {/* Photo */}
       <Box
         component="img"
@@ -51,7 +69,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
           objectFit: 'cover',
           display: 'block',
           opacity: imgLoaded ? 1 : 0,
-          transition: 'opacity 0.25s ease',
+          transition: 'opacity 0.4s ease',
         }}
       />
 
