@@ -36,6 +36,8 @@ export const translations = {
     // SwipeDeck
     noDisheFound: 'В базе нет подходящих блюд',
     aiSuggests: 'ИИ предлагает приготовить:',
+    searchingSuggestedRecipes: 'Ищем рецепты по предложенным блюдам...',
+    generateWithAI: 'Сгенерировать рецепты (ИИ)',
     changeIngredients: 'Изменить ингредиенты',
     back: 'Назад',
     dishesLeft: (n: number) => `${n} блюд осталось`,
@@ -190,6 +192,8 @@ export const translations = {
     // SwipeDeck
     noDisheFound: 'No matching dishes found',
     aiSuggests: 'AI suggests cooking:',
+    searchingSuggestedRecipes: 'Searching for recipes...',
+    generateWithAI: 'Generate recipes (AI)',
     changeIngredients: 'Change ingredients',
     back: 'Back',
     dishesLeft: (n: number) => `${n} dish${n === 1 ? '' : 'es'} left`,

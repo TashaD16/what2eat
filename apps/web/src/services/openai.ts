@@ -169,13 +169,25 @@ export async function fetchPopularDishes(): Promise<PopularDishSuggestion[]> {
 
 /**
  * Предлагает 3–5 блюд по списку ингредиентов (когда в базе ничего не нашли).
+ * lang: язык названий блюд в ответе (ru — русский, en — английский).
  */
-export async function suggestDishesByIngredients(ingredientNames: string[]): Promise<string[]> {
+export async function suggestDishesByIngredients(
+  ingredientNames: string[],
+  lang: 'ru' | 'en' = 'ru'
+): Promise<string[]> {
   if (ingredientNames.length === 0) return []
-  const prompt = `Есть продукты: ${ingredientNames.join(', ')}.
+  const langInstruction =
+    lang === 'en'
+      ? 'Return ONLY a JSON array of dish names in English. Example: ["Cheese pancakes", "Omelette with vegetables"]'
+      : 'Верни ТОЛЬКО JSON массив строк с названиями блюд на русском. Пример: ["Яичница с сыром", "Омлет с овощами"]'
+  const prompt =
+    lang === 'en'
+      ? `Available products: ${ingredientNames.join(', ')}.
+Suggest 3–5 simple dishes that can be made from these products (you may not use all).
+${langInstruction}`
+      : `Есть продукты: ${ingredientNames.join(', ')}.
 Предложи 3–5 простых блюд, которые можно приготовить из этих продуктов (можно не все использовать).
-Верни ТОЛЬКО JSON массив строк с названиями блюд на русском, без пояснений.
-Пример: ["Яичница с сыром", "Омлет с овощами"]`
+${langInstruction}`
 
   try {
     const response = await fetch(API_URL, {

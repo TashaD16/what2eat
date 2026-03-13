@@ -10,6 +10,7 @@ import {
   AIRecipe,
   searchRecipesByDishNames,
   translateRecipeToOtherLanguage,
+  generateRecipeByIngredients,
 } from '../../services/aiRecipes'
 import { loadSeedFromCache, saveSeedToCache, SEED_COUNT } from '../../services/seedRecipes'
 import { isSupabaseConfigured } from '../../services/supabase'
@@ -77,8 +78,8 @@ export const fetchPopularDishSuggestions = createAsyncThunk(
 
 export const fetchSuggestedDishes = createAsyncThunk(
   'dishes/suggestByAi',
-  async (ingredientNames: string[]) => {
-    return await suggestDishesByIngredients(ingredientNames)
+  async ({ ingredientNames, lang }: { ingredientNames: string[]; lang: 'ru' | 'en' }) => {
+    return await suggestDishesByIngredients(ingredientNames, lang)
   }
 )
 
@@ -280,6 +281,45 @@ export const loadSuggestedRecipesByNames = createAsyncThunk(
       if (recipes.length > 0) {
         dispatch(addAIDishes(recipes.map((recipe, i) => ({ recipe, index: i }))))
         dispatch(dishesSlice.actions.clearSuggestedDishNames())
+      }
+    } finally {
+      dispatch(setLoading(false))
+    }
+  }
+)
+
+/** Generate recipes for suggested dish names via AI when DB and internet search returned nothing. */
+export const generateSuggestedRecipesByAI = createAsyncThunk(
+  'dishes/generateSuggestedByAI',
+  async (
+    { names, lang }: { names: string[]; lang: 'ru' | 'en' },
+    { dispatch }
+  ) => {
+    if (names.length === 0) return
+    dispatch(setLoading(true))
+    try {
+      const recipes: AIRecipe[] = []
+      for (const name of names.slice(0, 5)) {
+        try {
+          let recipe = await generateRecipeByIngredients([name])
+          if (lang === 'en') {
+            recipe = await translateRecipeToOtherLanguage(recipe)
+          }
+          recipe.language = lang
+          recipes.push(recipe)
+        } catch {
+          // skip failed one
+        }
+      }
+      if (recipes.length > 0) {
+        dispatch(addAIDishes(recipes.map((recipe, i) => ({ recipe, index: i }))))
+        dispatch(dishesSlice.actions.clearSuggestedDishNames())
+        if (isSupabaseConfigured()) {
+          recipes.forEach((r) => {
+            saveGlobalRecipe(r).catch(() => {})
+            translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+          })
+        }
       }
     } finally {
       dispatch(setLoading(false))

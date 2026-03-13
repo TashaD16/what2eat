@@ -18,7 +18,7 @@ import {
 import { Dish } from '@what2eat/types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
-import { fetchSuggestedDishes, loadMoreWebDishes, loadSuggestedRecipesByNames } from '../../store/slices/dishesSlice'
+import { fetchSuggestedDishes, loadMoreWebDishes, loadSuggestedRecipesByNames, generateSuggestedRecipesByAI } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
 import { useT } from '../../i18n/useT'
 const btnContainerVariants = {
@@ -41,7 +41,7 @@ interface SwipeDeckProps {
 export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
   const { currentIndex } = useAppSelector((state) => state.swipe)
-  const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes } = useAppSelector((state) => state.dishes)
+  const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes, loading: dishesLoading } = useAppSelector((state) => state.dishes)
   const { ingredients, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const userId = useAppSelector((state) => state.auth.user?.id)
   const lang = useAppSelector((state) => state.lang.lang)
@@ -62,9 +62,9 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   useEffect(() => {
     const selectedNames = selectedNamesKey.split(',').filter(Boolean)
     if (dishes.length === 0 && selectedNames.length > 0 && suggestedDishNames.length === 0) {
-      dispatch(fetchSuggestedDishes(selectedNames))
+      dispatch(fetchSuggestedDishes({ ingredientNames: selectedNames, lang }))
     }
-  }, [dishes.length, selectedNamesKey, dispatch, suggestedDishNames.length])
+  }, [dishes.length, selectedNamesKey, dispatch, suggestedDishNames.length, lang])
 
   // When AI suggested dish names appear and we still have no dishes, load those recipes from DB and show in swipe
   useEffect(() => {
@@ -141,22 +141,42 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
   }
 
   if (dishes.length === 0) {
+    const hasSuggested = suggestedDishNames.length > 0
     return (
       <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
-        <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 2 }}>
-          {t.noDisheFound}
-        </Typography>
-        {suggestedDishNames.length > 0 && (
-          <Box sx={{ mb: 3, textAlign: 'left', maxWidth: 360, mx: 'auto' }}>
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Restaurant fontSize="small" /> {t.aiSuggests}
+        {hasSuggested && dishesLoading ? (
+          <>
+            <CircularProgress size={48} sx={{ color: 'primary.main', mb: 2 }} />
+            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
+              {t.searchingSuggestedRecipes}
             </Typography>
-            <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.primary' }}>
-              {suggestedDishNames.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </Box>
-          </Box>
+          </>
+        ) : (
+          <>
+            <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 2 }}>
+              {t.noDisheFound}
+            </Typography>
+            {hasSuggested && (
+              <Box sx={{ mb: 3, textAlign: 'left', maxWidth: 360, mx: 'auto' }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Restaurant fontSize="small" /> {t.aiSuggests}
+                </Typography>
+                <Box component="ul" sx={{ m: 0, pl: 2.5, color: 'text.primary' }}>
+                  {suggestedDishNames.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </Box>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => dispatch(generateSuggestedRecipesByAI({ names: suggestedDishNames, lang }))}
+                  sx={{ mt: 2 }}
+                >
+                  {t.generateWithAI}
+                </Button>
+              </Box>
+            )}
+          </>
         )}
         <Button variant="outlined" onClick={onBack} startIcon={<ArrowBack />} sx={{ mt: 1 }}>
           {t.changeIngredients}
