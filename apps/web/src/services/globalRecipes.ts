@@ -91,28 +91,40 @@ export interface SearchGlobalRecipesOptions {
   cuisine?: string | null
 }
 
-// Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en)
+// Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
 const MEAT_FISH_KEYWORDS = new Set([
   'мясо', 'говядина', 'свинина', 'баранина', 'курица', 'индейка', 'утка', 'фарш', 'бекон', 'колбаса', 'сосиски',
   'рыба', 'лосось', 'треска', 'сельдь', 'тунец', 'креветки', 'кальмар', 'мидии', 'моллюск',
   'meat', 'beef', 'pork', 'lamb', 'chicken', 'turkey', 'duck', 'minced', 'bacon', 'sausage', 'fish',
   'salmon', 'cod', 'herring', 'tuna', 'shrimp', 'prawn', 'squid', 'mussel', 'seafood',
 ])
-// Дополнительно для вегана: молочка, яйца
 const VEGAN_EXCLUDE_KEYWORDS = new Set([
   ...MEAT_FISH_KEYWORDS,
-  'молоко', 'сливки', 'сыр', 'творог', 'сметана', 'масло сливочное', 'яйцо', 'яйца', 'мёд',
+  'молоко', 'сливки', 'сыр', 'творог', 'сметана', 'яйцо', 'яйца', 'мёд', 'яичный',
   'milk', 'cream', 'cheese', 'butter', 'egg', 'eggs', 'honey', 'yogurt', 'yoghurt',
 ])
+// Многословные фразы (проверяем как подстроку)
+const VEGAN_EXCLUDE_PHRASES = ['масло сливочное', 'сливочное масло', 'butter']
+
+function getWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[\s,;]+/)
+    .map((w) => w.replace(/[^\p{L}]/gu, ''))
+    .filter(Boolean)
+}
 
 function recipeHasIngredientKeyword(
   ingredients: Array<{ name?: string }>,
-  keywords: Set<string>
+  wordKeywords: Set<string>,
+  phraseKeywords: string[]
 ): boolean {
   const text = ingredients
     .map((ing) => (ing.name ?? '').trim().toLowerCase())
     .join(' ')
-  return [...keywords].some((kw) => text.includes(kw))
+  const words = new Set(getWords(text))
+  if (phraseKeywords.some((phrase) => text.includes(phrase))) return true
+  return [...wordKeywords].some((kw) => words.has(kw))
 }
 
 function recipeMatchesCuisine(recipe: { name: string; description?: string }, cuisine: string): boolean {
@@ -152,11 +164,12 @@ export async function searchGlobalRecipesByIngredients(
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
   const allowedLower = new Set([...lowerNames, ...lowerSpice])
 
+  const fetchLimit = vegetarianOnly || veganOnly ? 1500 : 500
   const { data, error } = await supabase
     .from('global_recipes')
     .select('*')
     .eq('language', lang)
-    .limit(500)
+    .limit(fetchLimit)
 
   if (error || !data) return []
 
@@ -196,8 +209,16 @@ export async function searchGlobalRecipesByIngredients(
   }
 
   if (vegetarianOnly || veganOnly) {
-    const keywords = veganOnly ? VEGAN_EXCLUDE_KEYWORDS : MEAT_FISH_KEYWORDS
-    filtered = filtered.filter(({ r }) => !recipeHasIngredientKeyword((r.ingredients ?? []) as Array<{ name?: string }>, keywords))
+    const wordKeywords = veganOnly ? VEGAN_EXCLUDE_KEYWORDS : MEAT_FISH_KEYWORDS
+    const phraseKeywords = veganOnly ? VEGAN_EXCLUDE_PHRASES : []
+    filtered = filtered.filter(
+      ({ r }) =>
+        !recipeHasIngredientKeyword(
+          (r.ingredients ?? []) as Array<{ name?: string }>,
+          wordKeywords,
+          phraseKeywords
+        )
+    )
   }
   if (cuisine && cuisine.trim()) {
     filtered = filtered.filter(({ r }) => recipeMatchesCuisine(r, cuisine.trim()))

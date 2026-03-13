@@ -15,6 +15,7 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { toggleIngredient } from '../../store/slices/ingredientsSlice'
+import { ingredientMatchesCuisine } from '../../services/ingredients'
 import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
 import { IngredientCategory } from '@what2eat/types'
 import { useT } from '../../i18n/useT'
@@ -24,6 +25,7 @@ export default function IngredientSelector() {
   const { ingredients, selectedIngredients } = useAppSelector(
     (state) => state.ingredients
   )
+  const selectedCuisine = useAppSelector((state) => state.filters.cuisine)
   const theme = useTheme()
   const isLight = theme.palette.mode === 'light'
   const t = useT()
@@ -32,6 +34,10 @@ export default function IngredientSelector() {
 
   const filteredIngredients = useMemo(() => {
     let filtered = ingredients
+
+    if (selectedCuisine) {
+      filtered = filtered.filter((ing) => ingredientMatchesCuisine(ing, selectedCuisine))
+    }
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter((ing) => ing.category === selectedCategory)
@@ -44,7 +50,7 @@ export default function IngredientSelector() {
     }
 
     return filtered
-  }, [ingredients, selectedCategory, searchQuery])
+  }, [ingredients, selectedCategory, searchQuery, selectedCuisine])
 
   const handleToggle = (id: number) => {
     dispatch(toggleIngredient(id))
