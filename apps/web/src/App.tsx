@@ -264,42 +264,42 @@ function App() {
       strictOnlySelectedAndSpices: true,
     })
 
-    if (strictResults.length > 0) {
-      await dispatchProgressively(strictResults, false)
-      return
-    }
-
-    // ── Phase 2: allow missing ingredients ────────────────────────────────
-    dispatch(setStrictSearchFailed(true))
-    dispatch(setLoading(false)) // show "not found" UI immediately
-
-    // Small pause so user reads the "not found" message
-    await new Promise<void>((res) => setTimeout(res, 500))
-    dispatch(setLoading(true))
-
+    // ── Phase 2: allow missing (cache makes this instant after Phase 1) ───
     const missingResults = await searchGlobalRecipesByIngredients(selectedNames, {
       ...commonOpts,
       strictOnlySelectedAndSpices: false,
     })
 
-    if (missingResults.length > 0) {
-      // Sort by fewest missing ingredients first
-      const sorted = [...missingResults].sort((a, b) => getMissing(a).length - getMissing(b).length)
-      await dispatchProgressively(sorted, true)
+    // Deduplicate: only dishes NOT already in strict results
+    const strictIds = new Set(strictResults.map((r) => r.id))
+    const additional = [...missingResults]
+      .filter((r) => !strictIds.has(r.id))
+      .sort((a, b) => getMissing(a).length - getMissing(b).length)
+
+    // ── Phase 3: AI fallback if nothing found at all ──────────────────────
+    if (strictResults.length === 0 && additional.length === 0) {
+      try {
+        const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
+        if (generated.length > 0) {
+          generated.forEach((r) => {
+            saveGlobalRecipe(r)
+            translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+          })
+          dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
+        }
+      } catch { /* empty state */ }
+      dispatch(setLoading(false))
       return
     }
 
-    // ── Phase 3: AI generation fallback ──────────────────────────────────
-    try {
-      const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
-      if (generated.length > 0) {
-        generated.forEach((r) => {
-          saveGlobalRecipe(r)
-          translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
-        })
-        dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
-      }
-    } catch { /* empty state */ }
+    // If strict found nothing — show "missing" banner
+    if (strictResults.length === 0) {
+      dispatch(setStrictSearchFailed(true))
+    }
+
+    // Dispatch strict first, then additional appended after
+    await dispatchProgressively(strictResults, false, 0)
+    await dispatchProgressively(additional, true, strictResults.length)
     dispatch(setLoading(false))
   }
 
