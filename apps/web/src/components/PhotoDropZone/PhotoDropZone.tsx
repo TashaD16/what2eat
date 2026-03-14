@@ -93,7 +93,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
           onClick={() => !isAnalyzing && inputRef.current?.click()}
           sx={{
             position: 'relative', borderRadius: 3, overflow: 'hidden', cursor: isAnalyzing ? 'default' : 'pointer',
-            border: '1.5px solid', borderColor: isLight ? 'rgba(32,201,151,0.25)' : 'rgba(32,201,151,0.20)',
+            border: '1.5px solid', borderColor: isLight ? 'rgba(var(--w2e-primary-rgb),0.25)' : 'rgba(var(--w2e-primary-rgb),0.20)',
           }}
         >
           <input ref={inputRef} type="file" accept="image/*"
@@ -105,7 +105,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
             sx={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }} />
           {isAnalyzing && (
             <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.45)', gap: 1.5 }}>
-              <CircularProgress size={32} sx={{ color: '#20C997' }} />
+              <CircularProgress size={32} sx={{ color: 'var(--w2e-primary)' }} />
               <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>{t.analyzingPhoto}</Typography>
             </Box>
           )}
@@ -137,19 +137,19 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
         sx={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.25,
           py: 1.25, px: 2, cursor: 'pointer', borderRadius: 3,
-          border: '1.5px solid', borderColor: isLight ? 'rgba(32,201,151,0.30)' : 'rgba(32,201,151,0.22)',
-          bgcolor: isLight ? 'rgba(236,253,245,0.85)' : 'rgba(8,18,35,0.7)',
+          border: '1.5px solid', borderColor: isLight ? 'rgba(var(--w2e-primary-rgb),0.30)' : 'rgba(var(--w2e-primary-rgb),0.22)',
+          bgcolor: isLight ? 'rgba(var(--w2e-paper-dark-rgb),0.85)' : 'rgba(8,18,35,0.7)',
           transition: 'all 0.18s ease',
           '&:hover': {
-            borderColor: 'rgba(32,201,151,0.55)',
-            bgcolor: isLight ? 'rgba(32,201,151,0.08)' : 'rgba(32,201,151,0.10)',
+            borderColor: 'rgba(var(--w2e-primary-rgb),0.55)',
+            bgcolor: isLight ? 'rgba(var(--w2e-primary-rgb),0.08)' : 'rgba(var(--w2e-primary-rgb),0.10)',
           },
         }}
       >
-        <Box sx={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(32,201,151,0.50)', bgcolor: 'rgba(32,201,151,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <CameraAlt sx={{ fontSize: 16, color: '#20C997' }} />
+        <Box sx={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(var(--w2e-primary-rgb),0.50)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <CameraAlt sx={{ fontSize: 16, color: 'var(--w2e-primary)' }} />
         </Box>
-        <Typography variant="body2" sx={{ fontWeight: 600, color: '#0F9B6E' }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--w2e-primary-deep)' }}>
           {isMobile ? t.takePhoto : t.takeOrUpload}
         </Typography>
       </Box>

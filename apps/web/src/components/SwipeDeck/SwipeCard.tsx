@@ -29,9 +29,9 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
         borderRadius: 4,
         overflow: 'hidden',
         boxShadow: isLight
-          ? '0 24px 64px rgba(32,201,151,0.22), 0 8px 32px rgba(0,0,0,0.10)'
+          ? '0 24px 64px rgba(var(--w2e-primary-rgb),0.22), 0 8px 32px rgba(0,0,0,0.10)'
           : '0 24px 64px rgba(0,0,0,0.60)',
-        border: isLight ? '1px solid rgba(32,201,151,0.20)' : 'none',
+        border: isLight ? '1px solid rgba(var(--w2e-primary-rgb),0.20)' : 'none',
         cursor: 'grab',
         bgcolor: '#111',
         '&:active': { cursor: 'grabbing' },

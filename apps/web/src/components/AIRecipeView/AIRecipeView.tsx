@@ -308,7 +308,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
               height: '100%',
               background: (t) =>
                 t.palette.mode === 'light'
-                  ? 'rgba(230,252,244,0.97)'
+                  ? 'rgba(var(--w2e-paper-dark-rgb),0.97)'
                   : 'rgba(8,18,35,0.95)',
               backdropFilter: 'blur(20px)',
               border: '1.5px solid rgba(var(--w2e-primary-rgb),0.30)',
@@ -424,7 +424,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
               height: '100%',
               background: (t) =>
                 t.palette.mode === 'light'
-                  ? 'rgba(240,253,248,0.97)'
+                  ? 'rgba(var(--w2e-paper-rgb),0.97)'
                   : 'rgba(8,18,35,0.95)',
               backdropFilter: 'blur(20px)',
               border: '1.5px solid rgba(var(--w2e-primary-rgb),0.22)',

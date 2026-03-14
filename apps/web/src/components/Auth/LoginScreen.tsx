@@ -58,7 +58,7 @@ export default function LoginScreen() {
         <Box sx={{ textAlign: 'center', mb: 5 }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: 900, background: 'linear-gradient(135deg, #20C997 0%, #38D9A9 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', mb: 0.5 }}
+            sx={{ fontWeight: 900, background: 'linear-gradient(135deg, var(--w2e-primary) 0%, var(--w2e-primary-light) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.02em', mb: 0.5 }}
           >
             what2eat
           </Typography>
@@ -70,9 +70,9 @@ export default function LoginScreen() {
         {/* Card */}
         <Box
           sx={{
-            bgcolor: 'rgba(204,251,241,0.55)',
+            bgcolor: 'rgba(var(--w2e-tint-rgb),0.55)',
             borderRadius: 4,
-            border: '1px solid rgba(32,201,151,0.25)',
+            border: '1px solid rgba(var(--w2e-primary-rgb),0.25)',
             backdropFilter: 'blur(20px)',
             p: 3.5,
           }}

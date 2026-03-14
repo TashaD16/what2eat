@@ -4,8 +4,8 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeModeContext, ThemeMode, ThemeAccent } from '../contexts/ThemeContext'
 
 const ACCENT_PALETTE = {
-  green:  { main: '#20C997', light: '#38D9A9', dark: '#18B383', deep: '#0F9B6E', rgb: '32,201,151' },
-  orange: { main: '#F97316', light: '#FB923C', dark: '#EA580C', deep: '#C2410C', rgb: '249,115,22' },
+  green:  { main: '#20C997', light: '#38D9A9', dark: '#18B383', deep: '#0F9B6E', rgb: '32,201,151',  tintRgb: '204,251,241', paperRgb: '240,253,248', paperDarkRgb: '236,253,245', hoverRgb: '224,253,244' },
+  orange: { main: '#F97316', light: '#FB923C', dark: '#EA580C', deep: '#C2410C', rgb: '249,115,22',  tintRgb: '255,237,213', paperRgb: '255,247,237', paperDarkRgb: '255,243,224', hoverRgb: '254,235,200' },
 } as const
 
 const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
@@ -14,8 +14,8 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
     palette: {
       mode,
       background: {
-        default: mode === 'light' ? '#f0fdf8' : '#08121f',
-        paper: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
+        default: mode === 'light' ? `rgb(${p.paperRgb})` : '#08121f',
+        paper: mode === 'light' ? `rgba(${p.paperRgb},0.97)` : 'rgba(8,18,35,0.95)',
       },
       primary: { main: p.main, light: p.light, dark: p.dark, contrastText: '#ffffff' },
       secondary: { main: '#FB923C', contrastText: '#0a0a0a' },
@@ -48,6 +48,10 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
             '--w2e-primary-light': p.light,
             '--w2e-primary-dark': p.dark,
             '--w2e-primary-deep': p.deep,
+            '--w2e-tint-rgb': p.tintRgb,
+            '--w2e-paper-rgb': p.paperRgb,
+            '--w2e-paper-dark-rgb': p.paperDarkRgb,
+            '--w2e-hover-rgb': p.hoverRgb,
           } as Record<string, string>,
           body: {
             backgroundImage: mode === 'dark'
@@ -71,7 +75,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            background: mode === 'light' ? 'rgba(236,253,245,0.90)' : 'rgba(10,18,35,0.95)',
+            background: mode === 'light' ? `rgba(${p.paperDarkRgb},0.90)` : 'rgba(10,18,35,0.95)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderBottom: mode === 'light' ? `2px solid rgba(${p.rgb},0.35)` : 'none',
@@ -83,13 +87,13 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
         styleOverrides: {
           root: {
             backgroundImage: 'none',
-            background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
+            background: mode === 'light' ? `rgba(${p.paperRgb},0.97)` : 'rgba(8,18,35,0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: mode === 'light' ? `1px solid rgba(${p.rgb},0.15)` : '1px solid rgba(255,255,255,0.07)',
           },
           outlined: {
-            background: mode === 'light' ? 'rgba(204,251,241,0.55)' : 'rgba(20,35,60,0.70)',
+            background: mode === 'light' ? `rgba(${p.tintRgb},0.55)` : 'rgba(20,35,60,0.70)',
             border: `1px solid rgba(${p.rgb},0.22)`,
           },
         },
@@ -113,11 +117,11 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
           outlined: {
             color: mode === 'light' ? '#0F172A' : '#E2E8F0',
             borderColor: `rgba(${p.rgb},0.35)`,
-            background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
+            background: mode === 'light' ? `rgba(${p.paperRgb},0.97)` : 'rgba(8,18,35,0.95)',
             backdropFilter: 'blur(8px)',
             '&:hover': {
               borderColor: `rgba(${p.rgb},0.65)`,
-              background: mode === 'light' ? 'rgba(224,253,244,0.99)' : 'rgba(12,26,48,0.97)',
+              background: mode === 'light' ? `rgba(${p.hoverRgb},0.99)` : 'rgba(12,26,48,0.97)',
             },
             '&.Mui-disabled': {
               borderColor: `rgba(${p.rgb},0.12)`,
@@ -142,7 +146,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
         styleOverrides: {
           root: {
             backgroundImage: 'none',
-            background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
+            background: mode === 'light' ? `rgba(${p.paperRgb},0.97)` : 'rgba(8,18,35,0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: mode === 'light' ? `1px solid rgba(${p.rgb},0.15)` : '1px solid rgba(255,255,255,0.07)',
@@ -154,7 +158,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              background: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
+              background: mode === 'light' ? `rgba(${p.paperRgb},0.97)` : 'rgba(8,18,35,0.95)',
               backdropFilter: 'blur(8px)',
               '& fieldset': { borderColor: mode === 'light' ? `rgba(${p.rgb},0.30)` : `rgba(${p.rgb},0.22)` },
               '&:hover fieldset': { borderColor: `rgba(${p.rgb},0.55)` },
@@ -199,7 +203,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
       MuiDialog: {
         styleOverrides: {
           paper: {
-            background: mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(10,18,35,0.97)',
+            background: mode === 'light' ? `rgba(${p.paperDarkRgb},0.97)` : 'rgba(10,18,35,0.97)',
             border: `1px solid rgba(${p.rgb},0.22)`,
             backdropFilter: 'blur(32px)',
             WebkitBackdropFilter: 'blur(32px)',
@@ -210,7 +214,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
       MuiDrawer: {
         styleOverrides: {
           paper: {
-            background: mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(10,18,35,0.97)',
+            background: mode === 'light' ? `rgba(${p.paperDarkRgb},0.97)` : 'rgba(10,18,35,0.97)',
             border: `1px solid rgba(${p.rgb},0.18)`,
           },
         },

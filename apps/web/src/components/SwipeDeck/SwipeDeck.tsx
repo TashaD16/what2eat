@@ -308,7 +308,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'rgba(204,251,241,0.55)',
+              bgcolor: 'rgba(var(--w2e-tint-rgb),0.55)',
               borderRadius: 4,
               border: '1px solid rgba(var(--w2e-primary-rgb),0.20)',
             }}
@@ -440,7 +440,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         onClose={() => setInfoDish(null)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(8,18,35,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(var(--w2e-primary-rgb),0.20)' } }}
+        PaperProps={{ sx: { bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(var(--w2e-paper-dark-rgb),0.97)' : 'rgba(8,18,35,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(var(--w2e-primary-rgb),0.20)' } }}
       >
         {infoDish && (
           <>
@@ -480,13 +480,13 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               {/* Info chips */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
                 <Chip
-                  icon={<AccessTime sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
+                  icon={<AccessTime sx={{ fontSize: '13px !important', color: 'var(--w2e-primary-deep) !important' }} />}
                   label={t.min(infoDish.cooking_time)}
                   size="small"
                   sx={{ bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)', color: 'var(--w2e-primary-deep)', border: '1px solid rgba(var(--w2e-primary-rgb),0.25)' }}
                 />
                 <Chip
-                  icon={<People sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
+                  icon={<People sx={{ fontSize: '13px !important', color: 'var(--w2e-primary-deep) !important' }} />}
                   label={t.servingsShort(infoDish.servings)}
                   size="small"
                   sx={{ bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)', color: 'var(--w2e-primary-deep)', border: '1px solid rgba(var(--w2e-primary-rgb),0.25)' }}
@@ -569,7 +569,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                 <Box
                   key={dish.name}
                   sx={{
-                    bgcolor: 'rgba(204,251,241,0.50)',
+                    bgcolor: 'rgba(var(--w2e-tint-rgb),0.50)',
                     border: '1px solid rgba(var(--w2e-primary-rgb),0.18)',
                     borderRadius: 3,
                     p: 2,

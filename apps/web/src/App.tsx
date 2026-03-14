@@ -526,7 +526,7 @@ function App() {
                 sx={{
                   py: 1.75,
                   borderColor: 'rgba(var(--w2e-primary-rgb),0.35)',
-                  '&:hover': { borderColor: 'rgba(var(--w2e-primary-rgb),0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
+                  '&:hover': { borderColor: 'rgba(var(--w2e-primary-rgb),0.60)', bgcolor: 'rgba(var(--w2e-tint-rgb),0.65)' },
                 }}
               >
                 {t.randomizer}
