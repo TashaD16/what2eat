@@ -9,6 +9,7 @@ import photoReducer from './slices/photoSlice'
 import authReducer from './slices/authSlice'
 import aiRecipeReducer from './slices/aiRecipeSlice'
 import langReducer from './slices/langSlice'
+import userProfileReducer from './slices/userProfileSlice'
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     auth: authReducer,
     aiRecipe: aiRecipeReducer,
     lang: langReducer,
+    userProfile: userProfileReducer,
   },
 })
 

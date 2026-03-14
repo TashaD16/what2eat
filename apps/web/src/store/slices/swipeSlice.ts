@@ -107,10 +107,14 @@ export const migrateLocalFavorites = createAsyncThunk(
 // Load full dish data for favorites from Supabase (by UUID), in the given language
 export const loadFavoritesFromSupabase = createAsyncThunk(
   'swipe/loadFavorites',
-  async ({ userId, lang = 'ru' }: { userId: string; lang?: 'ru' | 'en' }): Promise<StoredDish[]> => {
+  async (
+    { userId, lang = 'ru' }: { userId: string; lang?: 'ru' | 'en' },
+    { dispatch }
+  ): Promise<StoredDish[]> => {
     const recipeIds = await getUserFavoriteGlobalRecipeIds(userId)
     if (recipeIds.length === 0) return []
-    const recipes = await getGlobalRecipesInLanguage(recipeIds, lang)
+    const { recipes, whenTranslationsSaved } = await getGlobalRecipesInLanguage(recipeIds, lang)
+    whenTranslationsSaved.then(() => dispatch(reloadLikedDishesInLanguage(lang)))
     return recipes.map((recipe, i): StoredDish => ({
       id: -(10000 + i),
       recipeId: recipe.id,
@@ -125,6 +129,40 @@ export const loadFavoritesFromSupabase = createAsyncThunk(
       is_vegetarian: false,
       is_vegan: false,
     }))
+  }
+)
+
+/** Reload liked dishes in the selected language (from current likedDishes with recipeIds). Missing translations are translated and saved in background; then list is re-fetched. */
+export const reloadLikedDishesInLanguage = createAsyncThunk(
+  'swipe/reloadLikedInLanguage',
+  async (lang: 'ru' | 'en', { getState, dispatch }) => {
+    const state = getState() as { swipe: { likedDishes: StoredDish[] } }
+    const likedDishes = state.swipe.likedDishes
+    const withRecipeId = likedDishes.filter((d): d is StoredDish & { recipeId: string } => Boolean(d.recipeId))
+    if (withRecipeId.length === 0) return { lang, updated: likedDishes }
+    const recipeIds = withRecipeId.map((d) => d.recipeId)
+    const { recipes, whenTranslationsSaved } = await getGlobalRecipesInLanguage(recipeIds, lang)
+    whenTranslationsSaved.then(() => dispatch(reloadLikedDishesInLanguage(lang)))
+    const recipeByIndex = new Map<string, import('../../services/globalRecipes').GetGlobalRecipesInLanguageResult['recipes'][number]>()
+    withRecipeId.forEach((d, i) => {
+      if (recipes[i]) recipeByIndex.set(d.recipeId, recipes[i])
+    })
+    const updated: StoredDish[] = likedDishes.map((d) => {
+      if (!d.recipeId) return d
+      const recipe = recipeByIndex.get(d.recipeId)
+      if (!recipe) return d
+      return {
+        ...d,
+        recipeId: recipe.id,
+        mealdb_id: recipe.mealdb_id,
+        name: recipe.name,
+        description: recipe.description ?? null,
+        image_url: recipe.image_url ?? null,
+        cooking_time: recipe.cooking_time,
+        difficulty: recipe.difficulty,
+      }
+    })
+    return { lang, updated }
   }
 )
 
@@ -240,17 +278,20 @@ const swipeSlice = createSlice({
       saveDislikedIds([])
       // NOTE: likedDishes is NOT cleared — favorites persist across sessions
     },
+
+    setLikedDishes: (state, action: PayloadAction<StoredDish[]>) => {
+      state.likedDishes = action.payload
+      saveLikedDishes(state.likedDishes)
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(syncFavoritesFromSupabase.fulfilled, (state, action) => {
-        // Merge Supabase legacy local_dish_id favorites with current likedDishIds
         const merged = Array.from(new Set([...state.likedDishIds, ...action.payload]))
         state.likedDishIds = merged
         saveLikedIds(merged)
       })
       .addCase(loadFavoritesFromSupabase.fulfilled, (state, action) => {
-        // Merge Supabase global_recipe favorites into likedDishes, dedup by recipeId
         const existingRecipeIds = new Set(state.likedDishes.map((d) => d.recipeId).filter(Boolean))
         const newDishes = action.payload.filter(
           (d) => !d.recipeId || !existingRecipeIds.has(d.recipeId)
@@ -260,8 +301,12 @@ const swipeSlice = createSlice({
           saveLikedDishes(state.likedDishes)
         }
       })
+      .addCase(reloadLikedDishesInLanguage.fulfilled, (state, action) => {
+        state.likedDishes = action.payload.updated
+        saveLikedDishes(state.likedDishes)
+      })
   },
 })
 
-export const { swipeDish, likeDish, unlikeDish, dislikeDish, markSessionComplete, resetSwipe } = swipeSlice.actions
+export const { swipeDish, likeDish, unlikeDish, dislikeDish, markSessionComplete, resetSwipe, setLikedDishes } = swipeSlice.actions
 export default swipeSlice.reducer

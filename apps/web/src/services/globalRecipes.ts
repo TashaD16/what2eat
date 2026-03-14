@@ -46,6 +46,10 @@ type RawRecipeRow = {
   mealdb_id?: string | null
   source_ingredients?: string[]
   created_at?: string
+  calories_per_serving?: number | null
+  protein_per_serving?: number | null
+  fat_per_serving?: number | null
+  carbs_per_serving?: number | null
 }
 
 function mapRow(r: RawRecipeRow): AIRecipe {
@@ -62,6 +66,10 @@ function mapRow(r: RawRecipeRow): AIRecipe {
     mealdb_id: r.mealdb_id ?? undefined,
     source_ingredients: r.source_ingredients ?? [],
     created_at: r.created_at,
+    calories_per_serving: r.calories_per_serving ?? undefined,
+    protein_per_serving: r.protein_per_serving ?? undefined,
+    fat_per_serving: r.fat_per_serving ?? undefined,
+    carbs_per_serving: r.carbs_per_serving ?? undefined,
   }
 }
 
@@ -93,6 +101,8 @@ export interface SearchGlobalRecipesOptions {
   dbLimit?: number
   /** Максимум рецептов в ответе (для первой порции — 5, потом подгрузка) */
   maxResults?: number
+  /** Фильтр по калориям на порцию (null = не фильтровать) */
+  caloriesMax?: number | null
 }
 
 // Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
@@ -165,6 +175,7 @@ export async function searchGlobalRecipesByIngredients(
     cuisine = null,
     dbLimit: optionDbLimit,
     maxResults = 20,
+    caloriesMax = null,
   } = options
   const lowerNames = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
@@ -229,6 +240,12 @@ export async function searchGlobalRecipesByIngredients(
   }
   if (cuisine && cuisine.trim()) {
     filtered = filtered.filter(({ r }) => recipeMatchesCuisine(r, cuisine.trim()))
+  }
+
+  if (caloriesMax != null) {
+    filtered = filtered.filter(({ r }) =>
+      !r.calories_per_serving || r.calories_per_serving <= caloriesMax
+    )
   }
 
   filtered.sort((a, b) => b.score - a.score)
@@ -331,6 +348,10 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
       mealdb_id: resolvedMealdbId,
       language: lang,
       source: 'mealdb',
+      calories_per_serving: recipe.calories_per_serving ?? null,
+      protein_per_serving: recipe.protein_per_serving ?? null,
+      fat_per_serving: recipe.fat_per_serving ?? null,
+      carbs_per_serving: recipe.carbs_per_serving ?? null,
     })
     .select('id')
     .single()
@@ -342,28 +363,29 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
   return (data?.id as string) ?? null
 }
 
+export interface GetGlobalRecipesInLanguageResult {
+  recipes: AIRecipe[]
+  /** Resolves when all background translations have been saved; then re-fetch to show translated versions. */
+  whenTranslationsSaved: Promise<void>
+}
+
 /**
- * Loads recipes by UUID and returns them in the requested language.
- * For recipes with a mealdb_id, looks up the translated version in global_recipes.
- * For missing translations, triggers background translation+save and returns originals.
+ * Loads recipes by UUID in the requested language.
+ * For missing translations: triggers background translation+save, returns originals; whenTranslationsSaved resolves after save — then re-call to get translated versions.
  */
 export async function getGlobalRecipesInLanguage(
   recipeIds: string[],
   lang: 'ru' | 'en'
-): Promise<AIRecipe[]> {
-  if (!isSupabaseConfigured() || recipeIds.length === 0) return []
+): Promise<GetGlobalRecipesInLanguageResult> {
+  const noop = { recipes: [] as AIRecipe[], whenTranslationsSaved: Promise.resolve() as Promise<void> }
+  if (!isSupabaseConfigured() || recipeIds.length === 0) return noop
 
   const originals = await getGlobalRecipesByIds(recipeIds)
-  if (originals.length === 0) return []
+  if (originals.length === 0) return noop
 
   const withMealdbId = originals.filter((r) => r.mealdb_id)
-  const withoutMealdbId = originals.filter((r) => !r.mealdb_id)
-
-  if (withMealdbId.length === 0) return originals
-
   const mealdbIds = withMealdbId.map((r) => r.mealdb_id!)
 
-  // Find existing translated versions in the target language
   const { data, error } = await supabase
     .from('global_recipes')
     .select('*')
@@ -377,21 +399,31 @@ export async function getGlobalRecipesInLanguage(
     }
   }
 
-  // For missing translations, trigger background translation+save
   const missingMealdbIds = mealdbIds.filter((id) => !translatedByMealdbId.has(id))
+  const savePromises: Promise<unknown>[] = []
   if (missingMealdbIds.length > 0) {
-    // Dynamic import to avoid potential circular dependency at load time
-    import('./aiRecipes').then(({ translateRecipeToOtherLanguage }) => {
-      for (const orig of withMealdbId.filter((r) => missingMealdbIds.includes(r.mealdb_id!))) {
+    const { translateRecipeToOtherLanguage } = await import('./aiRecipes')
+    for (const orig of withMealdbId.filter((r) => missingMealdbIds.includes(r.mealdb_id!))) {
+      savePromises.push(
         translateRecipeToOtherLanguage(orig)
           .then((other) => saveGlobalRecipe(other))
           .catch(() => {})
-      }
-    }).catch(() => {})
+      )
+    }
   }
 
-  return [
-    ...withMealdbId.map((orig) => translatedByMealdbId.get(orig.mealdb_id!) ?? orig),
-    ...withoutMealdbId,
-  ]
+  const byOriginalId = new Map(originals.map((r) => [r.id, r]))
+  const recipes: AIRecipe[] = []
+  for (const id of recipeIds) {
+    const orig = byOriginalId.get(id)
+    if (!orig) continue
+    if (orig.mealdb_id) {
+      recipes.push(translatedByMealdbId.get(orig.mealdb_id) ?? orig)
+    } else {
+      recipes.push(orig)
+    }
+  }
+
+  const whenTranslationsSaved = savePromises.length > 0 ? Promise.all(savePromises).then(() => {}) : Promise.resolve()
+  return { recipes, whenTranslationsSaved }
 }

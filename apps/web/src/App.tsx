@@ -4,10 +4,11 @@ import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt } from 
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { clearPhoto } from './store/slices/photoSlice'
-import { findDishes, generateAIRandomDishes, addAIDishes, replaceAIDishes, setLoading } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDishes, replaceAIDishes, setLoading, reloadDishesInLanguage } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { setLang } from './store/slices/langSlice'
+import { reloadLikedDishesInLanguage } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
@@ -25,9 +26,11 @@ import PhotoDropZone from './components/PhotoDropZone'
 import AuthModal from './components/Auth'
 import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
+import UserProfile from './components/UserProfile'
 import { useT } from './i18n/useT'
+import { fetchUserProfile } from './store/slices/userProfileSlice'
 
-type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe'
+type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe' | 'profile'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -87,6 +90,7 @@ function App() {
         }
         dispatch(syncFavoritesFromSupabase(session.user.id))
         dispatch(loadFavoritesFromSupabase({ userId: session.user.id, lang }))
+        dispatch(fetchUserProfile(session.user.id))
       }
     })
     return () => subscription.unsubscribe()
@@ -150,6 +154,7 @@ function App() {
     filters.cuisine != null,
     filters.allowMissing,
     filters.budgetEnabled,
+    filters.caloriesMax != null,
   ].filter(Boolean).length
 
   const selectedIngredientObjects = useMemo(
@@ -209,6 +214,7 @@ function App() {
         vegetarianOnly: filters.vegetarianOnly,
         veganOnly: filters.veganOnly,
         cuisine: filters.cuisine,
+        caloriesMax: filters.caloriesMax,
       }
       const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
       const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
@@ -360,8 +366,11 @@ function App() {
       onLangToggle={() => {
         const newLang = lang === 'ru' ? 'en' : 'ru'
         dispatch(setLang(newLang))
+        dispatch(reloadLikedDishesInLanguage(newLang))
+        dispatch(reloadDishesInLanguage(newLang))
         if (user) dispatch(loadFavoritesFromSupabase({ userId: user.id, lang: newLang }))
       }}
+      onProfileClick={() => { setPrevView(view); setView('profile') }}
     >
       {view === 'ingredients' && (
         <Box>
@@ -667,6 +676,10 @@ function App() {
 
       {view === 'ai_recipe' && (
         <AIRecipeView dishId={currentAiDishId} onBack={() => setView(prevView)} />
+      )}
+
+      {view === 'profile' && (
+        <UserProfile onBack={() => setView(prevView)} />
       )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />

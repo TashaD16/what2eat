@@ -32,6 +32,11 @@ export interface AIRecipe {
   youtube_url?: string          // TheMealDB strYoutube (may be absent)
   language?: 'ru' | 'en'       // recipe language (default 'ru')
   created_at?: string
+  // Nutrition per 1 serving (~2 servings total)
+  calories_per_serving?: number
+  protein_per_serving?: number
+  fat_per_serving?: number
+  carbs_per_serving?: number
 }
 
 /** Splits raw TheMealDB instruction text into structured steps. */
@@ -124,7 +129,7 @@ async function translateMealToRussian(meal: MealDBMeal): Promise<AIRecipe> {
   // Trim instructions to avoid token overflow
   const instructions = meal.strInstructions.slice(0, 3000)
 
-  const prompt = `Переведи этот рецепт с английского на русский. Раздели инструкции на чёткие пронумерованные шаги.
+  const prompt = `Переведи этот рецепт с английского на русский. Раздели инструкции на чёткие пронумерованные шаги. Оцени КБЖУ на 1 порцию (рецепт рассчитан на 2 порции).
 
 Блюдо: ${meal.strMeal}
 Кухня: ${meal.strArea}, категория: ${meal.strCategory}
@@ -137,7 +142,11 @@ ${ingredientLines}
   "name": "<название блюда на русском>",
   "description": "<2-3 предложения: что это за блюдо, вкус, из какой кухни>",
   "ingredients": [{"name": "<название на русском>", "quantity": "<количество>", "unit": "<единица>"}],
-  "instructions": [{"step": 1, "description": "<подробный шаг на русском>"}, ...]
+  "instructions": [{"step": 1, "description": "<подробный шаг на русском>"}, ...],
+  "calories_per_serving": <целое число ккал>,
+  "protein_per_serving": <целое число г>,
+  "fat_per_serving": <целое число г>,
+  "carbs_per_serving": <целое число г>
 }`
 
   const text = await callOpenAIMini(prompt)
@@ -149,6 +158,10 @@ ${ingredientLines}
     description: string
     ingredients: AIRecipeIngredient[]
     instructions: RecipeStep[]
+    calories_per_serving?: number
+    protein_per_serving?: number
+    fat_per_serving?: number
+    carbs_per_serving?: number
   }
 
   const youtubeUrl = (meal.strYoutube ?? '').trim() || undefined
@@ -165,6 +178,10 @@ ${ingredientLines}
     youtube_url: youtubeUrl,
     source_ingredients: [],
     language: 'ru',
+    calories_per_serving: parsed.calories_per_serving,
+    protein_per_serving: parsed.protein_per_serving,
+    fat_per_serving: parsed.fat_per_serving,
+    carbs_per_serving: parsed.carbs_per_serving,
   }
 }
 
@@ -227,6 +244,7 @@ async function generateRecipeWithGPT(ingredientNames: string[], cuisine: string 
   const cuisineHint = cuisine ? `\nПредпочтительная кухня: ${cuisine}.` : ''
   const prompt = `Составь вкусный рецепт из следующих продуктов: ${ingredientNames.join(', ')}.
 Можно добавить базовые специи/соль/масло.${cuisineHint}
+Оцени КБЖУ на 1 порцию (рецепт рассчитан на 2 порции).
 
 Верни ТОЛЬКО JSON (без пояснений):
 {
@@ -235,7 +253,11 @@ async function generateRecipeWithGPT(ingredientNames: string[], cuisine: string 
   "cooking_time": <минуты>,
   "difficulty": "<easy|medium|hard>",
   "ingredients": [{"name": "<название>", "quantity": "<количество>", "unit": "<единица>"}],
-  "instructions": [{"step": 1, "description": "<шаг>"}, ...]
+  "instructions": [{"step": 1, "description": "<шаг>"}, ...],
+  "calories_per_serving": <целое число ккал>,
+  "protein_per_serving": <целое число г>,
+  "fat_per_serving": <целое число г>,
+  "carbs_per_serving": <целое число г>
 }`
 
   const text = await callOpenAIMini(prompt)

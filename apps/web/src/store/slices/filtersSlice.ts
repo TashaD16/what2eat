@@ -7,6 +7,7 @@ interface FiltersState {
   budgetEnabled: boolean
   budgetLimit: number | null
   cuisine: string | null
+  caloriesMax: number | null
 }
 
 const initialState: FiltersState = {
@@ -16,6 +17,7 @@ const initialState: FiltersState = {
   budgetEnabled: false,
   budgetLimit: null,
   cuisine: null,
+  caloriesMax: null,
 }
 
 const filtersSlice = createSlice({
@@ -42,9 +44,12 @@ const filtersSlice = createSlice({
     setCuisine: (state, action: PayloadAction<string | null>) => {
       state.cuisine = action.payload
     },
+    setCaloriesMax: (state, action: PayloadAction<number | null>) => {
+      state.caloriesMax = action.payload
+    },
   },
 })
 
-export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit, setCuisine } =
+export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit, setCuisine, setCaloriesMax } =
   filtersSlice.actions
 export default filtersSlice.reducer

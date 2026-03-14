@@ -17,6 +17,7 @@ import { isSupabaseConfigured } from '../../services/supabase'
 import {
   getShuffledGlobalRecipeIds,
   getGlobalRecipesByIds,
+  getGlobalRecipesInLanguage,
   saveGlobalRecipe,
   searchGlobalRecipesByNames,
 } from '../../services/globalRecipes'
@@ -80,6 +81,29 @@ export const fetchSuggestedDishes = createAsyncThunk(
   'dishes/suggestByAi',
   async ({ ingredientNames, lang }: { ingredientNames: string[]; lang: 'ru' | 'en' }) => {
     return await suggestDishesByIngredients(ingredientNames, lang)
+  }
+)
+
+/** Reload current swipe deck dishes in the selected language. Missing translations are translated and saved in background; then deck is re-fetched. */
+export const reloadDishesInLanguage = createAsyncThunk(
+  'dishes/reloadInLanguage',
+  async (
+    lang: 'ru' | 'en',
+    { getState, dispatch }
+  ): Promise<Array<{ recipe: AIRecipe; index: number; missingIngredientNames?: string[] }> | null> => {
+    const state = getState() as { dishes: DishesState }
+    const { dishes, aiDishRecipes } = state.dishes
+    const recipeIds = dishes
+      .map((d) => aiDishRecipes[d.id]?.id)
+      .filter((id): id is string => typeof id === 'string')
+    if (recipeIds.length === 0) return null
+    const { recipes, whenTranslationsSaved } = await getGlobalRecipesInLanguage(recipeIds, lang)
+    whenTranslationsSaved.then(() => dispatch(reloadDishesInLanguage(lang)))
+    return recipes.map((recipe, i) => ({
+      recipe,
+      index: i,
+      missingIngredientNames: dishes[i]?.missing_ingredients?.map((ing) => ing.name) ?? [],
+    }))
   }
 )
 
@@ -273,6 +297,35 @@ const dishesSlice = createSlice({
       })
       .addCase(fetchPopularDishSuggestions.rejected, (state) => {
         state.popularSuggestions = []
+      })
+      .addCase(reloadDishesInLanguage.fulfilled, (state, action) => {
+        const payload = action.payload
+        if (!payload || payload.length === 0) return
+        state.dishes = []
+        state.aiDishRecipes = {}
+        for (const { recipe, index, missingIngredientNames } of payload) {
+          const id = -(index + 1)
+          const missing = (missingIngredientNames ?? []).map((name) => ({
+            id: 0,
+            name,
+            category: 'other' as const,
+            image_url: null,
+          }))
+          state.dishes.push({
+            id,
+            name: recipe.name,
+            description: recipe.description ?? '',
+            image_url: recipe.image_url ?? null,
+            cooking_time: recipe.cooking_time,
+            difficulty: recipe.difficulty,
+            servings: 2,
+            estimated_cost: null,
+            is_vegetarian: false,
+            is_vegan: false,
+            missing_ingredients: missing.length ? missing : undefined,
+          })
+          state.aiDishRecipes[id] = recipe
+        }
       })
   },
 })

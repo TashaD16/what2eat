@@ -1,5 +1,5 @@
 import { Box, AppBar, Toolbar, Typography, Container, Button, IconButton, Badge, Avatar, Tooltip } from '@mui/material'
-import { CalendarMonth, RestaurantMenu, Login, Logout, DarkMode, LightMode } from '@mui/icons-material'
+import { CalendarMonth, RestaurantMenu, Login, Logout, DarkMode, LightMode, Person } from '@mui/icons-material'
 import { ReactNode } from 'react'
 import { useThemeMode } from '../../contexts/ThemeContext'
 import { useT } from '../../i18n/useT'
@@ -15,9 +15,10 @@ interface LayoutProps {
   onSignOut?: () => void
   lang?: 'ru' | 'en'
   onLangToggle?: () => void
+  onProfileClick?: () => void
 }
 
-export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut, lang = 'ru', onLangToggle }: LayoutProps) {
+export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut, lang = 'ru', onLangToggle, onProfileClick }: LayoutProps) {
   const { mode, toggleMode } = useThemeMode()
   const t = useT()
 
@@ -115,6 +116,18 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
               {mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
             </IconButton>
           </Tooltip>
+
+          {user && onProfileClick && (
+            <Tooltip title={t.profileTitle}>
+              <IconButton
+                onClick={onProfileClick}
+                size="small"
+                sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
+              >
+                <Person fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {user ? (
             <Tooltip title={user.email ?? t.account}>

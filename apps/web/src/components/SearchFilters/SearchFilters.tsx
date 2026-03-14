@@ -6,7 +6,9 @@ import {
   InputAdornment,
   Switch,
   FormControlLabel,
+  IconButton,
 } from '@mui/material'
+import Close from '@mui/icons-material/Close'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import {
   toggleVegetarian,
@@ -15,13 +17,14 @@ import {
   toggleBudget,
   setBudgetLimit,
   setCuisine,
+  setCaloriesMax,
 } from '../../store/slices/filtersSlice'
 import { useT } from '../../i18n/useT'
 
 export default function SearchFilters() {
   const dispatch = useAppDispatch()
   const t = useT()
-  const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine } =
+  const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine, caloriesMax } =
     useAppSelector((state) => state.filters)
   const CUISINE_OPTIONS = [
     { value: null, label: t.allCuisines },
@@ -159,6 +162,37 @@ export default function SearchFilters() {
         </Box>
 
       </Box>
+
+      {/* Калории */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+          {t.caloriesFilter}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <TextField
+            size="small"
+            type="number"
+            placeholder={t.caloriesLabel}
+            value={caloriesMax ?? ''}
+            onChange={(e) => dispatch(setCaloriesMax(e.target.value ? Number(e.target.value) : null))}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">{t.kcalUnit}</InputAdornment>,
+              ...(caloriesMax != null && {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconButton size="small" onClick={() => dispatch(setCaloriesMax(null))} edge="start">
+                      <Close fontSize="inherit" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }),
+            }}
+            inputProps={{ min: 100, step: 50 }}
+            sx={{ maxWidth: 160 }}
+          />
+        </Box>
+      </Box>
+
     </Box>
   )
 }
