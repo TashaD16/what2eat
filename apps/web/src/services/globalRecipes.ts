@@ -103,6 +103,12 @@ export interface SearchGlobalRecipesOptions {
   maxResults?: number
   /** Фильтр по калориям на порцию (null = не фильтровать) */
   caloriesMax?: number | null
+  /** Фильтр по белкам на порцию (null = не фильтровать) */
+  proteinMax?: number | null
+  /** Фильтр по жирам на порцию (null = не фильтровать) */
+  fatMax?: number | null
+  /** Фильтр по углеводам на порцию (null = не фильтровать) */
+  carbsMax?: number | null
 }
 
 // Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
@@ -176,6 +182,9 @@ export async function searchGlobalRecipesByIngredients(
     dbLimit: optionDbLimit,
     maxResults = 20,
     caloriesMax = null,
+    proteinMax = null,
+    fatMax = null,
+    carbsMax = null,
   } = options
   const lowerNames = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
@@ -246,6 +255,15 @@ export async function searchGlobalRecipesByIngredients(
     filtered = filtered.filter(({ r }) =>
       !r.calories_per_serving || r.calories_per_serving <= caloriesMax
     )
+  }
+  if (proteinMax != null) {
+    filtered = filtered.filter(({ r }) => r.protein_per_serving == null || r.protein_per_serving <= proteinMax!)
+  }
+  if (fatMax != null) {
+    filtered = filtered.filter(({ r }) => r.fat_per_serving == null || r.fat_per_serving <= fatMax!)
+  }
+  if (carbsMax != null) {
+    filtered = filtered.filter(({ r }) => r.carbs_per_serving == null || r.carbs_per_serving <= carbsMax!)
   }
 
   filtered.sort((a, b) => b.score - a.score)

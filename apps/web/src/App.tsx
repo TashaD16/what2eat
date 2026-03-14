@@ -155,6 +155,9 @@ function App() {
     filters.allowMissing,
     filters.budgetEnabled,
     filters.caloriesMax != null,
+    filters.proteinMax != null,
+    filters.fatMax != null,
+    filters.carbsMax != null,
   ].filter(Boolean).length
 
   const selectedIngredientObjects = useMemo(
@@ -215,6 +218,9 @@ function App() {
         veganOnly: filters.veganOnly,
         cuisine: filters.cuisine,
         caloriesMax: filters.caloriesMax,
+        proteinMax: filters.proteinMax,
+        fatMax: filters.fatMax,
+        carbsMax: filters.carbsMax,
       }
       const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
       const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
