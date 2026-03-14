@@ -7,7 +7,7 @@ import { ArrowBack, CheckCircle, Lock } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { setProfile, clearSaved, persistUserProfile } from '../../store/slices/userProfileSlice'
-import { setCaloriesMax } from '../../store/slices/filtersSlice'
+import { setCaloriesMax, setProteinMax, setFatMax, setCarbsMax } from '../../store/slices/filtersSlice'
 import { setLang } from '../../store/slices/langSlice'
 import { UserProfileData, calculateKBJU } from '../../services/userProfile'
 import { useT } from '../../i18n/useT'
@@ -78,6 +78,9 @@ export default function UserProfile({ onBack }: UserProfileProps) {
 
   const handleSetGoal = () => {
     dispatch(setCaloriesMax(displayKbju.calories))
+    dispatch(setProteinMax(displayKbju.protein))
+    dispatch(setFatMax(displayKbju.fat))
+    dispatch(setCarbsMax(displayKbju.carbs))
     onBack()
   }
 
