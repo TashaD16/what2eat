@@ -225,7 +225,7 @@ const buildTheme = (mode: ThemeMode, accent: ThemeAccent) => {
 
 export default function ThemeWrapper({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(() => (localStorage.getItem('w2e_theme') as ThemeMode) || 'light')
-  const [accent, setAccent] = useState<ThemeAccent>(() => (localStorage.getItem('w2e_accent') as ThemeAccent) || 'green')
+  const [accent, setAccent] = useState<ThemeAccent>(() => (localStorage.getItem('w2e_accent') as ThemeAccent) || 'orange')
 
   const toggleMode = () => {
     const next: ThemeMode = mode === 'light' ? 'dark' : 'light'
