@@ -236,6 +236,9 @@ export const translations = {
 
     loadFromProfile: 'Из профиля',
     goToProfile: 'Заполнить профиль',
+    accentColor: 'Цвет акцента',
+    accentGreen: 'Зелёный',
+    accentOrange: 'Оранжевый',
 
     // LoginScreen
     appSubtitle: 'Планировщик блюд для двоих',
@@ -488,6 +491,9 @@ export const translations = {
 
     loadFromProfile: 'From profile',
     goToProfile: 'Fill profile',
+    accentColor: 'Accent color',
+    accentGreen: 'Green',
+    accentOrange: 'Orange',
 
     // LoginScreen
     appSubtitle: 'Meal planner for two',

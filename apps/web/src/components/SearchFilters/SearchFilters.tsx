@@ -237,11 +237,11 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
                 minWidth: 0,
                 textTransform: 'none',
                 borderRadius: '20px',
-                borderColor: profile || kbju ? 'rgba(32,201,151,0.5)' : 'rgba(0,0,0,0.18)',
-                color: profile || kbju ? '#0F9B6E' : 'text.secondary',
+                borderColor: profile || kbju ? 'rgba(var(--w2e-primary-rgb),0.5)' : 'rgba(0,0,0,0.18)',
+                color: profile || kbju ? 'var(--w2e-primary-deep)' : 'text.secondary',
                 '&:hover': {
-                  borderColor: profile || kbju ? '#20C997' : 'rgba(0,0,0,0.3)',
-                  bgcolor: profile || kbju ? 'rgba(32,201,151,0.06)' : 'rgba(0,0,0,0.04)',
+                  borderColor: profile || kbju ? 'var(--w2e-primary)' : 'rgba(0,0,0,0.3)',
+                  bgcolor: profile || kbju ? 'rgba(var(--w2e-primary-rgb),0.06)' : 'rgba(0,0,0,0.04)',
                 },
               }}
             >
@@ -260,7 +260,7 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
             const active = value != null
             return (
               <Box key={label}>
-                <Typography variant="caption" sx={{ color: active ? '#0F9B6E' : 'text.disabled', fontSize: '0.68rem', display: 'block', mb: 0.3, fontWeight: active ? 600 : 400 }}>
+                <Typography variant="caption" sx={{ color: active ? 'var(--w2e-primary-deep)' : 'text.disabled', fontSize: '0.68rem', display: 'block', mb: 0.3, fontWeight: active ? 600 : 400 }}>
                   {label}
                 </Typography>
                 <TextField
@@ -291,9 +291,9 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       fontSize: '0.82rem',
-                      '& fieldset': { borderColor: active ? 'rgba(32,201,151,0.55)' : 'rgba(0,0,0,0.15)' },
-                      '&:hover fieldset': { borderColor: 'rgba(32,201,151,0.4)' },
-                      '&.Mui-focused fieldset': { borderColor: '#20C997', borderWidth: 1.5 },
+                      '& fieldset': { borderColor: active ? 'rgba(var(--w2e-primary-rgb),0.55)' : 'rgba(0,0,0,0.15)' },
+                      '&:hover fieldset': { borderColor: 'rgba(var(--w2e-primary-rgb),0.4)' },
+                      '&.Mui-focused fieldset': { borderColor: 'var(--w2e-primary)', borderWidth: 1.5 },
                     },
                     '& input': { py: '6px', px: active ? 0.5 : 1 },
                   }}

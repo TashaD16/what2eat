@@ -23,7 +23,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
   const { user } = useAppSelector((state) => state.auth)
   const { profile, saved } = useAppSelector((state) => state.userProfile)
   const lang = useAppSelector((state) => state.lang.lang)
-  const { mode, toggleMode } = useThemeMode()
+  const { mode, toggleMode, accent, toggleAccent } = useThemeMode()
 
   const [tab, setTab] = useState(0)
   const [gender, setGender] = useState<'male' | 'female'>(profile?.gender ?? 'male')
@@ -221,16 +221,16 @@ export default function UserProfile({ onBack }: UserProfileProps) {
               onClick={handleSave}
               sx={{
                 borderRadius: '50px',
-                border: '2.5px dashed rgba(32,201,151,0.65)',
-                bgcolor: 'rgba(32,201,151,0.07)',
-                color: '#0F9B6E',
+                border: '2.5px dashed rgba(var(--w2e-primary-rgb),0.65)',
+                bgcolor: 'rgba(var(--w2e-primary-rgb),0.07)',
+                color: 'var(--w2e-primary-deep)',
                 fontWeight: 800,
                 fontSize: '0.88rem',
                 px: 3,
                 py: 0.9,
                 textTransform: 'none',
-                boxShadow: '0 3px 14px rgba(32,201,151,0.15)',
-                '&:hover': { bgcolor: 'rgba(32,201,151,0.14)', borderColor: '#20C997', borderStyle: 'dashed', boxShadow: '0 5px 20px rgba(32,201,151,0.28)' },
+                boxShadow: '0 3px 14px rgba(var(--w2e-primary-rgb),0.15)',
+                '&:hover': { bgcolor: 'rgba(var(--w2e-primary-rgb),0.14)', borderColor: 'var(--w2e-primary)', borderStyle: 'dashed', boxShadow: '0 5px 20px rgba(var(--w2e-primary-rgb),0.28)' },
               }}
             >
               {t.saveProfile}
@@ -245,11 +245,11 @@ export default function UserProfile({ onBack }: UserProfileProps) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Typography variant="subtitle1" fontWeight={700}>{t.calculatedKbju}</Typography>
             </Box>
-            <Typography variant="body2" color="#0F9B6E" fontWeight={600} mb={1.5}>
+            <Typography variant="body2" sx={{ color: 'var(--w2e-primary-deep)', fontWeight: 600, mb: 1.5 }}>
               {t.dailyCaloriesNorm}
             </Typography>
 
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(32,201,151,0.35)', bgcolor: 'rgba(32,201,151,0.04)' }}>
+            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(var(--w2e-primary-rgb),0.35)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.04)' }}>
               {kbjuEdit ? (
                 /* Edit mode: 4 text fields */
                 <Box>
@@ -281,7 +281,6 @@ export default function UserProfile({ onBack }: UserProfileProps) {
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button size="small" variant="contained" onClick={() => setKbjuEdit(null)}
-                      sx={{ bgcolor: '#20C997', '&:hover': { bgcolor: '#18B383' } }}
                     >{t.applyKbju}</Button>
                     <Button size="small" variant="text" onClick={() => setKbjuEdit(null)}
                       sx={{ color: 'text.secondary' }}
@@ -299,10 +298,10 @@ export default function UserProfile({ onBack }: UserProfileProps) {
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <Button size="small" variant="outlined" onClick={() => setKbjuEdit({ ...displayKbju })}
-                      sx={{ borderColor: 'rgba(32,201,151,0.45)', color: '#0F9B6E', '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.06)' } }}
+                      sx={{ borderColor: 'rgba(var(--w2e-primary-rgb),0.45)', color: 'var(--w2e-primary-deep)', '&:hover': { borderColor: 'var(--w2e-primary)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.06)' } }}
                     >{t.editKbju}</Button>
                     <Button size="small" variant="outlined" onClick={handleSetGoal}
-                      sx={{ borderColor: 'rgba(32,201,151,0.45)', color: '#0F9B6E', '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.06)' } }}
+                      sx={{ borderColor: 'rgba(var(--w2e-primary-rgb),0.45)', color: 'var(--w2e-primary-deep)', '&:hover': { borderColor: 'var(--w2e-primary)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.06)' } }}
                     >{t.setAsGoal}</Button>
                   </Box>
 
@@ -363,14 +362,52 @@ export default function UserProfile({ onBack }: UserProfileProps) {
             </ToggleButtonGroup>
           </Box>
           <Box>
+            <Typography variant="subtitle2" color="text.secondary" mb={1}>{t.accentColor}</Typography>
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
+              {(['green', 'orange'] as const).map((a) => {
+                const colors = { green: { main: '#20C997', light: '#38D9A9' }, orange: { main: '#F97316', light: '#FB923C' } }
+                const c = colors[a]
+                const label = a === 'green' ? t.accentGreen : t.accentOrange
+                return (
+                  <Box
+                    key={a}
+                    onClick={() => { if (accent !== a) toggleAccent() }}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 1,
+                      px: 1.5, py: 0.75,
+                      borderRadius: 3,
+                      border: '2px solid',
+                      borderColor: accent === a ? c.main : 'rgba(0,0,0,0.12)',
+                      cursor: accent === a ? 'default' : 'pointer',
+                      bgcolor: accent === a ? `rgba(${a === 'green' ? '32,201,151' : '249,115,22'},0.08)` : 'transparent',
+                      transition: 'all 0.2s ease',
+                      '&:hover': { borderColor: c.main, bgcolor: `rgba(${a === 'green' ? '32,201,151' : '249,115,22'},0.08)` },
+                    }}
+                  >
+                    <Box sx={{
+                      width: 20, height: 20, borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${c.main} 0%, ${c.light} 100%)`,
+                      boxShadow: accent === a ? `0 0 8px ${c.main}88` : 'none',
+                      flexShrink: 0,
+                    }} />
+                    <Typography variant="body2" sx={{ color: accent === a ? c.main : 'text.secondary', fontWeight: accent === a ? 600 : 400 }}>
+                      {label}
+                    </Typography>
+                  </Box>
+                )
+              })}
+            </Box>
+          </Box>
+
+          <Box>
             <FormControlLabel
               control={
                 <Switch
                   checked={showIntro}
                   onChange={(e) => handleToggleIntro(e.target.checked)}
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': { color: '#20C997' },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#20C997' },
+                    '& .MuiSwitch-switchBase.Mui-checked': { color: 'var(--w2e-primary)' },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'var(--w2e-primary)' },
                   }}
                 />
               }
@@ -402,7 +439,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Typography variant="body1" color="text.secondary">{t.currentPlan}:</Typography>
-            <Chip label={t.freePlan} variant="outlined" size="small" sx={{ borderColor: '#20C997', color: '#0F9B6E', fontWeight: 700 }} />
+            <Chip label={t.freePlan} variant="outlined" size="small" sx={{ borderColor: 'var(--w2e-primary)', color: 'var(--w2e-primary-deep)', fontWeight: 700 }} />
           </Box>
 
           {/* Free plan card */}
@@ -411,7 +448,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
             <List dense disablePadding>
               {FREE_FEATURES.map((f) => (
                 <ListItem key={f} disableGutters sx={{ py: 0.25 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><CheckCircle sx={{ fontSize: 16, color: '#20C997' }} /></ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 28 }}><CheckCircle sx={{ fontSize: 16, color: 'var(--w2e-primary)' }} /></ListItemIcon>
                   <ListItemText primary={<Typography variant="body2">{f}</Typography>} />
                 </ListItem>
               ))}

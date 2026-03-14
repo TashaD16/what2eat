@@ -19,7 +19,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children, onHomeClick, onPlannerClick, likedCount, onFavoritesClick, user, onAuthClick, onSignOut, lang = 'ru', onLangToggle, onProfileClick }: LayoutProps) {
-  const { mode, toggleMode } = useThemeMode()
+  const { mode, toggleMode, accent, toggleAccent } = useThemeMode()
   const t = useT()
 
   return (
@@ -33,7 +33,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
             sx={{
               flexGrow: 1,
               fontWeight: 900,
-              background: 'linear-gradient(135deg, #20C997 0%, #38D9A9 100%)',
+              background: 'linear-gradient(135deg, var(--w2e-primary) 0%, var(--w2e-primary-light) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -52,7 +52,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
               sx={{
                 color: 'text.secondary',
                 mr: 0.5,
-                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.10)' },
+                '&:hover': { color: 'var(--w2e-primary)', background: 'rgba(var(--w2e-primary-rgb),0.10)' },
               }}
             >
               <Badge badgeContent={likedCount} color="error" max={99}>
@@ -70,7 +70,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
                 color: 'text.secondary',
                 borderRadius: 3,
                 px: 2,
-                '&:hover': { color: 'text.primary', background: 'rgba(32,201,151,0.10)' },
+                '&:hover': { color: 'text.primary', background: 'rgba(var(--w2e-primary-rgb),0.10)' },
               }}
             >
               {t.planner}
@@ -92,16 +92,35 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
                   letterSpacing: '0.04em',
                   borderRadius: 2,
                   border: '1.5px solid',
-                  borderColor: lang === 'en' ? '#20C997' : 'rgba(0,0,0,0.15)',
-                  color: lang === 'en' ? '#20C997' : 'text.secondary',
-                  bgcolor: lang === 'en' ? 'rgba(32,201,151,0.08)' : 'transparent',
-                  '&:hover': { borderColor: '#20C997', color: '#20C997', bgcolor: 'rgba(32,201,151,0.10)' },
+                  borderColor: lang === 'en' ? 'var(--w2e-primary)' : 'rgba(0,0,0,0.15)',
+                  color: lang === 'en' ? 'var(--w2e-primary)' : 'text.secondary',
+                  bgcolor: lang === 'en' ? 'rgba(var(--w2e-primary-rgb),0.08)' : 'transparent',
+                  '&:hover': { borderColor: 'var(--w2e-primary)', color: 'var(--w2e-primary)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.10)' },
                 }}
               >
                 {lang === 'ru' ? 'EN' : 'RU'}
               </Button>
             </Tooltip>
           )}
+
+          <Tooltip title={accent === 'green' ? (lang === 'ru' ? 'Оранжевый акцент' : 'Orange accent') : (lang === 'ru' ? 'Зелёный акцент' : 'Green accent')}>
+            <IconButton
+              onClick={toggleAccent}
+              size="small"
+              sx={{ ml: 0.5, p: '6px' }}
+            >
+              <Box sx={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--w2e-primary) 0%, var(--w2e-primary-light) 100%)',
+                border: '2px solid',
+                borderColor: 'divider',
+                boxShadow: '0 0 8px rgba(var(--w2e-primary-rgb),0.5)',
+                transition: 'all 0.3s ease',
+              }} />
+            </IconButton>
+          </Tooltip>
 
           <Tooltip title={mode === 'dark' ? t.lightTheme : t.darkTheme}>
             <IconButton
@@ -110,7 +129,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
               sx={{
                 ml: 0.5,
                 color: 'text.secondary',
-                '&:hover': { color: '#20C997', background: 'rgba(32,201,151,0.10)' },
+                '&:hover': { color: 'var(--w2e-primary)', background: 'rgba(var(--w2e-primary-rgb),0.10)' },
               }}
             >
               {mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
@@ -122,7 +141,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
               <IconButton
                 onClick={onProfileClick}
                 size="small"
-                sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
+                sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: 'var(--w2e-primary)' } }}
               >
                 <Person fontSize="small" />
               </IconButton>
@@ -132,7 +151,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
           {user ? (
             <Tooltip title={user.email ?? t.account}>
               <IconButton onClick={onSignOut} size="small" sx={{ ml: 0.5 }}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#20C997', fontSize: '0.85rem' }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'var(--w2e-primary)', fontSize: '0.85rem' }}>
                   {user.email?.[0]?.toUpperCase() ?? '?'}
                 </Avatar>
               </IconButton>
@@ -142,7 +161,7 @@ export default function Layout({ children, onHomeClick, onPlannerClick, likedCou
               onClick={onAuthClick}
               size="small"
               aria-label={t.signIn}
-              sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: '#20C997' } }}
+              sx={{ ml: 0.5, color: 'text.secondary', '&:hover': { color: 'var(--w2e-primary)' } }}
             >
               <Login />
             </IconButton>

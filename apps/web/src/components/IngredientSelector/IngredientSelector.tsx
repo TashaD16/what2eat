@@ -136,11 +136,11 @@ export default function IngredientSelector() {
                   label={name}
                   onDelete={() => ingredient && handleToggle(ingredient.id)}
                   sx={{
-                    background: 'linear-gradient(135deg, rgba(32,201,151,0.85) 0%, rgba(56,217,169,0.75) 100%)',
-                    border: '1px solid rgba(32,201,151,0.4)',
+                    background: 'rgba(var(--w2e-primary-rgb),0.85)',
+                    border: '1px solid rgba(var(--w2e-primary-rgb),0.40)',
                     color: 'white',
                     fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#18B383' } },
+                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'var(--w2e-primary-dark)' } },
                   }}
                 />
               )
@@ -163,17 +163,17 @@ export default function IngredientSelector() {
                   sx={{
                     p: 1.5,
                     cursor: 'pointer',
-                    border: isSelected ? '1.5px solid rgba(32,201,151,0.6)' : `1px solid ${isLight ? 'rgba(32,201,151,0.15)' : 'rgba(255,255,255,0.07)'}`,
+                    border: isSelected ? '1.5px solid rgba(var(--w2e-primary-rgb),0.60)' : `1px solid ${isLight ? 'rgba(var(--w2e-primary-rgb),0.15)' : 'rgba(255,255,255,0.07)'}`,
                     bgcolor: isSelected
-                      ? (isLight ? 'rgba(32,201,151,0.12)' : 'rgba(32,201,151,0.15)')
+                      ? (isLight ? 'rgba(var(--w2e-primary-rgb),0.12)' : 'rgba(var(--w2e-primary-rgb),0.15)')
                       : (isLight ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)'),
-                    boxShadow: isSelected ? '0 0 16px rgba(32,201,151,0.20)' : 'none',
+                    boxShadow: isSelected ? '0 0 16px rgba(var(--w2e-primary-rgb),0.20)' : 'none',
                     transition: 'all 0.2s ease',
                     '&:hover': {
                       bgcolor: isSelected
-                        ? (isLight ? 'rgba(32,201,151,0.18)' : 'rgba(32,201,151,0.22)')
+                        ? (isLight ? 'rgba(var(--w2e-primary-rgb),0.18)' : 'rgba(var(--w2e-primary-rgb),0.22)')
                         : (isLight ? 'rgba(224,253,244,0.99)' : 'rgba(12,26,48,0.97)'),
-                      border: isSelected ? '1.5px solid rgba(32,201,151,0.7)' : '1px solid rgba(32,201,151,0.30)',
+                      border: isSelected ? '1.5px solid rgba(var(--w2e-primary-rgb),0.70)' : '1px solid rgba(var(--w2e-primary-rgb),0.30)',
                     },
                   }}
                   onClick={() => handleToggle(ingredient.id)}
@@ -182,7 +182,7 @@ export default function IngredientSelector() {
                     variant="body2"
                     align="center"
                     sx={{
-                      color: isSelected ? '#18B383' : 'text.primary',
+                      color: isSelected ? 'var(--w2e-primary-dark)' : 'text.primary',
                       fontWeight: isSelected ? 600 : 400,
                     }}
                   >

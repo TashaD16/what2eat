@@ -226,8 +226,8 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
           </Typography>
           {loadingMore && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CircularProgress size={12} sx={{ color: '#20C997' }} />
-              <Typography variant="caption" sx={{ color: '#20C997', fontSize: '0.65rem' }}>
+              <CircularProgress size={12} sx={{ color: 'var(--w2e-primary)' }} />
+              <Typography variant="caption" sx={{ color: 'var(--w2e-primary)', fontSize: '0.65rem' }}>
                 {t.loadingMore}
               </Typography>
             </Box>
@@ -264,7 +264,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             position: 'absolute',
             inset: '-60px',
             borderRadius: '48px',
-            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.32) 0%, rgba(32,201,151,0.10) 45%, transparent 70%)',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(var(--w2e-primary-rgb),0.32) 0%, rgba(var(--w2e-primary-rgb),0.10) 45%, transparent 70%)',
             filter: 'blur(40px)',
             pointerEvents: 'none',
             zIndex: 0,
@@ -279,7 +279,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             position: 'absolute',
             inset: '-90px',
             borderRadius: '60px',
-            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.18) 0%, rgba(32,201,151,0.05) 50%, transparent 70%)',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(var(--w2e-primary-rgb),0.18) 0%, rgba(var(--w2e-primary-rgb),0.05) 50%, transparent 70%)',
             filter: 'blur(56px)',
             pointerEvents: 'none',
             zIndex: 0,
@@ -293,7 +293,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             position: 'absolute',
             inset: '-50px',
             borderRadius: '44px',
-            background: 'radial-gradient(ellipse at 50% 60%, rgba(32,201,151,0.18) 0%, rgba(32,201,151,0.05) 50%, transparent 70%)',
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(var(--w2e-primary-rgb),0.18) 0%, rgba(var(--w2e-primary-rgb),0.05) 50%, transparent 70%)',
             filter: 'blur(32px)',
             pointerEvents: 'none',
             zIndex: 0,
@@ -310,7 +310,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
               justifyContent: 'center',
               bgcolor: 'rgba(204,251,241,0.55)',
               borderRadius: 4,
-              border: '1px solid rgba(32,201,151,0.20)',
+              border: '1px solid rgba(var(--w2e-primary-rgb),0.20)',
             }}
           >
             <Typography variant="h5" sx={{ color: 'text.secondary', fontWeight: 700, mb: 3 }}>
@@ -440,7 +440,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         onClose={() => setInfoDish(null)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(8,18,35,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(32,201,151,0.20)' } }}
+        PaperProps={{ sx: { bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(236,253,245,0.97)' : 'rgba(8,18,35,0.97)', backgroundImage: 'none', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(var(--w2e-primary-rgb),0.20)' } }}
       >
         {infoDish && (
           <>
@@ -483,13 +483,13 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   icon={<AccessTime sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
                   label={t.min(infoDish.cooking_time)}
                   size="small"
-                  sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
+                  sx={{ bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)', color: 'var(--w2e-primary-deep)', border: '1px solid rgba(var(--w2e-primary-rgb),0.25)' }}
                 />
                 <Chip
                   icon={<People sx={{ fontSize: '13px !important', color: '#0F9B6E !important' }} />}
                   label={t.servingsShort(infoDish.servings)}
                   size="small"
-                  sx={{ bgcolor: 'rgba(32,201,151,0.12)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.25)' }}
+                  sx={{ bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)', color: 'var(--w2e-primary-deep)', border: '1px solid rgba(var(--w2e-primary-rgb),0.25)' }}
                 />
                 {infoDish.is_vegan && (
                   <Chip label={t.vegan} size="small" sx={{ bgcolor: 'rgba(22,163,74,0.1)', color: '#15803d', border: '1px solid rgba(22,163,74,0.25)' }} />
@@ -508,7 +508,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   <List dense disablePadding>
                     {infoDish.ingredients.slice(0, 6).map((ing) => (
                       <ListItem key={ing.id} sx={{ px: 0, py: 0.4 }}>
-                        <FiberManualRecord sx={{ fontSize: 6, color: '#20C997', mr: 1, flexShrink: 0 }} />
+                        <FiberManualRecord sx={{ fontSize: 6, color: 'var(--w2e-primary)', mr: 1, flexShrink: 0 }} />
                         <Typography variant="body2" sx={{ color: 'text.primary' }}>{ing.name}</Typography>
                       </ListItem>
                     ))}
@@ -570,7 +570,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                   key={dish.name}
                   sx={{
                     bgcolor: 'rgba(204,251,241,0.50)',
-                    border: '1px solid rgba(32,201,151,0.18)',
+                    border: '1px solid rgba(var(--w2e-primary-rgb),0.18)',
                     borderRadius: 3,
                     p: 2,
                   }}

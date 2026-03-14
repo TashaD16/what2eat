@@ -136,8 +136,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             {t.nazad}
           </Button>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <AutoAwesome sx={{ color: '#20C997', fontSize: 16 }} />
-            <Typography variant="caption" sx={{ color: '#20C997', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <AutoAwesome sx={{ color: 'var(--w2e-primary)', fontSize: 16 }} />
+            <Typography variant="caption" sx={{ color: 'var(--w2e-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               {t.recipeSource}
             </Typography>
           </Box>
@@ -311,17 +311,17 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                   ? 'rgba(230,252,244,0.97)'
                   : 'rgba(8,18,35,0.95)',
               backdropFilter: 'blur(20px)',
-              border: '1.5px solid rgba(32,201,151,0.30)',
-              boxShadow: '0 4px 24px rgba(32,201,151,0.14)',
+              border: '1.5px solid rgba(var(--w2e-primary-rgb),0.30)',
+              boxShadow: '0 4px 24px rgba(var(--w2e-primary-rgb),0.14)',
             }}
           >
             {/* Мета-чипы */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
               <Chip
-                icon={<AccessTime sx={{ fontSize: '14px !important', color: '#0F9B6E !important' }} />}
+                icon={<AccessTime sx={{ fontSize: '14px !important', color: 'var(--w2e-primary-deep) !important' }} />}
                 label={t.min(recipe.cooking_time)}
                 size="small"
-                sx={{ bgcolor: 'rgba(32,201,151,0.15)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.30)', fontWeight: 600 }}
+                sx={{ bgcolor: 'rgba(var(--w2e-primary-rgb),0.15)', color: 'var(--w2e-primary-deep)', border: '1px solid rgba(var(--w2e-primary-rgb),0.30)', fontWeight: 600 }}
               />
               <Chip
                 label={{ easy: t.easy, medium: t.medium, hard: t.hard }[recipe.difficulty]}
@@ -333,7 +333,7 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             {/* КБЖУ на порцию: первая строка — ккал, вторая — жиры, углеводы, белки */}
             {(recipe.calories_per_serving || recipe.protein_per_serving || recipe.fat_per_serving || recipe.carbs_per_serving) && (
               <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ color: '#0F9B6E', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 0.75 }}>
+                <Typography variant="caption" sx={{ color: 'var(--w2e-primary-deep)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 0.75 }}>
                   {t.kbjuPerServing}
                 </Typography>
                 {recipe.calories_per_serving && (
@@ -358,18 +358,18 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
             )}
 
             {/* Порции */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(32,201,151,0.10)', border: '1px solid rgba(32,201,151,0.25)', borderRadius: 3, px: 1, py: 0.5, mb: 2, width: 'fit-content' }}>
-              <People sx={{ fontSize: 16, color: '#0F9B6E', ml: 0.5 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, bgcolor: 'rgba(var(--w2e-primary-rgb),0.10)', border: '1px solid rgba(var(--w2e-primary-rgb),0.25)', borderRadius: 3, px: 1, py: 0.5, mb: 2, width: 'fit-content' }}>
+              <People sx={{ fontSize: 16, color: 'var(--w2e-primary-deep)', ml: 0.5 }} />
               <IconButton size="small" onClick={() => setServings(Math.max(1, currentServings - 1))} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Remove sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 700, color: '#0F9B6E' }}>
+              <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center', fontWeight: 700, color: 'var(--w2e-primary-deep)' }}>
                 {currentServings}
               </Typography>
               <IconButton size="small" onClick={() => setServings(currentServings + 1)} sx={{ p: 0.25, color: 'text.primary' }}>
                 <Add sx={{ fontSize: 14 }} />
               </IconButton>
-              <Typography variant="body2" sx={{ color: '#0F9B6E', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>{t.servings}</Typography>
+              <Typography variant="body2" sx={{ color: 'var(--w2e-primary-deep)', mr: 0.5, fontSize: '0.8rem', fontWeight: 500 }}>{t.servings}</Typography>
             </Box>
 
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
@@ -386,13 +386,13 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderBottom: i < recipe.ingredients.length - 1
-                      ? '1px solid rgba(32,201,151,0.14)'
+                      ? '1px solid rgba(var(--w2e-primary-rgb),0.14)'
                       : 'none',
                     gap: 1,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                    <FiberManualRecord sx={{ fontSize: 6, color: '#20C997', flexShrink: 0 }} />
+                    <FiberManualRecord sx={{ fontSize: 6, color: 'var(--w2e-primary)', flexShrink: 0 }} />
                     <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                       {ing.name}
                     </Typography>
@@ -401,9 +401,9 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                     label={`${scaleQty(ing.quantity)} ${ing.unit}`}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(32,201,151,0.12)',
-                      color: '#0F9B6E',
-                      border: '1px solid rgba(32,201,151,0.28)',
+                      bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)',
+                      color: 'var(--w2e-primary-deep)',
+                      border: '1px solid rgba(var(--w2e-primary-rgb),0.28)',
                       fontWeight: 600,
                       fontSize: '0.72rem',
                       height: 22,
@@ -427,8 +427,8 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                   ? 'rgba(240,253,248,0.97)'
                   : 'rgba(8,18,35,0.95)',
               backdropFilter: 'blur(20px)',
-              border: '1.5px solid rgba(32,201,151,0.22)',
-              boxShadow: '0 4px 24px rgba(32,201,151,0.08)',
+              border: '1.5px solid rgba(var(--w2e-primary-rgb),0.22)',
+              boxShadow: '0 4px 24px rgba(var(--w2e-primary-rgb),0.08)',
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
@@ -455,12 +455,12 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
                           width: 32,
                           height: 32,
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #18B383 0%, #20C997 100%)',
+                          background: 'linear-gradient(135deg, var(--w2e-primary-dark) 0%, var(--w2e-primary) 100%)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           flexShrink: 0,
-                          boxShadow: '0 2px 12px rgba(32,201,151,0.35)',
+                          boxShadow: '0 2px 12px rgba(var(--w2e-primary-rgb),0.35)',
                         }}
                       >
                         <Typography variant="caption" sx={{ color: 'white', fontWeight: 800, fontSize: '0.75rem' }}>

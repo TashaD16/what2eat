@@ -525,8 +525,8 @@ function App() {
                 startIcon={<Casino />}
                 sx={{
                   py: 1.75,
-                  borderColor: 'rgba(32,201,151,0.35)',
-                  '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
+                  borderColor: 'rgba(var(--w2e-primary-rgb),0.35)',
+                  '&:hover': { borderColor: 'rgba(var(--w2e-primary-rgb),0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
                 }}
               >
                 {t.randomizer}
@@ -540,9 +540,9 @@ function App() {
                 startIcon={<AutoAwesome />}
                 sx={{
                   py: 1.75,
-                  borderColor: 'rgba(32,201,151,0.4)',
-                  color: '#20C997',
-                  '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.08)' },
+                  borderColor: 'rgba(var(--w2e-primary-rgb),0.4)',
+                  color: 'var(--w2e-primary)',
+                  '&:hover': { borderColor: 'var(--w2e-primary)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.08)' },
                   '&.Mui-disabled': { borderColor: 'rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.25)' },
                 }}
               >
@@ -560,10 +560,10 @@ function App() {
                 onClick={() => setSelectorOpen((v) => !v)}
                 startIcon={selectedIngredients.length > 0 ? <Edit /> : <Add />}
                 sx={{
-                  borderColor: selectorOpen ? 'rgba(32,201,151,0.60)' : 'rgba(32,201,151,0.35)',
+                  borderColor: selectorOpen ? 'rgba(var(--w2e-primary-rgb),0.60)' : 'rgba(var(--w2e-primary-rgb),0.35)',
                   color: 'text.primary',
-                  bgcolor: selectorOpen ? 'rgba(204,251,241,0.35)' : 'transparent',
-                  '&:hover': { borderColor: 'rgba(32,201,151,0.60)', bgcolor: 'rgba(204,251,241,0.65)' },
+                  bgcolor: selectorOpen ? 'rgba(var(--w2e-primary-rgb),0.08)' : 'transparent',
+                  '&:hover': { borderColor: 'rgba(var(--w2e-primary-rgb),0.60)', bgcolor: 'rgba(var(--w2e-primary-rgb),0.12)' },
                 }}
               >
                 {selectedIngredients.length > 0
@@ -577,7 +577,7 @@ function App() {
                 sx={{
                   mt: 1,
                   p: 2,
-                  border: '1.5px solid rgba(32,201,151,0.25)',
+                  border: '1.5px solid rgba(var(--w2e-primary-rgb),0.25)',
                   borderRadius: 3,
                   bgcolor: 'background.paper',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
@@ -609,10 +609,10 @@ function App() {
                   size="small"
                   onDelete={() => dispatch(toggleIngredient(ing.id))}
                   sx={{
-                    bgcolor: 'rgba(32,201,151,0.08)',
-                    color: '#0F9B6E',
-                    borderColor: 'rgba(32,201,151,0.25)',
-                    '& .MuiChip-deleteIcon': { color: 'rgba(15,155,110,0.5)', '&:hover': { color: '#0F9B6E' } },
+                    bgcolor: 'rgba(var(--w2e-primary-rgb),0.08)',
+                    color: 'var(--w2e-primary-deep)',
+                    borderColor: 'rgba(var(--w2e-primary-rgb),0.25)',
+                    '& .MuiChip-deleteIcon': { color: 'rgba(15,155,110,0.5)', '&:hover': { color: 'var(--w2e-primary-deep)' } },
                   }}
                   variant="outlined"
                 />
@@ -626,10 +626,10 @@ function App() {
                 sx={{
                   cursor: 'pointer',
                   borderStyle: 'dashed',
-                  borderColor: 'rgba(32,201,151,0.40)',
-                  color: '#0F9B6E',
-                  '& .MuiChip-icon': { color: '#0F9B6E' },
-                  '&:hover': { bgcolor: 'rgba(32,201,151,0.08)', borderColor: 'rgba(32,201,151,0.65)' },
+                  borderColor: 'rgba(var(--w2e-primary-rgb),0.40)',
+                  color: 'var(--w2e-primary-deep)',
+                  '& .MuiChip-icon': { color: 'var(--w2e-primary-deep)' },
+                  '&:hover': { bgcolor: 'rgba(var(--w2e-primary-rgb),0.08)', borderColor: 'rgba(var(--w2e-primary-rgb),0.65)' },
                 }}
               />
             </Box>
@@ -645,8 +645,8 @@ function App() {
             sx={{
               py: 1.75,
               fontSize: '1rem',
-              boxShadow: '0 6px 32px rgba(32,201,151,0.50)',
-              '&:hover': { boxShadow: '0 8px 40px rgba(32,201,151,0.65)' },
+              boxShadow: '0 6px 32px rgba(var(--w2e-primary-rgb),0.50)',
+              '&:hover': { boxShadow: '0 8px 40px rgba(var(--w2e-primary-rgb),0.65)' },
             }}
           >
             {liveCount != null && (liveCount.strict + liveCount.additional) > 0
@@ -663,7 +663,7 @@ function App() {
         dishesLoading && visibleDishes.length === 0 ? (
           /* Full-screen spinner: initial load or loading-with-missing phase */
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
-            <CircularProgress size={56} sx={{ color: '#20C997' }} />
+            <CircularProgress size={56} sx={{ color: 'var(--w2e-primary)' }} />
             <Box sx={{ textAlign: 'center' }}>
               <Typography sx={{ color: 'text.primary', fontWeight: 600, mb: 0.5 }}>
                 {strictSearchFailed
