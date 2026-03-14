@@ -330,26 +330,30 @@ export default function AIRecipeView({ dishId, onBack }: AIRecipeViewProps) {
               />
             </Box>
 
-            {/* КБЖУ на порцию */}
+            {/* КБЖУ на порцию: первая строка — ккал, вторая — жиры, углеводы, белки */}
             {(recipe.calories_per_serving || recipe.protein_per_serving || recipe.fat_per_serving || recipe.carbs_per_serving) && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="caption" sx={{ color: '#0F9B6E', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 0.75 }}>
                   {t.kbjuPerServing}
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6 }}>
-                  {recipe.calories_per_serving && (
+                {recipe.calories_per_serving && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, mb: 0.5 }}>
                     <Chip label={`${recipe.calories_per_serving} ${t.kcalUnit}`} size="small" sx={{ bgcolor: 'rgba(255,167,38,0.15)', color: '#E65100', border: '1px solid rgba(255,167,38,0.35)', fontWeight: 600, fontSize: '0.72rem' }} />
-                  )}
-                  {recipe.protein_per_serving && (
-                    <Chip label={`${t.proteinLabel} ${recipe.protein_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(66,165,245,0.15)', color: '#1565C0', border: '1px solid rgba(66,165,245,0.35)', fontWeight: 600, fontSize: '0.72rem' }} />
-                  )}
-                  {recipe.fat_per_serving && (
-                    <Chip label={`${t.fatLabel} ${recipe.fat_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(239,108,0,0.12)', color: '#BF360C', border: '1px solid rgba(239,108,0,0.3)', fontWeight: 600, fontSize: '0.72rem' }} />
-                  )}
-                  {recipe.carbs_per_serving && (
-                    <Chip label={`${t.carbsLabel} ${recipe.carbs_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(156,39,176,0.1)', color: '#6A1B9A', border: '1px solid rgba(156,39,176,0.28)', fontWeight: 600, fontSize: '0.72rem' }} />
-                  )}
-                </Box>
+                  </Box>
+                )}
+                {(recipe.fat_per_serving || recipe.carbs_per_serving || recipe.protein_per_serving) && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6 }}>
+                    {recipe.fat_per_serving && (
+                      <Chip label={`${t.fatLabel} ${recipe.fat_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(239,108,0,0.12)', color: '#BF360C', border: '1px solid rgba(239,108,0,0.3)', fontWeight: 600, fontSize: '0.72rem' }} />
+                    )}
+                    {recipe.carbs_per_serving && (
+                      <Chip label={`${t.carbsLabel} ${recipe.carbs_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(156,39,176,0.1)', color: '#6A1B9A', border: '1px solid rgba(156,39,176,0.28)', fontWeight: 600, fontSize: '0.72rem' }} />
+                    )}
+                    {recipe.protein_per_serving && (
+                      <Chip label={`${t.proteinLabel} ${recipe.protein_per_serving}${t.gUnit}`} size="small" sx={{ bgcolor: 'rgba(66,165,245,0.15)', color: '#1565C0', border: '1px solid rgba(66,165,245,0.35)', fontWeight: 600, fontSize: '0.72rem' }} />
+                    )}
+                  </Box>
+                )}
               </Box>
             )}
 

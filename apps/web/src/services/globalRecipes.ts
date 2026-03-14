@@ -191,6 +191,105 @@ function recipeMatchesCuisine(recipe: { name: string; description?: string }, cu
   return terms.some((t) => combined.includes(t))
 }
 
+export interface CombinedSearchResult {
+  /** Recipes where ALL ingredients are within selected + spices */
+  strict: AIRecipe[]
+  /** Recipes with some missing ingredients, sorted by fewest missing first */
+  additional: Array<{ recipe: AIRecipe; missingNames: string[] }>
+}
+
+/**
+ * Single-pass optimized search: returns strict matches AND additional-ingredient matches
+ * in one iteration over the cache instead of two separate calls.
+ */
+export async function searchByIngredients(
+  ingredientNames: string[],
+  options: Omit<SearchGlobalRecipesOptions, 'strictOnlySelectedAndSpices' | 'maxResults' | 'dbLimit'> = {}
+): Promise<CombinedSearchResult> {
+  if (!isSupabaseConfigured() || ingredientNames.length === 0) {
+    return { strict: [], additional: [] }
+  }
+
+  const {
+    spiceNames = [],
+    lang = 'ru',
+    vegetarianOnly = false,
+    veganOnly = false,
+    cuisine = null,
+    caloriesMax = null,
+    proteinMax = null,
+    fatMax = null,
+    carbsMax = null,
+  } = options
+
+  const selLower = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
+  const spiceLower = (spiceNames as string[]).map((n) => n.toLowerCase().trim()).filter(Boolean)
+  const allowedLower = [...selLower, ...spiceLower]
+
+  const allRows = await fetchAllRecipesForLang(lang)
+  if (allRows.length === 0) return { strict: [], additional: [] }
+
+  const strictItems: Array<{ recipe: AIRecipe; score: number }> = []
+  const additionalItems: Array<{ recipe: AIRecipe; missingNames: string[]; missingCount: number }> = []
+
+  for (const r of allRows) {
+    const rawIngs = r.ingredients
+    if (!Array.isArray(rawIngs) || rawIngs.length === 0) continue
+    const ings = rawIngs as Array<{ name?: string }>
+
+    // Apply cheap numeric filters first — skip early to avoid ingredient parsing
+    if (caloriesMax != null && r.calories_per_serving != null && r.calories_per_serving > caloriesMax) continue
+    if (proteinMax != null && r.protein_per_serving != null && r.protein_per_serving > proteinMax) continue
+    if (fatMax != null && r.fat_per_serving != null && r.fat_per_serving > fatMax) continue
+    if (carbsMax != null && r.carbs_per_serving != null && r.carbs_per_serving > carbsMax) continue
+
+    // Diet filters
+    if (vegetarianOnly || veganOnly) {
+      const wordKw = veganOnly ? VEGAN_EXCLUDE_KEYWORDS : MEAT_FISH_KEYWORDS
+      const phraseKw = veganOnly ? VEGAN_EXCLUDE_PHRASES : []
+      if (recipeHasIngredientKeyword(ings, wordKw, phraseKw)) continue
+    }
+
+    // Cuisine filter
+    if (cuisine?.trim() && !recipeMatchesCuisine(r, cuisine.trim())) continue
+
+    // Extract ingredient names (only `.name` field — not full JSON, no false positives)
+    const ingLower = ings.map((ing) => (ing.name ?? '').toLowerCase().trim()).filter(Boolean)
+    if (ingLower.length === 0) continue
+
+    // Score: count how many selected ingredients appear in this recipe
+    let score = 0
+    for (const sel of selLower) {
+      if (ingLower.some((name) => name.includes(sel) || sel.includes(name))) score++
+    }
+    if (score === 0) continue
+
+    // Classify as strict or additional in one pass
+    const missingNames: string[] = []
+    for (let i = 0; i < ings.length; i++) {
+      const name = ingLower[i]
+      if (!name) continue
+      const isAllowed = allowedLower.some((a) => name.includes(a) || a.includes(name))
+      if (!isAllowed) missingNames.push((ings[i].name ?? name))
+    }
+
+    const mapped = { ...mapRow(r), source_ingredients: ingredientNames }
+    if (missingNames.length === 0) {
+      strictItems.push({ recipe: mapped, score })
+    } else {
+      additionalItems.push({ recipe: mapped, missingNames, missingCount: missingNames.length })
+    }
+  }
+
+  strictItems.sort((a, b) => b.score - a.score)
+  additionalItems.sort((a, b) => a.missingCount - b.missingCount)
+
+  return {
+    strict: strictItems.map(({ recipe }) => recipe),
+    additional: additionalItems.map(({ recipe, missingNames }) => ({ recipe, missingNames })),
+  }
+}
+
 /**
  * Searches global_recipes by ingredient names.
  * Fetches all recipes and ranks client-side by number of matching ingredients.
