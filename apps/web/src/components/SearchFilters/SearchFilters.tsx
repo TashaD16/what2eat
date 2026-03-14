@@ -169,7 +169,7 @@ export default function SearchFilters() {
       {/* КБЖУ в одну строку */}
       <Box>
         <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
-          КБЖУ, max
+          {t.kbjuMax}
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {([
