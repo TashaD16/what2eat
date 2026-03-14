@@ -250,7 +250,7 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
           </Tooltip>
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
           {([
             { label: t.caloriesLabel, unit: t.kcalUnit, value: caloriesMax, step: 50, min: 100, set: (v: number | null) => dispatch(setCaloriesMax(v)) },
             { label: t.proteinLabel,  unit: t.gUnit,    value: proteinMax,  step: 5,  min: 1,   set: (v: number | null) => dispatch(setProteinMax(v)) },
