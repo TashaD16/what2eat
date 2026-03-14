@@ -21,14 +21,22 @@ import {
   setProteinMax,
   setFatMax,
   setCarbsMax,
+  setCookingTimeMax,
 } from '../../store/slices/filtersSlice'
 import { useT } from '../../i18n/useT'
 
 export default function SearchFilters() {
   const dispatch = useAppDispatch()
   const t = useT()
-  const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine, caloriesMax, proteinMax, fatMax, carbsMax } =
+  const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine, caloriesMax, proteinMax, fatMax, carbsMax, cookingTimeMax } =
     useAppSelector((state) => state.filters)
+  const COOKING_TIME_OPTIONS = [
+    { value: null, label: t.allCuisines },
+    { value: 20, label: t.min(20) },
+    { value: 40, label: t.min(40) },
+    { value: 65, label: t.min(65) },
+  ] as const
+
   const CUISINE_OPTIONS = [
     { value: null, label: t.allCuisines },
     { value: 'russian', label: t.russian },
@@ -102,6 +110,31 @@ export default function SearchFilters() {
               sx={{
                 fontSize: '0.78rem',
                 ...(nutritionValue === opt.value
+                  ? { bgcolor: 'rgba(29,78,216,0.12)', color: '#1d4ed8', borderColor: 'rgba(29,78,216,0.35)' }
+                  : { color: 'text.secondary', borderColor: 'rgba(0,0,0,0.15)' }),
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
+
+      {/* Время готовки */}
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
+          {t.cookingTimeFilter}
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+          {COOKING_TIME_OPTIONS.map((opt) => (
+            <Chip
+              key={String(opt.value)}
+              label={opt.label}
+              size="small"
+              clickable
+              onClick={() => dispatch(setCookingTimeMax(opt.value))}
+              variant={cookingTimeMax === opt.value ? 'filled' : 'outlined'}
+              sx={{
+                fontSize: '0.78rem',
+                ...(cookingTimeMax === opt.value
                   ? { bgcolor: 'rgba(29,78,216,0.12)', color: '#1d4ed8', borderColor: 'rgba(29,78,216,0.35)' }
                   : { color: 'text.secondary', borderColor: 'rgba(0,0,0,0.15)' }),
               }}

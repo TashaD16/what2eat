@@ -507,14 +507,15 @@ async function batchPreloadAndDispatch(
  */
 export const generateAIRandomDishes = (cuisine?: string | null) => async (
   dispatch: (action: unknown) => void,
-  getState: () => { lang?: { lang: 'ru' | 'en' } }
+  getState: () => { lang?: { lang: 'ru' | 'en' }; filters?: { cookingTimeMax: number | null } }
 ) => {
   dispatch(startAIRandom())
   const lang = getState().lang?.lang ?? 'ru'
+  const cookingTimeMax = getState().filters?.cookingTimeMax ?? null
 
   if (isSupabaseConfigured()) {
     // ── Scenario A: Supabase global_recipes (no OpenAI cost) ───────────────
-    const ids = await getShuffledGlobalRecipeIds(lang)
+    const ids = await getShuffledGlobalRecipeIds(lang, cookingTimeMax)
     dispatch(setGlobalRecipeQueue(ids))
 
     if (ids.length === 0) {
@@ -572,6 +573,7 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
         dispatch(finishAIRandom(e instanceof Error ? e.message : 'Ошибка загрузки рецептов'))
         return
       }
+      if (cookingTimeMax != null) successful = successful.filter((r) => r.cooking_time <= cookingTimeMax)
       if (successful.length > 0) saveSeedToCache(successful)
       dispatch(finishAIRandom(
         successful.length === 0
@@ -594,10 +596,11 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
  */
 export const loadMoreWebDishes = () => async (
   dispatch: (action: unknown) => void,
-  getState: () => { dishes: DishesState; lang?: { lang: 'ru' | 'en' } }
+  getState: () => { dishes: DishesState; lang?: { lang: 'ru' | 'en' }; filters?: { cookingTimeMax: number | null } }
 ) => {
   const { globalRecipeQueue, globalRecipesExhausted } = getState().dishes
   const lang = getState().lang?.lang ?? 'ru'
+  const cookingTimeMax = getState().filters?.cookingTimeMax ?? null
   const currentCount = getState().dishes.dishes.length
   dispatch(setLoadingMore(true))
 
@@ -610,7 +613,8 @@ export const loadMoreWebDishes = () => async (
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     } else if (globalRecipesExhausted || !isSupabaseConfigured()) {
       // ── Fallback: TheMealDB + GPT → save back to grow the pool ─────────
-      const recipes = await fetchRecipesFromWeb(5, lang)
+      let recipes = await fetchRecipesFromWeb(5, lang)
+      if (cookingTimeMax != null) recipes = recipes.filter((r) => r.cooking_time <= cookingTimeMax)
       await Promise.allSettled(recipes.map((r) => saveGlobalRecipe(r)))
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     }

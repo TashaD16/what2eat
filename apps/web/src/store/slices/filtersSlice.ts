@@ -11,6 +11,7 @@ interface FiltersState {
   proteinMax: number | null
   fatMax: number | null
   carbsMax: number | null
+  cookingTimeMax: number | null
 }
 
 const initialState: FiltersState = {
@@ -24,6 +25,7 @@ const initialState: FiltersState = {
   proteinMax: null,
   fatMax: null,
   carbsMax: null,
+  cookingTimeMax: null,
 }
 
 const filtersSlice = createSlice({
@@ -62,9 +64,12 @@ const filtersSlice = createSlice({
     setCarbsMax: (state, action: PayloadAction<number | null>) => {
       state.carbsMax = action.payload
     },
+    setCookingTimeMax: (state, action: PayloadAction<number | null>) => {
+      state.cookingTimeMax = action.payload
+    },
   },
 })
 
-export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit, setCuisine, setCaloriesMax, setProteinMax, setFatMax, setCarbsMax } =
+export const { toggleVegetarian, toggleVegan, toggleAllowMissing, toggleBudget, setBudgetLimit, setCuisine, setCaloriesMax, setProteinMax, setFatMax, setCarbsMax, setCookingTimeMax } =
   filtersSlice.actions
 export default filtersSlice.reducer

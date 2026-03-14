@@ -41,13 +41,15 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Loads all global recipe IDs for the given language and returns them shuffled. Only returns recipes with an image. */
-export async function getShuffledGlobalRecipeIds(lang: 'ru' | 'en' = 'ru'): Promise<string[]> {
+export async function getShuffledGlobalRecipeIds(lang: 'ru' | 'en' = 'ru', cookingTimeMax?: number | null): Promise<string[]> {
   if (!isSupabaseConfigured()) return []
-  const { data, error } = await supabase
+  let q = supabase
     .from('global_recipes')
     .select('id')
     .eq('language', lang)
     .not('image_url', 'is', null)
+  if (cookingTimeMax != null) q = q.lte('cooking_time', cookingTimeMax)
+  const { data, error } = await q
   if (error || !data) return []
   return shuffle(data.map((r: { id: string }) => r.id))
 }
@@ -138,6 +140,8 @@ export interface SearchGlobalRecipesOptions {
   fatMax?: number | null
   /** Фильтр по углеводам на порцию (null = не фильтровать) */
   carbsMax?: number | null
+  /** Фильтр по времени приготовления в минутах (null = не фильтровать) */
+  cookingTimeMax?: number | null
 }
 
 // Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
@@ -220,6 +224,7 @@ export async function searchByIngredients(
     proteinMax = null,
     fatMax = null,
     carbsMax = null,
+    cookingTimeMax = null,
   } = options
 
   const selLower = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
@@ -242,6 +247,7 @@ export async function searchByIngredients(
     if (proteinMax != null && r.protein_per_serving != null && r.protein_per_serving > proteinMax) continue
     if (fatMax != null && r.fat_per_serving != null && r.fat_per_serving > fatMax) continue
     if (carbsMax != null && r.carbs_per_serving != null && r.carbs_per_serving > carbsMax) continue
+    if (cookingTimeMax != null && r.cooking_time != null && r.cooking_time > cookingTimeMax) continue
 
     // Diet filters
     if (vegetarianOnly || veganOnly) {
@@ -313,6 +319,7 @@ export async function searchGlobalRecipesByIngredients(
     proteinMax = null,
     fatMax = null,
     carbsMax = null,
+    cookingTimeMax = null,
   } = options
   const lowerNames = ingredientNames.map((n) => n.toLowerCase().trim()).filter(Boolean)
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
@@ -383,6 +390,9 @@ export async function searchGlobalRecipesByIngredients(
   }
   if (carbsMax != null) {
     filtered = filtered.filter(({ r }) => r.carbs_per_serving == null || r.carbs_per_serving <= carbsMax!)
+  }
+  if (cookingTimeMax != null) {
+    filtered = filtered.filter(({ r }) => r.cooking_time == null || r.cooking_time <= cookingTimeMax!)
   }
 
   filtered.sort((a, b) => b.score - a.score)

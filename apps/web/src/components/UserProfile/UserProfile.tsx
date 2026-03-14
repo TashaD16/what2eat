@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { setProfile, clearSaved, persistUserProfile } from '../../store/slices/userProfileSlice'
 import { setCaloriesMax, setProteinMax, setFatMax, setCarbsMax } from '../../store/slices/filtersSlice'
 import { setLang } from '../../store/slices/langSlice'
-import { UserProfileData, calculateKBJU } from '../../services/userProfile'
+import { UserProfileData, calculateKBJU, getMealDistribution } from '../../services/userProfile'
 import { useT } from '../../i18n/useT'
 import { useThemeMode } from '../../contexts/ThemeContext'
 
@@ -31,6 +31,9 @@ export default function UserProfile({ onBack }: UserProfileProps) {
   const [height, setHeight] = useState<string>(String(profile?.height ?? 170))
   const [weight, setWeight] = useState<string>(String(profile?.weight ?? 70))
   const [activity, setActivity] = useState<UserProfileData['activity']>(profile?.activity ?? 'moderate')
+  const [goal, setGoal] = useState<UserProfileData['goal']>(profile?.goal ?? 'maintenance')
+  const [goalIntensity, setGoalIntensity] = useState<UserProfileData['goalIntensity']>(profile?.goalIntensity ?? 'light')
+  const [mealsPerDay, setMealsPerDay] = useState<3 | 4 | 5>(profile?.mealsPerDay ?? 3)
 
   // КБЖУ edit state: null = display mode
   const [kbjuEdit, setKbjuEdit] = useState<{ calories: number; protein: number; fat: number; carbs: number } | null>(null)
@@ -48,6 +51,9 @@ export default function UserProfile({ onBack }: UserProfileProps) {
       setHeight(String(profile.height))
       setWeight(String(profile.weight))
       setActivity(profile.activity)
+      setGoal(profile.goal ?? 'maintenance')
+      setGoalIntensity(profile.goalIntensity ?? 'light')
+      setMealsPerDay(profile.mealsPerDay ?? 3)
     }
   }, [profile])
 
@@ -64,6 +70,9 @@ export default function UserProfile({ onBack }: UserProfileProps) {
     height: parseInt(height) || 170,
     weight: parseInt(weight) || 70,
     activity,
+    goal,
+    goalIntensity,
+    mealsPerDay,
   }
   const preview = calculateKBJU(currentProfile)
 
@@ -94,6 +103,20 @@ export default function UserProfile({ onBack }: UserProfileProps) {
 
   const FREE_FEATURES = [t.caloriesLabel, 'AI ' + t.aiRecipe, t.favorites]
   const PRO_FEATURES = ['Безлимитный AI', 'Персональный КБЖУ-план', 'Приоритетная поддержка']
+
+  const intensityPct = {
+    loss:        { light: '-10%', moderate: '-20%' },
+    maintenance: { light: '0%',   moderate: '0%'   },
+    gain:        { light: '+5%',  moderate: '+15%'  },
+  }
+
+  const mealLabels: Record<string, string> = {
+    breakfast: t.mealBreakfast,
+    lunch:     t.mealLunch,
+    snack:     t.mealSnack,
+    snack2:    t.mealSnack,
+    dinner:    t.mealDinner,
+  }
 
   return (
     <Box sx={{ maxWidth: 580, mx: 'auto' }}>
@@ -155,6 +178,41 @@ export default function UserProfile({ onBack }: UserProfileProps) {
               {ACTIVITY_OPTIONS.map((opt) => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
             </Select>
           </FormControl>
+
+          {/* Goal */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.75}>{t.goalLabel}</Typography>
+            <ToggleButtonGroup value={goal} exclusive onChange={(_, v) => { if (v) setGoal(v) }} size="small">
+              <ToggleButton value="loss">{t.goalLoss}</ToggleButton>
+              <ToggleButton value="maintenance">{t.goalMaintenance}</ToggleButton>
+              <ToggleButton value="gain">{t.goalGain}</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          {/* Goal intensity (only for loss/gain) */}
+          {goal !== 'maintenance' && (
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block" mb={0.75}>{t.goalIntensityLabel}</Typography>
+              <ToggleButtonGroup value={goalIntensity} exclusive onChange={(_, v) => { if (v) setGoalIntensity(v) }} size="small">
+                <ToggleButton value="light">
+                  {t.goalIntensityLight(intensityPct[goal].light)}
+                </ToggleButton>
+                <ToggleButton value="moderate">
+                  {t.goalIntensityModerate(intensityPct[goal].moderate)}
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          )}
+
+          {/* Meals per day */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.75}>{t.mealsPerDayLabel}</Typography>
+            <ToggleButtonGroup value={mealsPerDay} exclusive onChange={(_, v) => { if (v) setMealsPerDay(v) }} size="small">
+              <ToggleButton value={3}>3</ToggleButton>
+              <ToggleButton value={4}>4</ToggleButton>
+              <ToggleButton value={5}>5</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
           {/* Cartoonish save button */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
@@ -231,7 +289,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
                   </Box>
                 </Box>
               ) : (
-                /* Display mode: chips */
+                /* Display mode: chips + meal distribution */
                 <Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
                     <Chip label={`${displayKbju.calories} ${t.kcalUnit}`} sx={{ bgcolor: 'rgba(255,167,38,0.15)', color: '#E65100', border: '1px solid rgba(255,167,38,0.35)', fontWeight: 700 }} />
@@ -239,13 +297,43 @@ export default function UserProfile({ onBack }: UserProfileProps) {
                     <Chip label={`${t.fatLabel} ${displayKbju.fat}${t.gUnit}`} sx={{ bgcolor: 'rgba(239,108,0,0.12)', color: '#BF360C', border: '1px solid rgba(239,108,0,0.3)', fontWeight: 600 }} />
                     <Chip label={`${t.carbsLabel} ${displayKbju.carbs}${t.gUnit}`} sx={{ bgcolor: 'rgba(156,39,176,0.1)', color: '#6A1B9A', border: '1px solid rgba(156,39,176,0.28)', fontWeight: 600 }} />
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <Button size="small" variant="outlined" onClick={() => setKbjuEdit({ ...displayKbju })}
                       sx={{ borderColor: 'rgba(32,201,151,0.45)', color: '#0F9B6E', '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.06)' } }}
                     >{t.editKbju}</Button>
                     <Button size="small" variant="outlined" onClick={handleSetGoal}
                       sx={{ borderColor: 'rgba(32,201,151,0.45)', color: '#0F9B6E', '&:hover': { borderColor: '#20C997', bgcolor: 'rgba(32,201,151,0.06)' } }}
                     >{t.setAsGoal}</Button>
+                  </Box>
+
+                  {/* Meal distribution */}
+                  <Divider sx={{ mb: 1.5 }} />
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={1}>
+                    {t.mealDistributionTitle}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    {getMealDistribution(displayKbju, mealsPerDay).map((meal, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: 'flex', alignItems: 'baseline', gap: 1,
+                          fontSize: '0.78rem', flexWrap: 'wrap',
+                        }}
+                      >
+                        <Typography variant="caption" fontWeight={700} sx={{ minWidth: 72, color: 'text.primary' }}>
+                          {mealLabels[meal.name]}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 32 }}>
+                          {Math.round(meal.pct * 100)}%
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#E65100', fontWeight: 600 }}>
+                          {meal.calories} {t.kcalUnit}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Б{meal.protein}{t.gUnit} / Ж{meal.fat}{t.gUnit} / У{meal.carbs}{t.gUnit}
+                        </Typography>
+                      </Box>
+                    ))}
                   </Box>
                 </Box>
               )}

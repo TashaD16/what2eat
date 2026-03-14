@@ -233,6 +233,7 @@ function App() {
       proteinMax: filters.proteinMax,
       fatMax: filters.fatMax,
       carbsMax: filters.carbsMax,
+      cookingTimeMax: filters.cookingTimeMax,
     })
 
     // ── Phase 3: AI fallback if nothing found at all ──────────────────────

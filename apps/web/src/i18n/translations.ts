@@ -159,7 +159,23 @@ export const translations = {
     fatFilter: 'Жиры, max',
     carbsFilter: 'Углеводы, max',
 
+    // Goal & meal distribution
+    goalLabel: 'Цель',
+    goalLoss: 'Похудение',
+    goalMaintenance: 'Поддержание',
+    goalGain: 'Набор',
+    goalIntensityLabel: 'Интенсивность',
+    goalIntensityLight: (pct: string) => `Лёгкая ${pct}`,
+    goalIntensityModerate: (pct: string) => `Умеренная ${pct}`,
+    mealsPerDayLabel: 'Приёмов пищи в день',
+    mealBreakfast: 'Завтрак',
+    mealLunch: 'Обед',
+    mealSnack: 'Перекус',
+    mealDinner: 'Ужин',
+    mealDistributionTitle: 'По приёмам пищи',
+
     // SearchFilters
+    cookingTimeFilter: 'Время готовки',
     cuisine: 'Кухня',
     allCuisines: 'Все',
     russian: 'Русская', italian: 'Итальянская', asian: 'Азиатская', american: 'Американская',
@@ -371,7 +387,23 @@ export const translations = {
     fatFilter: 'Fat, max',
     carbsFilter: 'Carbs, max',
 
+    // Goal & meal distribution
+    goalLabel: 'Goal',
+    goalLoss: 'Weight loss',
+    goalMaintenance: 'Maintenance',
+    goalGain: 'Muscle gain',
+    goalIntensityLabel: 'Intensity',
+    goalIntensityLight: (pct: string) => `Light ${pct}`,
+    goalIntensityModerate: (pct: string) => `Moderate ${pct}`,
+    mealsPerDayLabel: 'Meals per day',
+    mealBreakfast: 'Breakfast',
+    mealLunch: 'Lunch',
+    mealSnack: 'Snack',
+    mealDinner: 'Dinner',
+    mealDistributionTitle: 'By meal',
+
     // SearchFilters
+    cookingTimeFilter: 'Cook time',
     cuisine: 'Cuisine',
     allCuisines: 'All',
     russian: 'Russian', italian: 'Italian', asian: 'Asian', american: 'American',
