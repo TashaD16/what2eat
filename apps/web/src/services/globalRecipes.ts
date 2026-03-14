@@ -31,6 +31,14 @@ export function invalidateRecipeCache(lang?: string) {
   else _recipeCache.clear()
 }
 
+/** Pre-fetches all recipes for the language into the in-memory cache.
+ *  Call on app init so the first search is instant. */
+export function warmRecipeCache(lang: 'ru' | 'en'): void {
+  if (isSupabaseConfigured()) {
+    fetchAllRecipesForLang(lang).catch(() => {})
+  }
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {

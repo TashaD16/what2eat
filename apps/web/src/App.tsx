@@ -12,7 +12,7 @@ import { reloadLikedDishesInLanguage } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
-import { searchByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe } from './services/globalRecipes'
+import { searchByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe, warmRecipeCache, CombinedSearchResult } from './services/globalRecipes'
 import { searchRecipesByIngredients, translateRecipeToOtherLanguage } from './services/aiRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
@@ -57,6 +57,8 @@ function App() {
   const [photoKey, setPhotoKey] = useState(0)
   const searchRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
+  const pendingResultsRef = useRef<CombinedSearchResult | null>(null)
+  const [liveResultCount, setLiveResultCount] = useState<number | null>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError, strictSearchFailed } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
@@ -75,6 +77,7 @@ function App() {
         }
         dispatch(initAuth())
         await dispatch(fetchIngredients()).unwrap()
+        warmRecipeCache(lang)
         if (!cancelled) setAppReady(true)
       } catch (error) {
         if (!cancelled) {
@@ -159,6 +162,38 @@ function App() {
     return () => document.removeEventListener('keydown', handler)
   }, [selectorOpen])
 
+  // Reactive pre-computation: debounce 250ms, runs whenever ingredients/filters change
+  useEffect(() => {
+    if (selectedIngredients.length === 0) {
+      pendingResultsRef.current = null
+      setLiveResultCount(null)
+      return
+    }
+    const timer = setTimeout(async () => {
+      if (!isSupabaseConfigured()) return
+      const selectedNames = ingredients
+        .filter((i) => selectedIngredients.includes(i.id))
+        .map((i) => i.name)
+        .filter(Boolean)
+      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
+      const result = await searchByIngredients(selectedNames, {
+        spiceNames,
+        lang,
+        vegetarianOnly: filters.vegetarianOnly,
+        veganOnly: filters.veganOnly,
+        cuisine: filters.cuisine,
+        caloriesMax: filters.caloriesMax,
+        proteinMax: filters.proteinMax,
+        fatMax: filters.fatMax,
+        carbsMax: filters.carbsMax,
+        cookingTimeMax: filters.cookingTimeMax,
+      })
+      pendingResultsRef.current = result
+      setLiveResultCount(result.strict.length + result.additional.length)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [selectedIngredients, filters, lang, ingredients])
+
   const activeFilterCount = [
     filters.vegetarianOnly || filters.veganOnly,
     filters.cuisine != null,
@@ -168,6 +203,7 @@ function App() {
     filters.proteinMax != null,
     filters.fatMax != null,
     filters.carbsMax != null,
+    filters.cookingTimeMax != null,
   ].filter(Boolean).length
 
   const selectedIngredientObjects = useMemo(
@@ -222,8 +258,10 @@ function App() {
     const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
     if (selectedNames.length === 0) { dispatch(setLoading(false)); return }
 
-    // Single-pass search: strict and additional results in one cache iteration
-    const { strict, additional } = await searchByIngredients(selectedNames, {
+    // Use pre-computed results if available (instant), otherwise compute now
+    const precomputed = pendingResultsRef.current
+    pendingResultsRef.current = null
+    const { strict, additional } = precomputed ?? await searchByIngredients(selectedNames, {
       spiceNames,
       lang,
       vegetarianOnly: filters.vegetarianOnly,
@@ -610,7 +648,9 @@ function App() {
               '&:hover': { boxShadow: '0 8px 40px rgba(32,201,151,0.65)' },
             }}
           >
-            {t.findDishes}
+            {liveResultCount != null && liveResultCount > 0
+              ? `${t.findDishes} (${liveResultCount})`
+              : t.findDishes}
           </Button>
 
         </Box>
