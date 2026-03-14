@@ -38,7 +38,25 @@ export const signUpWithEmail = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) return rejectWithValue(error.message)
-    return { user: data.user, session: data.session }
+
+    // Supabase returns success even for existing emails (prevents enumeration).
+    // Detect existing unconfirmed account: user has no identities.
+    if (!data.session && data.user?.identities?.length === 0) {
+      // Try signing in — if it works, return the session
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError && signInData.session) {
+        return { user: signInData.user, session: signInData.session, needsConfirmation: false }
+      }
+      return rejectWithValue('This email is already registered. Please sign in or reset your password.')
+    }
+
+    // If session exists — email confirmation disabled, logged in immediately
+    if (data.session) {
+      return { user: data.user, session: data.session, needsConfirmation: false }
+    }
+
+    // Session null, new user → needs email confirmation
+    return { user: data.user, session: null, needsConfirmation: true }
   }
 )
 

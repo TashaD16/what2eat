@@ -2,6 +2,35 @@ import { supabase, isSupabaseConfigured } from './supabase'
 import { AIRecipe } from './aiRecipes'
 import { RecipeStep } from '@what2eat/types'
 
+// ─── In-memory recipe cache ────────────────────────────────────────────────────
+// First search fetches all recipes for the language and caches them.
+// Subsequent searches filter the cache in <10ms instead of making a new network request.
+const _recipeCache = new Map<string, { rows: RawRecipeRow[]; ts: number }>()
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+async function fetchAllRecipesForLang(lang: string): Promise<RawRecipeRow[]> {
+  const cached = _recipeCache.get(lang)
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) return cached.rows
+
+  const { data, error } = await supabase
+    .from('global_recipes')
+    .select('*')
+    .eq('language', lang)
+    .not('image_url', 'is', null)
+    .limit(3000)
+
+  if (error || !data) return []
+  const rows = data as RawRecipeRow[]
+  _recipeCache.set(lang, { rows, ts: Date.now() })
+  return rows
+}
+
+/** Invalidate cache (call after saving new recipes). */
+export function invalidateRecipeCache(lang?: string) {
+  if (lang) _recipeCache.delete(lang)
+  else _recipeCache.clear()
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -179,7 +208,7 @@ export async function searchGlobalRecipesByIngredients(
     vegetarianOnly = false,
     veganOnly = false,
     cuisine = null,
-    dbLimit: optionDbLimit,
+    dbLimit: _optionDbLimit,
     maxResults = 20,
     caloriesMax = null,
     proteinMax = null,
@@ -190,33 +219,13 @@ export async function searchGlobalRecipesByIngredients(
   const lowerSpice = spiceNames.map((n) => n.toLowerCase()).filter(Boolean)
   const allowedLower = new Set([...lowerNames, ...lowerSpice])
 
-  const fetchLimit = optionDbLimit ?? 500
+  // Use in-memory cache — first call fetches all rows, subsequent calls are instant.
+  // `_optionDbLimit` is kept for API compatibility but ignored (cache always holds all rows).
+  const allRows = await fetchAllRecipesForLang(lang)
+  if (allRows.length === 0) return []
 
-  // Server-side pre-filter: cast ingredients JSONB to text and check for any selected ingredient.
-  // This dramatically reduces rows transferred from Supabase (e.g. 500→30-80) without losing matches.
-  let query = supabase
-    .from('global_recipes')
-    .select('*')
-    .eq('language', lang)
-    .not('image_url', 'is', null)
-
-  if (lowerNames.length > 0) {
-    // Build OR: at least one selected ingredient name appears in the ingredients JSON text.
-    // PostgREST supports casting JSONB to text via filter().
-    const orFilter = lowerNames
-      .slice(0, 6)
-      .map((n) => `ingredients.ilike.%${n.replace(/[%_]/g, '')}%`)
-      .join(',')
-    query = query.or(orFilter)
-  }
-
-  const { data, error } = await query.limit(fetchLimit)
-
-  if (error || !data) return []
-
-  const scored = (data as RawRecipeRow[])
+  const scored = allRows
     .filter((r) => {
-      // Only show recipes with ingredients (image already filtered server-side)
       const ings = r.ingredients
       return Array.isArray(ings) && ings.length > 0
     })
@@ -389,6 +398,8 @@ export async function saveGlobalRecipe(recipe: AIRecipe, mealdbId?: string): Pro
     console.error('saveGlobalRecipe insert error:', error)
     return null
   }
+  // Invalidate cache so new recipe appears in next search
+  invalidateRecipeCache(lang)
   return (data?.id as string) ?? null
 }
 

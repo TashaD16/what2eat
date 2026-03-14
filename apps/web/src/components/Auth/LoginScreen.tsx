@@ -20,7 +20,8 @@ export default function LoginScreen() {
     dispatch(signInWithGoogle())
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     if (!email || !password) return
     setSuccessMsg(null)
     if (mode === 'signin') {
@@ -28,6 +29,8 @@ export default function LoginScreen() {
     } else {
       const result = await dispatch(signUpWithEmail({ email, password }))
       if (signUpWithEmail.fulfilled.match(result)) {
+        // If session exists — logged in immediately (email confirmation disabled)
+        if (result.payload?.session) return
         setSuccessMsg(t.checkEmail)
       }
     }
@@ -118,33 +121,40 @@ export default function LoginScreen() {
             </Typography>
           </Divider>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            autoComplete="on"
+            sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}
+          >
             <TextField
               label={t.email}
               type="email"
+              name="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               fullWidth
               size="small"
               disabled={loading}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
             <TextField
               label={t.password}
               type="password"
+              name="password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               fullWidth
               size="small"
               disabled={loading}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
             />
             <Button
+              type="submit"
               variant="contained"
               fullWidth
-              onClick={handleSubmit}
               disabled={loading || !email || !password}
               sx={{ py: 1.25, fontWeight: 700, borderRadius: 2, mt: 0.5 }}
             >
