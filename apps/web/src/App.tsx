@@ -505,7 +505,7 @@ function App() {
           {/* === Панель фильтров === */}
           <Collapse in={filtersOpen}>
             <Paper variant="outlined" sx={{ mb: 2, p: 2 }}>
-              <SearchFilters />
+              <SearchFilters onGoToProfile={() => { setFiltersOpen(false); setPrevView(view); setView('profile') }} />
             </Paper>
           </Collapse>
 

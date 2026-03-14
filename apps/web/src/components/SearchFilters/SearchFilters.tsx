@@ -7,8 +7,11 @@ import {
   Switch,
   FormControlLabel,
   IconButton,
+  Button,
+  Tooltip,
 } from '@mui/material'
 import Close from '@mui/icons-material/Close'
+import PersonOutline from '@mui/icons-material/PersonOutline'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import {
   toggleVegetarian,
@@ -23,11 +26,17 @@ import {
   setCarbsMax,
   setCookingTimeMax,
 } from '../../store/slices/filtersSlice'
+import { calculateKBJU } from '../../services/userProfile'
 import { useT } from '../../i18n/useT'
 
-export default function SearchFilters() {
+interface SearchFiltersProps {
+  onGoToProfile?: () => void
+}
+
+export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
   const dispatch = useAppDispatch()
   const t = useT()
+  const { profile, kbju } = useAppSelector((state) => state.userProfile)
   const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine, caloriesMax, proteinMax, fatMax, carbsMax, cookingTimeMax } =
     useAppSelector((state) => state.filters)
   const COOKING_TIME_OPTIONS = [
@@ -199,41 +208,99 @@ export default function SearchFilters() {
 
       </Box>
 
-      {/* КБЖУ в одну строку */}
+      {/* КБЖУ max */}
       <Box>
-        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
-          {t.kbjuMax}
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {t.kbjuMax}
+          </Typography>
+          <Tooltip title={!profile && !kbju ? t.goToProfile : t.loadFromProfile} placement="top">
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<PersonOutline sx={{ fontSize: '14px !important' }} />}
+              onClick={() => {
+                const src = kbju ?? (profile ? calculateKBJU(profile) : null)
+                if (src) {
+                  dispatch(setCaloriesMax(src.calories))
+                  dispatch(setProteinMax(src.protein))
+                  dispatch(setFatMax(src.fat))
+                  dispatch(setCarbsMax(src.carbs))
+                } else {
+                  onGoToProfile?.()
+                }
+              }}
+              sx={{
+                fontSize: '0.7rem',
+                py: 0.3,
+                px: 1,
+                minWidth: 0,
+                textTransform: 'none',
+                borderRadius: '20px',
+                borderColor: profile || kbju ? 'rgba(32,201,151,0.5)' : 'rgba(0,0,0,0.18)',
+                color: profile || kbju ? '#0F9B6E' : 'text.secondary',
+                '&:hover': {
+                  borderColor: profile || kbju ? '#20C997' : 'rgba(0,0,0,0.3)',
+                  bgcolor: profile || kbju ? 'rgba(32,201,151,0.06)' : 'rgba(0,0,0,0.04)',
+                },
+              }}
+            >
+              {profile || kbju ? t.loadFromProfile : t.goToProfile}
+            </Button>
+          </Tooltip>
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           {([
             { label: t.caloriesLabel, unit: t.kcalUnit, value: caloriesMax, step: 50, min: 100, set: (v: number | null) => dispatch(setCaloriesMax(v)) },
-            { label: t.proteinLabel, unit: t.gUnit, value: proteinMax, step: 5, min: 1, set: (v: number | null) => dispatch(setProteinMax(v)) },
-            { label: t.fatLabel, unit: t.gUnit, value: fatMax, step: 5, min: 1, set: (v: number | null) => dispatch(setFatMax(v)) },
-            { label: t.carbsLabel, unit: t.gUnit, value: carbsMax, step: 5, min: 1, set: (v: number | null) => dispatch(setCarbsMax(v)) },
-          ] as const).map(({ label, unit, value, step, min, set }) => (
-            <TextField
-              key={label}
-              size="small"
-              type="number"
-              placeholder={label}
-              value={value ?? ''}
-              onChange={(e) => set(e.target.value ? Number(e.target.value) : null)}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">{unit}</InputAdornment>,
-                ...(value != null && {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <IconButton size="small" onClick={() => set(null)} edge="start">
-                        <Close fontSize="inherit" />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }),
-              }}
-              inputProps={{ min, step }}
-              sx={{ width: 120 }}
-            />
-          ))}
+            { label: t.proteinLabel,  unit: t.gUnit,    value: proteinMax,  step: 5,  min: 1,   set: (v: number | null) => dispatch(setProteinMax(v)) },
+            { label: t.fatLabel,      unit: t.gUnit,    value: fatMax,      step: 5,  min: 1,   set: (v: number | null) => dispatch(setFatMax(v)) },
+            { label: t.carbsLabel,    unit: t.gUnit,    value: carbsMax,    step: 5,  min: 1,   set: (v: number | null) => dispatch(setCarbsMax(v)) },
+          ] as const).map(({ label, unit, value, step, min, set }) => {
+            const active = value != null
+            return (
+              <Box key={label}>
+                <Typography variant="caption" sx={{ color: active ? '#0F9B6E' : 'text.disabled', fontSize: '0.68rem', display: 'block', mb: 0.3, fontWeight: active ? 600 : 400 }}>
+                  {label}
+                </Typography>
+                <TextField
+                  size="small"
+                  type="number"
+                  placeholder="—"
+                  value={value ?? ''}
+                  onChange={(e) => set(e.target.value ? Number(e.target.value) : null)}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.68rem' }}>{unit}</Typography>
+                      </InputAdornment>
+                    ),
+                    ...(active && {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <IconButton size="small" onClick={() => set(null)} sx={{ p: 0.25 }}>
+                            <Close sx={{ fontSize: 11, color: 'text.disabled' }} />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }),
+                  }}
+                  inputProps={{ min, step }}
+                  sx={{
+                    width: '100%',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      fontSize: '0.82rem',
+                      '& fieldset': { borderColor: active ? 'rgba(32,201,151,0.55)' : 'rgba(0,0,0,0.15)' },
+                      '&:hover fieldset': { borderColor: 'rgba(32,201,151,0.4)' },
+                      '&.Mui-focused fieldset': { borderColor: '#20C997', borderWidth: 1.5 },
+                    },
+                    '& input': { py: '6px', px: active ? 0.5 : 1 },
+                  }}
+                />
+              </Box>
+            )
+          })}
         </Box>
       </Box>
 

@@ -234,6 +234,9 @@ export const translations = {
     fatAbbr: 'Ж',
     carbsAbbr: 'У',
 
+    loadFromProfile: 'Из профиля',
+    goToProfile: 'Заполнить профиль',
+
     // LoginScreen
     appSubtitle: 'Планировщик блюд для двоих',
     signInTitle: 'Вход в аккаунт',
@@ -482,6 +485,9 @@ export const translations = {
     proteinAbbr: 'P',
     fatAbbr: 'F',
     carbsAbbr: 'C',
+
+    loadFromProfile: 'From profile',
+    goToProfile: 'Fill profile',
 
     // LoginScreen
     appSubtitle: 'Meal planner for two',
