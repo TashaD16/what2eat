@@ -16,7 +16,6 @@ import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { toggleIngredient } from '../../store/slices/ingredientsSlice'
 import { ingredientMatchesCuisine } from '../../services/ingredients'
-import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
 import { IngredientCategory } from '@what2eat/types'
 import { useT } from '../../i18n/useT'
 
@@ -87,9 +86,13 @@ export default function IngredientSelector() {
         scrollButtons="auto"
       >
         <Tab label={t.all} value="all" />
-        {Object.entries(INGREDIENT_CATEGORIES).map(([key, label]) => (
-          <Tab key={key} label={label} value={key} />
-        ))}
+        {(['meat', 'cereals', 'vegetables', 'dairy', 'spices', 'other'] as IngredientCategory[]).map((key) => {
+          const catLabels: Record<IngredientCategory, string> = {
+            meat: t.categoryMeat, cereals: t.categoryCereals, vegetables: t.categoryVegetables,
+            dairy: t.categoryDairy, spices: t.categorySpices, other: t.categoryOther,
+          }
+          return <Tab key={key} label={catLabels[key]} value={key} />
+        })}
       </Tabs>
 
       {selectedIngredientNames.length > 0 && (

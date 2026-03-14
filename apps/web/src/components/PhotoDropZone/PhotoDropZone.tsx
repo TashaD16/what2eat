@@ -30,6 +30,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
   const t = useT()
   const { status, error } = useAppSelector((state) => state.photo)
   const { ingredients } = useAppSelector((state) => state.ingredients)
+  const lang = useAppSelector((state) => state.lang.lang)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [detectedCount, setDetectedCount] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -64,7 +65,7 @@ export default function PhotoDropZone({ onDetected, onPhotoSelected }: PhotoDrop
     }
 
     const result = await dispatch(analyzeIngredients({
-      base64, mimeType, ingredientNames: ingredients.map((i) => i.name),
+      base64, mimeType, ingredientNames: ingredients.map((i) => i.name), lang,
     }))
     if (analyzeIngredients.fulfilled.match(result)) {
       const names = result.payload as string[]

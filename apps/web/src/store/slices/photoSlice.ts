@@ -17,15 +17,15 @@ const initialState: PhotoState = {
 
 export const analyzeIngredients = createAsyncThunk(
   'photo/analyzeIngredients',
-  async ({ base64, mimeType, ingredientNames }: { base64: string; mimeType: string; ingredientNames: string[] }) => {
-    return await detectIngredientsFromImage(base64, mimeType, ingredientNames)
+  async ({ base64, mimeType, ingredientNames, lang }: { base64: string; mimeType: string; ingredientNames: string[]; lang?: 'ru' | 'en' }) => {
+    return await detectIngredientsFromImage(base64, mimeType, ingredientNames, lang ?? 'ru')
   }
 )
 
 export const analyzeCalories = createAsyncThunk(
   'photo/analyzeCalories',
-  async ({ base64, mimeType }: { base64: string; mimeType: string }) => {
-    return await estimateCaloriesFromImage(base64, mimeType)
+  async ({ base64, mimeType, lang }: { base64: string; mimeType: string; lang?: 'ru' | 'en' }) => {
+    return await estimateCaloriesFromImage(base64, mimeType, lang ?? 'ru')
   }
 )
 
@@ -56,7 +56,7 @@ const photoSlice = createSlice({
       })
       .addCase(analyzeIngredients.rejected, (state, action) => {
         state.status = 'error'
-        state.error = action.error.message || 'Ошибка анализа фото'
+        state.error = action.error.message || 'Photo analysis error'
       })
       .addCase(analyzeCalories.pending, (state) => {
         state.status = 'analyzing'
@@ -69,7 +69,7 @@ const photoSlice = createSlice({
       })
       .addCase(analyzeCalories.rejected, (state, action) => {
         state.status = 'error'
-        state.error = action.error.message || 'Ошибка подсчёта калорий'
+        state.error = action.error.message || 'Calorie estimation error'
       })
   },
 })

@@ -167,6 +167,16 @@ const VEGAN_EXCLUDE_KEYWORDS = new Set([
 // Многословные фразы (проверяем как подстроку)
 const VEGAN_EXCLUDE_PHRASES = ['масло сливочное', 'сливочное масло', 'butter']
 
+/** Always-available kitchen staples — treated like spices, never counted as missing. */
+const PANTRY_STAPLES: string[] = [
+  // RU
+  'вода', 'соль', 'сахар', 'перец молотый', 'черный перец', 'лавровый лист',
+  'масло растительное', 'масло подсолнечное', 'уксус', 'укроп', 'петрушка', 'зелень',
+  // EN
+  'water', 'salt', 'sugar', 'black pepper', 'bay leaf',
+  'vegetable oil', 'sunflower oil', 'vinegar', 'dill', 'parsley',
+]
+
 function getWords(text: string): string[] {
   return text
     .toLowerCase()
@@ -271,19 +281,22 @@ export async function searchByIngredients(
     const ingLower = ings.map((ing) => (ing.name ?? '').toLowerCase().trim()).filter(Boolean)
     if (ingLower.length === 0) continue
 
-    // Score: count how many selected ingredients appear in this recipe
-    let score = 0
+    // Score: coverage-aware — (matched/total) * matched favours recipes where selected ingredients cover more of the recipe
+    let matchCount = 0
     for (const sel of selLower) {
-      if (ingLower.some((name) => name.includes(sel) || sel.includes(name))) score++
+      if (ingLower.some((name) => name.includes(sel) || sel.includes(name))) matchCount++
     }
-    if (score === 0) continue
+    if (matchCount === 0) continue
+    const score = ingLower.length > 0 ? (matchCount / ingLower.length) * matchCount : 0
 
     // Classify as strict or additional in one pass
     const missingNames: string[] = []
     for (let i = 0; i < ings.length; i++) {
       const name = ingLower[i]
       if (!name) continue
-      const isAllowed = allowedLower.some((a) => name.includes(a) || a.includes(name))
+      const isAllowed =
+        allowedLower.some((a) => name.includes(a) || a.includes(name)) ||
+        PANTRY_STAPLES.some((staple) => name.includes(staple) || staple.includes(name))
       if (!isAllowed) missingNames.push((ings[i].name ?? name))
     }
 

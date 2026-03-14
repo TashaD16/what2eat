@@ -14,8 +14,7 @@ import {
 } from '@mui/material'
 import { ArrowBack, ShoppingCart, ContentCopy, Check } from '@mui/icons-material'
 import { useAppSelector } from '../../hooks/redux'
-import { INGREDIENT_CATEGORIES } from '@what2eat/constants'
-import { Ingredient } from '@what2eat/types'
+import { Ingredient, IngredientCategory } from '@what2eat/types'
 import { useT } from '../../i18n/useT'
 
 const STORAGE_KEY = 'what2eat_shopping_checked'
@@ -30,6 +29,10 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
   const { dishes } = useAppSelector((state) => state.dishes)
   const { selectedIngredients } = useAppSelector((state) => state.ingredients)
   const t = useT()
+  const catLabels: Record<IngredientCategory, string> = {
+    meat: t.categoryMeat, cereals: t.categoryCereals, vegetables: t.categoryVegetables,
+    dairy: t.categoryDairy, spices: t.categorySpices, other: t.categoryOther,
+  }
   const [copied, setCopied] = useState(false)
 
   const sourceDishIds = plannerDishIds ?? likedDishIds
@@ -95,7 +98,7 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
   const copyToClipboard = () => {
     const lines: string[] = [t.shoppingListHeader]
     for (const [category, items] of grouped.entries()) {
-      const label = INGREDIENT_CATEGORIES[category as keyof typeof INGREDIENT_CATEGORIES] ?? category
+      const label = catLabels[category as IngredientCategory] ?? category
       lines.push(`${label}:`)
       items.forEach((ing) => lines.push(`  • ${ing.name}`))
       lines.push('')
@@ -147,7 +150,7 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
             <Paper key={category} variant="outlined" sx={{ mb: 2 }}>
               <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  {INGREDIENT_CATEGORIES[category as keyof typeof INGREDIENT_CATEGORIES] ?? category}
+                  {catLabels[category as IngredientCategory] ?? category}
                 </Typography>
               </Box>
               <Divider />

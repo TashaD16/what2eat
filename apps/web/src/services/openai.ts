@@ -20,9 +20,18 @@ function getApiKey(): string {
 export async function detectIngredientsFromImage(
   base64: string,
   mimeType: string,
-  ingredientNames: string[]
+  ingredientNames: string[],
+  lang: 'ru' | 'en' = 'ru'
 ): Promise<string[]> {
-  const prompt = `Ты видишь фото продуктов или холодильника.
+  const prompt = lang === 'en'
+    ? `You see a photo of groceries or a fridge.
+From the following ingredient list, select only those you can see in the photo:
+${ingredientNames.join(', ')}
+
+Return ONLY a JSON array with the names of detected ingredients, no explanations.
+Example: ["Chicken", "Carrot", "Milk"]
+If nothing is found, return: []`
+    : `Ты видишь фото продуктов или холодильника.
 Из следующего списка ингредиентов выбери только те, что ты видишь на фото:
 ${ingredientNames.join(', ')}
 
@@ -71,9 +80,15 @@ ${ingredientNames.join(', ')}
 
 export async function estimateCaloriesFromImage(
   base64: string,
-  mimeType: string
+  mimeType: string,
+  lang: 'ru' | 'en' = 'ru'
 ): Promise<CalorieEstimate> {
-  const prompt = `Посмотри на фото блюда или продукта и оцени его питательную ценность на одну порцию.
+  const prompt = lang === 'en'
+    ? `Look at this photo of a dish or food and estimate its nutritional value per serving.
+Return ONLY a JSON object in the format:
+{"calories": <number>, "protein": <g>, "fat": <g>, "carbs": <g>, "description": "<brief dish description in English>"}
+No explanations, JSON only.`
+    : `Посмотри на фото блюда или продукта и оцени его питательную ценность на одну порцию.
 Верни ТОЛЬКО JSON объект в формате:
 {"calories": <число>, "protein": <г>, "fat": <г>, "carbs": <г>, "description": "<краткое описание блюда на русском>"}
 Без пояснений, только JSON.`
@@ -115,7 +130,7 @@ export async function estimateCaloriesFromImage(
   } catch {
     // fall through
   }
-  return { calories: 0, protein: 0, fat: 0, carbs: 0, description: 'Не удалось определить' }
+  return { calories: 0, protein: 0, fat: 0, carbs: 0, description: lang === 'en' ? 'Could not determine' : 'Не удалось определить' }
 }
 
 export interface PopularDishSuggestion {
@@ -128,8 +143,12 @@ export interface PopularDishSuggestion {
 /**
  * Возвращает 5 популярных блюд из интернета (без привязки к конкретным ингредиентам).
  */
-export async function fetchPopularDishes(): Promise<PopularDishSuggestion[]> {
-  const prompt = `Назови 5 популярных блюд, которые часто готовят дома. Верни ТОЛЬКО JSON массив объектов:
+export async function fetchPopularDishes(lang: 'ru' | 'en' = 'ru'): Promise<PopularDishSuggestion[]> {
+  const prompt = lang === 'en'
+    ? `Name 5 popular dishes that people often cook at home. Return ONLY a JSON array of objects:
+[{"name":"<dish name in English>","description":"<1–2 sentences why it's delicious>","mainIngredients":["<ing1>","<ing2>","<ing3>"],"cookingTime":"<e.g. 30 min>"}]
+No explanations, JSON only.`
+    : `Назови 5 популярных блюд, которые часто готовят дома. Верни ТОЛЬКО JSON массив объектов:
 [{"name":"<название на русском>","description":"<1–2 предложения, почему вкусно>","mainIngredients":["<ing1>","<ing2>","<ing3>"],"cookingTime":"<напр. 30 мин>"}]
 Без пояснений, только JSON.`
 

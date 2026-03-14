@@ -102,7 +102,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
   ]
 
   const FREE_FEATURES = [t.caloriesLabel, 'AI ' + t.aiRecipe, t.favorites]
-  const PRO_FEATURES = ['Безлимитный AI', 'Персональный КБЖУ-план', 'Приоритетная поддержка']
+  const PRO_FEATURES = [t.unlimitedAI, t.personalNutritionPlan, t.prioritySupport]
 
   const intensityPct = {
     loss:        { light: '-10%', moderate: '-20%' },
@@ -129,7 +129,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
       </Typography>
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Tab label={lang === 'ru' ? 'Профиль' : 'Profile'} />
+        <Tab label={t.profileTitle} />
         <Tab label={t.generalSettings} />
         <Tab label={t.billingTitle} />
       </Tabs>
@@ -330,7 +330,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
                           {meal.calories} {t.kcalUnit}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Б{meal.protein}{t.gUnit} / Ж{meal.fat}{t.gUnit} / У{meal.carbs}{t.gUnit}
+                          {t.proteinAbbr}{meal.protein}{t.gUnit} / {t.fatAbbr}{meal.fat}{t.gUnit} / {t.carbsAbbr}{meal.carbs}{t.gUnit}
                         </Typography>
                       </Box>
                     ))}
@@ -382,7 +382,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" mb={1}>
-              {lang === 'ru' ? 'Язык интерфейса' : 'Interface language'}
+              {t.interfaceLanguage}
             </Typography>
             <ToggleButtonGroup
               value={lang}
@@ -422,7 +422,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(99,102,241,0.45)', bgcolor: 'rgba(99,102,241,0.04)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
               <Typography variant="subtitle2" fontWeight={800}>{t.proPlan}</Typography>
-              <Chip label={lang === 'ru' ? 'Скоро' : 'Coming soon'} size="small" sx={{ bgcolor: 'rgba(99,102,241,0.12)', color: '#4338CA', fontWeight: 600, fontSize: '0.7rem' }} />
+              <Chip label={t.comingSoon} size="small" sx={{ bgcolor: 'rgba(99,102,241,0.12)', color: '#4338CA', fontWeight: 600, fontSize: '0.7rem' }} />
             </Box>
             <List dense disablePadding sx={{ mb: 2 }}>
               {PRO_FEATURES.map((f) => (
@@ -440,7 +440,7 @@ export default function UserProfile({ onBack }: UserProfileProps) {
               {t.upgradePlan}
             </Button>
             <Typography variant="caption" color="text.disabled" display="block" mt={1} fontSize="0.7rem">
-              {lang === 'ru' ? 'Оплата недоступна в текущей версии' : 'Payment not available in the current version'}
+              {t.paymentUnavailable}
             </Typography>
           </Paper>
         </Box>

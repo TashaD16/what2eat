@@ -58,7 +58,7 @@ function App() {
   const searchRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
   const pendingResultsRef = useRef<CombinedSearchResult | null>(null)
-  const [liveResultCount, setLiveResultCount] = useState<number | null>(null)
+  const [liveCount, setLiveCount] = useState<{ strict: number; additional: number } | null>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError, strictSearchFailed } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
@@ -166,7 +166,7 @@ function App() {
   useEffect(() => {
     if (selectedIngredients.length === 0) {
       pendingResultsRef.current = null
-      setLiveResultCount(null)
+      setLiveCount(null)
       return
     }
     const timer = setTimeout(async () => {
@@ -189,7 +189,7 @@ function App() {
         cookingTimeMax: filters.cookingTimeMax,
       })
       pendingResultsRef.current = result
-      setLiveResultCount(result.strict.length + result.additional.length)
+      setLiveCount({ strict: result.strict.length, additional: result.additional.length })
     }, 250)
     return () => clearTimeout(timer)
   }, [selectedIngredients, filters, lang, ingredients])
@@ -648,8 +648,10 @@ function App() {
               '&:hover': { boxShadow: '0 8px 40px rgba(32,201,151,0.65)' },
             }}
           >
-            {liveResultCount != null && liveResultCount > 0
-              ? `${t.findDishes} (${liveResultCount})`
+            {liveCount != null && (liveCount.strict + liveCount.additional) > 0
+              ? liveCount.additional > 0
+                ? `${t.findDishes} (${liveCount.strict} + ${liveCount.additional})`
+                : `${t.findDishes} (${liveCount.strict})`
               : t.findDishes}
           </Button>
 

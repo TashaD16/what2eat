@@ -12,7 +12,7 @@ import {
 import { AccessTime, People, AttachMoney, ShoppingCart, DeleteOutline } from '@mui/icons-material'
 import { motion } from 'framer-motion'
 import { Dish, Difficulty } from '@what2eat/types'
-import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
+import { DIFFICULTY_COLORS } from '@what2eat/constants'
 import { getDishImageUrl } from '../../utils/imageUtils'
 import { useT } from '../../i18n/useT'
 
@@ -90,7 +90,7 @@ export default function DishCard({ dish, onSelect, onRemove }: DishCardProps) {
               variant="outlined"
             />
             <Chip
-              label={DIFFICULTY_LABELS[dish.difficulty]}
+              label={{ easy: t.easy, medium: t.medium, hard: t.hard }[dish.difficulty]}
               size="small"
               sx={{ bgcolor: getDifficultyColor(dish.difficulty), color: 'white', fontWeight: 600 }}
             />

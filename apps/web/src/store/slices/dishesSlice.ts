@@ -74,8 +74,8 @@ export const randomizeMeatDishes = createAsyncThunk(
 
 export const fetchPopularDishSuggestions = createAsyncThunk(
   'dishes/fetchPopular',
-  async () => {
-    return await fetchPopularDishes()
+  async (lang: 'ru' | 'en' = 'ru') => {
+    return await fetchPopularDishes(lang)
   }
 )
 

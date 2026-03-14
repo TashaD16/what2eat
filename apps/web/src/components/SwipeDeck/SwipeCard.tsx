@@ -3,7 +3,7 @@ import { Box, Typography, Chip, Skeleton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { AccessTime, AttachMoney, ShoppingCart } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
-import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
+import { DIFFICULTY_COLORS } from '@what2eat/constants'
 import { getDishImageUrl } from '../../utils/imageUtils'
 import { useT } from '../../i18n/useT'
 
@@ -117,7 +117,7 @@ export default function SwipeCard({ dish, swipeDirection }: SwipeCardProps) {
             }}
           />
           <Chip
-            label={DIFFICULTY_LABELS[dish.difficulty]}
+            label={{ easy: t.easy, medium: t.medium, hard: t.hard }[dish.difficulty]}
             size="small"
             sx={{ bgcolor: DIFFICULTY_COLORS[dish.difficulty], color: 'white', fontWeight: 600 }}
           />

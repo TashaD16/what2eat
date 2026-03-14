@@ -213,6 +213,27 @@ export const translations = {
     viewRecipe: 'Посмотреть рецепт',
     matches: (n: number) => `Совпадений: ${n}`,
 
+    // Ingredient categories
+    categoryMeat: 'Мясо',
+    categoryCereals: 'Крупы',
+    categoryVegetables: 'Овощи',
+    categoryDairy: 'Молочные продукты',
+    categorySpices: 'Специи',
+    categoryOther: 'Прочее',
+
+    // Pro features / billing
+    unlimitedAI: 'Безлимитный AI',
+    personalNutritionPlan: 'Персональный план питания',
+    prioritySupport: 'Приоритетная поддержка',
+    comingSoon: 'Скоро',
+    paymentUnavailable: 'Оплата недоступна в текущей версии',
+    interfaceLanguage: 'Язык интерфейса',
+
+    // Macro abbreviations (meal distribution row)
+    proteinAbbr: 'Б',
+    fatAbbr: 'Ж',
+    carbsAbbr: 'У',
+
     // LoginScreen
     appSubtitle: 'Планировщик блюд для двоих',
     signInTitle: 'Вход в аккаунт',
@@ -440,6 +461,27 @@ export const translations = {
     removeFromList: 'Remove from list',
     viewRecipe: 'View recipe',
     matches: (n: number) => `Matches: ${n}`,
+
+    // Ingredient categories
+    categoryMeat: 'Meat',
+    categoryCereals: 'Cereals',
+    categoryVegetables: 'Vegetables',
+    categoryDairy: 'Dairy',
+    categorySpices: 'Spices',
+    categoryOther: 'Other',
+
+    // Pro features / billing
+    unlimitedAI: 'Unlimited AI',
+    personalNutritionPlan: 'Personal nutrition plan',
+    prioritySupport: 'Priority support',
+    comingSoon: 'Coming soon',
+    paymentUnavailable: 'Payment not available in current version',
+    interfaceLanguage: 'Interface language',
+
+    // Macro abbreviations (meal distribution row)
+    proteinAbbr: 'P',
+    fatAbbr: 'F',
+    carbsAbbr: 'C',
 
     // LoginScreen
     appSubtitle: 'Meal planner for two',

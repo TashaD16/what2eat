@@ -17,7 +17,7 @@ import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { clearRecipe } from '../../store/slices/recipeSlice'
 import { likeDish, unlikeDish, dislikeDish } from '../../store/slices/swipeSlice'
-import { DIFFICULTY_LABELS, DIFFICULTY_COLORS } from '@what2eat/constants'
+import { DIFFICULTY_COLORS } from '@what2eat/constants'
 import { Difficulty } from '@what2eat/types'
 import { getDishImageUrl } from '../../utils/imageUtils'
 import { useT } from '../../i18n/useT'
@@ -237,7 +237,7 @@ export default function RecipeView({ onBack }: RecipeViewProps) {
                 sx={{ bgcolor: 'rgba(32,201,151,0.15)', color: '#0F9B6E', border: '1px solid rgba(32,201,151,0.30)', fontWeight: 600 }}
               />
               <Chip
-                label={DIFFICULTY_LABELS[currentRecipe.difficulty]}
+                label={{ easy: t.easy, medium: t.medium, hard: t.hard }[currentRecipe.difficulty]}
                 size="small"
                 sx={{ bgcolor: getDifficultyColor(currentRecipe.difficulty), color: 'white', fontWeight: 600 }}
               />
