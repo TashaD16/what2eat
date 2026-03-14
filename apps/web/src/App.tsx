@@ -12,7 +12,7 @@ import { reloadLikedDishesInLanguage } from './store/slices/swipeSlice'
 import { initAuth, signOut } from './store/slices/authSlice'
 import { generateAIRecipe, setGeneratedRecipe } from './store/slices/aiRecipeSlice'
 import { supabase, isSupabaseConfigured } from './services/supabase'
-import { searchGlobalRecipesByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe } from './services/globalRecipes'
+import { searchByIngredients, searchGlobalRecipesByName, getGlobalRecipeById, saveGlobalRecipe } from './services/globalRecipes'
 import { searchRecipesByIngredients, translateRecipeToOtherLanguage } from './services/aiRecipes'
 import Layout from './components/Layout'
 import IngredientSelector from './components/IngredientSelector'
@@ -222,19 +222,8 @@ function App() {
     const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
     if (selectedNames.length === 0) { dispatch(setLoading(false)); return }
 
-    const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
-    const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
-
-    const getMissing = (recipe: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>[number]) =>
-      (recipe.ingredients ?? [])
-        .filter((ing) => {
-          const name = (ing.name ?? '').trim().toLowerCase()
-          return name && !selectedLower.has(name) && !spiceLower.has(name)
-        })
-        .map((ing) => ing.name as string)
-        .filter(Boolean)
-
-    const commonOpts = {
+    // Single-pass search: strict and additional results in one cache iteration
+    const { strict, additional } = await searchByIngredients(selectedNames, {
       spiceNames,
       lang,
       vegetarianOnly: filters.vegetarianOnly,
@@ -244,50 +233,10 @@ function App() {
       proteinMax: filters.proteinMax,
       fatMax: filters.fatMax,
       carbsMax: filters.carbsMax,
-    }
-
-    // Progressive stagger: show first chunk immediately, append rest with tiny delays
-    const dispatchProgressively = async (
-      recipes: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>,
-      withMissing: boolean,
-      startIndex = 0
-    ) => {
-      if (recipes.length === 0) return
-      const toPayload = (r: typeof recipes[number], i: number) => ({
-        recipe: r,
-        index: startIndex + i,
-        missingIngredientNames: withMissing ? getMissing(r) : undefined,
-      })
-      // First 5 — immediate
-      dispatch(addAIDishes(recipes.slice(0, 5).map(toPayload)))
-      dispatch(setLoading(false))
-      // Rest — staggered in chunks of 5
-      for (let i = 5; i < recipes.length; i += 5) {
-        await new Promise<void>((res) => setTimeout(res, 150))
-        dispatch(addAIDishes(recipes.slice(i, i + 5).map((r, j) => toPayload(r, i + j))))
-      }
-    }
-
-    // ── Phase 1: strict — only selected + spices ──────────────────────────
-    const strictResults = await searchGlobalRecipesByIngredients(selectedNames, {
-      ...commonOpts,
-      strictOnlySelectedAndSpices: true,
     })
-
-    // ── Phase 2: allow missing (cache makes this instant after Phase 1) ───
-    const missingResults = await searchGlobalRecipesByIngredients(selectedNames, {
-      ...commonOpts,
-      strictOnlySelectedAndSpices: false,
-    })
-
-    // Deduplicate: only dishes NOT already in strict results
-    const strictIds = new Set(strictResults.map((r) => r.id))
-    const additional = [...missingResults]
-      .filter((r) => !strictIds.has(r.id))
-      .sort((a, b) => getMissing(a).length - getMissing(b).length)
 
     // ── Phase 3: AI fallback if nothing found at all ──────────────────────
-    if (strictResults.length === 0 && additional.length === 0) {
+    if (strict.length === 0 && additional.length === 0) {
       try {
         const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
         if (generated.length > 0) {
@@ -302,14 +251,33 @@ function App() {
       return
     }
 
-    // If strict found nothing — show "missing" banner
-    if (strictResults.length === 0) {
-      dispatch(setStrictSearchFailed(true))
+    // If only additional found — show "missing ingredients" banner
+    if (strict.length === 0) dispatch(setStrictSearchFailed(true))
+
+    // Helper: dispatch in chunks with 150ms stagger between chunks
+    type DishPayloadItem = Omit<Parameters<typeof addAIDishes>[0][number], 'index'>
+    const dispatchChunked = async (
+      payloads: DishPayloadItem[],
+      startIndex: number
+    ) => {
+      if (payloads.length === 0) return
+      const indexed = payloads.map((p, i) => ({ ...p, index: startIndex + i }))
+      dispatch(addAIDishes(indexed.slice(0, 5)))
+      dispatch(setLoading(false))
+      for (let i = 5; i < indexed.length; i += 5) {
+        await new Promise<void>((res) => setTimeout(res, 150))
+        dispatch(addAIDishes(indexed.slice(i, i + 5)))
+      }
     }
 
-    // Dispatch strict first, then additional appended after
-    await dispatchProgressively(strictResults, false, 0)
-    await dispatchProgressively(additional, true, strictResults.length)
+    await dispatchChunked(
+      strict.map((recipe) => ({ recipe, missingIngredientNames: undefined })),
+      0
+    )
+    await dispatchChunked(
+      additional.map(({ recipe, missingNames }) => ({ recipe, missingIngredientNames: missingNames })),
+      strict.length
+    )
     dispatch(setLoading(false))
   }
 
