@@ -4,7 +4,7 @@ import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt } from 
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { clearPhoto } from './store/slices/photoSlice'
-import { findDishes, generateAIRandomDishes, addAIDishes, replaceAIDishes, setLoading, reloadDishesInLanguage } from './store/slices/dishesSlice'
+import { findDishes, generateAIRandomDishes, addAIDishes, setLoading, reloadDishesInLanguage, setStrictSearchFailed } from './store/slices/dishesSlice'
 import { fetchRecipe } from './store/slices/recipeSlice'
 import { resetSwipe, syncFavoritesFromSupabase, migrateLocalFavorites, loadFavoritesFromSupabase } from './store/slices/swipeSlice'
 import { setLang } from './store/slices/langSlice'
@@ -50,7 +50,7 @@ function App() {
   const searchRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
-  const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError } = useAppSelector((state) => state.dishes)
+  const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError, strictSearchFailed } = useAppSelector((state) => state.dishes)
   const filters = useAppSelector((state) => state.filters)
   const { likedDishIds, dislikedDishIds, likedDishes } = useAppSelector((state) => state.swipe)
   const { user, initialized: authInitialized } = useAppSelector((state) => state.auth)
@@ -196,86 +196,111 @@ function App() {
   const handleFindDishes = async () => {
     if (selectedIngredients.length === 0) return
     dispatch(resetSwipe())
+    dispatch(setStrictSearchFailed(false))
     dispatch(setLoading(true))
     setView('dishes')
 
-    if (isSupabaseConfigured()) {
-      const selectedIds = new Set(selectedIngredients.map(Number))
-      const selectedNames = ingredients
-        .filter((i) => selectedIds.has(Number(i.id)))
-        .map((i) => i.name)
-        .filter(Boolean)
-      const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
-      if (selectedNames.length === 0) {
-        dispatch(setLoading(false))
-        return
-      }
-      const opts = {
-        strictOnlySelectedAndSpices: !filters.allowMissing,
-        spiceNames,
-        lang,
-        vegetarianOnly: filters.vegetarianOnly,
-        veganOnly: filters.veganOnly,
-        cuisine: filters.cuisine,
-        caloriesMax: filters.caloriesMax,
-        proteinMax: filters.proteinMax,
-        fatMax: filters.fatMax,
-        carbsMax: filters.carbsMax,
-      }
-      const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
-      const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
-      const buildPayload = (recipes: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>) => {
-        const withMissing = recipes.map((recipe) => {
-          const missing = filters.allowMissing
-            ? (recipe.ingredients ?? [])
-                .filter((ing) => {
-                  const name = (ing.name ?? '').trim().toLowerCase()
-                  return name && !selectedLower.has(name) && !spiceLower.has(name)
-                })
-                .map((ing) => ing.name)
-            : []
-          return { recipe, missing }
-        })
-        const sorted = filters.allowMissing
-          ? [...withMissing].sort((a, b) => a.missing.length - b.missing.length)
-          : withMissing
-        return sorted.map(({ recipe, missing }, i) => ({ recipe, index: i, missingIngredientNames: missing }))
-      }
-
-      const firstBatch = await searchGlobalRecipesByIngredients(selectedNames, {
-        ...opts,
-        dbLimit: 80,
-        maxResults: 5,
-      })
-
-      if (firstBatch.length > 0) {
-        dispatch(addAIDishes(buildPayload(firstBatch)))
-        dispatch(setLoading(false))
-        const fullBatch = await searchGlobalRecipesByIngredients(selectedNames, { ...opts })
-        if (fullBatch.length > firstBatch.length) {
-          dispatch(replaceAIDishes(buildPayload(fullBatch)))
-        }
-      } else {
-        const fullBatch = await searchGlobalRecipesByIngredients(selectedNames, { ...opts })
-        if (fullBatch.length > 0) {
-          dispatch(addAIDishes(buildPayload(fullBatch)))
-        } else {
-          try {
-            const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
-            if (generated.length > 0) {
-              generated.forEach((r) => {
-                saveGlobalRecipe(r)
-                translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
-              })
-              dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
-            }
-          } catch { /* empty state */ }
-        }
-        dispatch(setLoading(false))
-      }
-    } else {
+    if (!isSupabaseConfigured()) {
       dispatchFindDishes(selectedIngredients)
+      return
     }
+
+    const selectedNames = ingredients
+      .filter((i) => selectedIngredients.includes(i.id))
+      .map((i) => i.name)
+      .filter(Boolean)
+    const spiceNames = ingredients.filter((i) => i.category === 'spices').map((i) => i.name).filter(Boolean)
+    if (selectedNames.length === 0) { dispatch(setLoading(false)); return }
+
+    const selectedLower = new Set(selectedNames.map((n) => n.toLowerCase()))
+    const spiceLower = new Set(spiceNames.map((n) => n.toLowerCase()))
+
+    const getMissing = (recipe: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>[number]) =>
+      (recipe.ingredients ?? [])
+        .filter((ing) => {
+          const name = (ing.name ?? '').trim().toLowerCase()
+          return name && !selectedLower.has(name) && !spiceLower.has(name)
+        })
+        .map((ing) => ing.name as string)
+        .filter(Boolean)
+
+    const commonOpts = {
+      spiceNames,
+      lang,
+      vegetarianOnly: filters.vegetarianOnly,
+      veganOnly: filters.veganOnly,
+      cuisine: filters.cuisine,
+      caloriesMax: filters.caloriesMax,
+      proteinMax: filters.proteinMax,
+      fatMax: filters.fatMax,
+      carbsMax: filters.carbsMax,
+    }
+
+    // Progressive stagger: show first chunk immediately, append rest with tiny delays
+    const dispatchProgressively = async (
+      recipes: Awaited<ReturnType<typeof searchGlobalRecipesByIngredients>>,
+      withMissing: boolean,
+      startIndex = 0
+    ) => {
+      if (recipes.length === 0) return
+      const toPayload = (r: typeof recipes[number], i: number) => ({
+        recipe: r,
+        index: startIndex + i,
+        missingIngredientNames: withMissing ? getMissing(r) : undefined,
+      })
+      // First 5 — immediate
+      dispatch(addAIDishes(recipes.slice(0, 5).map(toPayload)))
+      dispatch(setLoading(false))
+      // Rest — staggered in chunks of 5
+      for (let i = 5; i < recipes.length; i += 5) {
+        await new Promise<void>((res) => setTimeout(res, 150))
+        dispatch(addAIDishes(recipes.slice(i, i + 5).map((r, j) => toPayload(r, i + j))))
+      }
+    }
+
+    // ── Phase 1: strict — only selected + spices ──────────────────────────
+    const strictResults = await searchGlobalRecipesByIngredients(selectedNames, {
+      ...commonOpts,
+      strictOnlySelectedAndSpices: true,
+    })
+
+    if (strictResults.length > 0) {
+      await dispatchProgressively(strictResults, false)
+      return
+    }
+
+    // ── Phase 2: allow missing ingredients ────────────────────────────────
+    dispatch(setStrictSearchFailed(true))
+    dispatch(setLoading(false)) // show "not found" UI immediately
+
+    // Small pause so user reads the "not found" message
+    await new Promise<void>((res) => setTimeout(res, 500))
+    dispatch(setLoading(true))
+
+    const missingResults = await searchGlobalRecipesByIngredients(selectedNames, {
+      ...commonOpts,
+      strictOnlySelectedAndSpices: false,
+    })
+
+    if (missingResults.length > 0) {
+      // Sort by fewest missing ingredients first
+      const sorted = [...missingResults].sort((a, b) => getMissing(a).length - getMissing(b).length)
+      await dispatchProgressively(sorted, true)
+      return
+    }
+
+    // ── Phase 3: AI generation fallback ──────────────────────────────────
+    try {
+      const generated = await searchRecipesByIngredients(selectedNames, 5, lang)
+      if (generated.length > 0) {
+        generated.forEach((r) => {
+          saveGlobalRecipe(r)
+          translateRecipeToOtherLanguage(r).then((other) => saveGlobalRecipe(other)).catch(() => {})
+        })
+        dispatch(addAIDishes(generated.map((recipe, i) => ({ recipe, index: i }))))
+      }
+    } catch { /* empty state */ }
+    dispatch(setLoading(false))
   }
 
   const handleRandomize = () => {
@@ -609,40 +634,54 @@ function App() {
       )}
 
       {view === 'dishes' && (
-        dishesLoading ? (
+        dishesLoading && visibleDishes.length === 0 ? (
+          /* Full-screen spinner: initial load or loading-with-missing phase */
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 3 }}>
             <CircularProgress size={56} sx={{ color: '#20C997' }} />
             <Box sx={{ textAlign: 'center' }}>
               <Typography sx={{ color: 'text.primary', fontWeight: 600, mb: 0.5 }}>
-                {loadingStep === 'search' ? t.loadingRecipes : t.translatingRecipes}
+                {strictSearchFailed
+                  ? t.loadingWithMissing
+                  : loadingStep === 'search' ? t.loadingRecipes : t.translatingRecipes}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {loadingStep === 'search' ? t.fetchingFromSources : t.firstDishSoon}
-              </Typography>
+              {strictSearchFailed && (
+                <Typography variant="caption" sx={{ color: '#E65100' }}>
+                  {t.strictNotFound}
+                </Typography>
+              )}
+              {!strictSearchFailed && (
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {loadingStep === 'search' ? t.fetchingFromSources : t.firstDishSoon}
+                </Typography>
+              )}
             </Box>
           </Box>
         ) : dishesError && visibleDishes.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
             <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>{dishesError}</Alert>
-            <Button
-              variant="contained"
-              onClick={handleRandomize}
-              sx={{ mr: 2 }}
-            >
-              {t.tryAgain}
-            </Button>
-            <Button variant="outlined" onClick={() => setView('ingredients')}>
-              {t.toHome}
-            </Button>
+            <Button variant="contained" onClick={handleRandomize} sx={{ mr: 2 }}>{t.tryAgain}</Button>
+            <Button variant="outlined" onClick={() => setView('ingredients')}>{t.toHome}</Button>
           </Box>
         ) : (
-          <SwipeDeck
-            dishes={visibleDishes}
-            loadingMore={loadingMore}
-            onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
-            onComplete={() => setView('swipe_results')}
-            onBack={() => setView('ingredients')}
-          />
+          <Box>
+            {/* "Showing with missing ingredients" banner */}
+            {strictSearchFailed && visibleDishes.length > 0 && (
+              <Alert
+                severity="info"
+                sx={{ mb: 2, fontSize: '0.82rem', py: 0.5, alignItems: 'center',
+                  '& .MuiAlert-icon': { fontSize: 18 } }}
+              >
+                {t.showingWithMissing}
+              </Alert>
+            )}
+            <SwipeDeck
+              dishes={visibleDishes}
+              loadingMore={loadingMore}
+              onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
+              onComplete={() => setView('swipe_results')}
+              onBack={() => setView('ingredients')}
+            />
+          </Box>
         )
       )}
 

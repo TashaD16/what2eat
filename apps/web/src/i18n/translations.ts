@@ -19,6 +19,9 @@ export const translations = {
     translatingRecipes: 'Переводим и готовим блюда...',
     fetchingFromSources: 'Получаем рецепты из открытых источников',
     firstDishSoon: 'Первое блюдо появится через несколько секунд',
+    strictNotFound: 'Точных совпадений нет',
+    loadingWithMissing: 'Загружаем блюда с дополнительными ингредиентами...',
+    showingWithMissing: 'Показаны блюда с недостающими ингредиентами',
     tryAgain: 'Попробовать снова',
     toHome: 'На главную',
 
@@ -226,6 +229,9 @@ export const translations = {
     translatingRecipes: 'Preparing dishes...',
     fetchingFromSources: 'Fetching recipes from open sources',
     firstDishSoon: 'First dish will appear in a few seconds',
+    strictNotFound: 'No exact matches found',
+    loadingWithMissing: 'Loading dishes with additional ingredients...',
+    showingWithMissing: 'Showing dishes with some missing ingredients',
     tryAgain: 'Try again',
     toHome: 'Home',
 

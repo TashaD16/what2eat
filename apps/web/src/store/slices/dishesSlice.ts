@@ -39,6 +39,7 @@ interface DishesState {
   error: string | null
   globalRecipeQueue: string[]      // shuffled UUIDs not yet shown
   globalRecipesExhausted: boolean  // true when queue is empty
+  strictSearchFailed: boolean      // true when strict search found 0, showing results with missing ingredients
 }
 
 const initialState: DishesState = {
@@ -53,6 +54,7 @@ const initialState: DishesState = {
   error: null,
   globalRecipeQueue: [],
   globalRecipesExhausted: false,
+  strictSearchFailed: false,
 }
 
 // ─── Simple thunks (defined before slice so they can go in extraReducers) ─────
@@ -113,6 +115,10 @@ const dishesSlice = createSlice({
   name: 'dishes',
   initialState,
   reducers: {
+    setStrictSearchFailed: (state, action: PayloadAction<boolean>) => {
+      state.strictSearchFailed = action.payload
+    },
+
     clearDishes: (state) => {
       state.dishes = []
       state.aiDishRecipes = {}
@@ -123,6 +129,7 @@ const dishesSlice = createSlice({
       state.loadingMore = false
       state.globalRecipeQueue = []
       state.globalRecipesExhausted = false
+      state.strictSearchFailed = false
     },
 
     // Called at the start of AI randomizer to reset and show loading
@@ -136,6 +143,7 @@ const dishesSlice = createSlice({
       state.loadingMore = false
       state.globalRecipeQueue = []
       state.globalRecipesExhausted = false
+      state.strictSearchFailed = false
     },
 
     // Called when web search finishes and photo phase starts
@@ -256,6 +264,7 @@ const dishesSlice = createSlice({
         state.aiDishRecipes = {}
         state.loadingStep = null
         state.loadingMore = false
+        state.strictSearchFailed = false
       })
       .addCase(findDishes.fulfilled, (state, action) => {
         state.loading = false
@@ -408,7 +417,7 @@ export const generateSuggestedRecipesByAI = createAsyncThunk(
 
 export const {
   clearDishes, startAIRandom, setLoadingStep, setLoadingMore, setLoading, addAIDish, addAIDishes, replaceAIDishes, finishAIRandom,
-  setGlobalRecipeQueue, consumeFromGlobalQueue, clearSuggestedDishNames,
+  setGlobalRecipeQueue, consumeFromGlobalQueue, clearSuggestedDishNames, setStrictSearchFailed,
 } = dishesSlice.actions
 export type { PopularDishSuggestion }
 export default dishesSlice.reducer
