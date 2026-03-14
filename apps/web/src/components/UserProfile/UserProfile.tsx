@@ -1,6 +1,7 @@
 import {
   Box, Typography, Button, TextField, ToggleButtonGroup, ToggleButton,
   Select, MenuItem, FormControl, InputLabel, Chip, Divider, Paper, Tabs, Tab, List, ListItem, ListItemIcon, ListItemText,
+  Switch, FormControlLabel,
 } from '@mui/material'
 import { ArrowBack, CheckCircle, Lock } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
@@ -33,6 +34,12 @@ export default function UserProfile({ onBack }: UserProfileProps) {
 
   // КБЖУ edit state: null = display mode
   const [kbjuEdit, setKbjuEdit] = useState<{ calories: number; protein: number; fat: number; carbs: number } | null>(null)
+  const [showIntro, setShowIntro] = useState(() => localStorage.getItem('w2e_show_intro') !== 'false')
+
+  const handleToggleIntro = (checked: boolean) => {
+    setShowIntro(checked)
+    localStorage.setItem('w2e_show_intro', checked ? 'true' : 'false')
+  }
 
   useEffect(() => {
     if (profile) {
@@ -264,6 +271,24 @@ export default function UserProfile({ onBack }: UserProfileProps) {
               <ToggleButton value="dark">{t.darkTheme}</ToggleButton>
             </ToggleButtonGroup>
           </Box>
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showIntro}
+                  onChange={(e) => handleToggleIntro(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': { color: '#20C997' },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#20C997' },
+                  }}
+                />
+              }
+              label={
+                <Typography variant="body2">{t.showIntroVideo}</Typography>
+              }
+            />
+          </Box>
+
           <Box>
             <Typography variant="subtitle2" color="text.secondary" mb={1}>
               {lang === 'ru' ? 'Язык интерфейса' : 'Interface language'}

@@ -27,6 +27,7 @@ import AuthModal from './components/Auth'
 import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
 import UserProfile from './components/UserProfile'
+import SplashScreen from './components/SplashScreen/SplashScreen'
 import { useT } from './i18n/useT'
 import { fetchUserProfile } from './store/slices/userProfileSlice'
 
@@ -36,6 +37,7 @@ function App() {
   const dispatch = useAppDispatch()
   const [view, setView] = useState<View>('ingredients')
   const [prevView, setPrevView] = useState<View>('swipe_results')
+  const [splashDone, setSplashDone] = useState(() => localStorage.getItem('w2e_show_intro') === 'false')
   const [appReady, setAppReady] = useState(false)
   const [appError, setAppError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -350,6 +352,10 @@ function App() {
     }
   }
 
+
+  if (!splashDone) {
+    return <SplashScreen onDone={() => setSplashDone(true)} />
+  }
 
   if (!appReady && !appError) {
     return (
