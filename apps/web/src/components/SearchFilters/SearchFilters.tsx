@@ -166,123 +166,41 @@ export default function SearchFilters() {
 
       </Box>
 
-      {/* Калории */}
+      {/* КБЖУ в одну строку */}
       <Box>
-        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-          {t.caloriesFilter}
+        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.75, display: 'block' }}>
+          КБЖУ, max
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            size="small"
-            type="number"
-            placeholder={t.caloriesLabel}
-            value={caloriesMax ?? ''}
-            onChange={(e) => dispatch(setCaloriesMax(e.target.value ? Number(e.target.value) : null))}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">{t.kcalUnit}</InputAdornment>,
-              ...(caloriesMax != null && {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconButton size="small" onClick={() => dispatch(setCaloriesMax(null))} edge="start">
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }),
-            }}
-            inputProps={{ min: 100, step: 50 }}
-            sx={{ maxWidth: 160 }}
-          />
-        </Box>
-      </Box>
-
-      {/* Белки */}
-      <Box>
-        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-          {t.proteinFilter}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            size="small"
-            type="number"
-            placeholder={t.proteinLabel}
-            value={proteinMax ?? ''}
-            onChange={(e) => dispatch(setProteinMax(e.target.value ? Number(e.target.value) : null))}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">{t.gUnit}</InputAdornment>,
-              ...(proteinMax != null && {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconButton size="small" onClick={() => dispatch(setProteinMax(null))} edge="start">
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }),
-            }}
-            inputProps={{ min: 1, step: 5 }}
-            sx={{ maxWidth: 160 }}
-          />
-        </Box>
-      </Box>
-
-      {/* Жиры */}
-      <Box>
-        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-          {t.fatFilter}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            size="small"
-            type="number"
-            placeholder={t.fatLabel}
-            value={fatMax ?? ''}
-            onChange={(e) => dispatch(setFatMax(e.target.value ? Number(e.target.value) : null))}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">{t.gUnit}</InputAdornment>,
-              ...(fatMax != null && {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconButton size="small" onClick={() => dispatch(setFatMax(null))} edge="start">
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }),
-            }}
-            inputProps={{ min: 1, step: 5 }}
-            sx={{ maxWidth: 160 }}
-          />
-        </Box>
-      </Box>
-
-      {/* Углеводы */}
-      <Box>
-        <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-          {t.carbsFilter}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            size="small"
-            type="number"
-            placeholder={t.carbsLabel}
-            value={carbsMax ?? ''}
-            onChange={(e) => dispatch(setCarbsMax(e.target.value ? Number(e.target.value) : null))}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">{t.gUnit}</InputAdornment>,
-              ...(carbsMax != null && {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconButton size="small" onClick={() => dispatch(setCarbsMax(null))} edge="start">
-                      <Close fontSize="inherit" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }),
-            }}
-            inputProps={{ min: 1, step: 5 }}
-            sx={{ maxWidth: 160 }}
-          />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {([
+            { label: t.caloriesLabel, unit: t.kcalUnit, value: caloriesMax, step: 50, min: 100, set: (v: number | null) => dispatch(setCaloriesMax(v)) },
+            { label: t.proteinLabel, unit: t.gUnit, value: proteinMax, step: 5, min: 1, set: (v: number | null) => dispatch(setProteinMax(v)) },
+            { label: t.fatLabel, unit: t.gUnit, value: fatMax, step: 5, min: 1, set: (v: number | null) => dispatch(setFatMax(v)) },
+            { label: t.carbsLabel, unit: t.gUnit, value: carbsMax, step: 5, min: 1, set: (v: number | null) => dispatch(setCarbsMax(v)) },
+          ] as const).map(({ label, unit, value, step, min, set }) => (
+            <TextField
+              key={label}
+              size="small"
+              type="number"
+              placeholder={label}
+              value={value ?? ''}
+              onChange={(e) => set(e.target.value ? Number(e.target.value) : null)}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">{unit}</InputAdornment>,
+                ...(value != null && {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton size="small" onClick={() => set(null)} edge="start">
+                        <Close fontSize="inherit" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }),
+              }}
+              inputProps={{ min, step }}
+              sx={{ width: 120 }}
+            />
+          ))}
         </Box>
       </Box>
 
