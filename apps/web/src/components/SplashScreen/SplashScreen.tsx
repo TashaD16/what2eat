@@ -11,6 +11,7 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
   const t = useT()
   const [opacity, setOpacity] = useState(1)
   const doneRef = useRef(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const handleDone = () => {
     if (doneRef.current) return
@@ -20,9 +21,11 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
   }
 
   useEffect(() => {
-    // Safety: always proceed after 20 seconds even if video stalls
-    const timeout = setTimeout(handleDone, 20_000)
-    return () => clearTimeout(timeout)
+    const video = videoRef.current
+    if (!video) return
+    // React doesn't forward `muted` prop to the DOM — must set via ref
+    video.muted = true
+    video.play().catch(() => handleDone())
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -42,12 +45,11 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
       }}
     >
       <video
+        ref={videoRef}
         src="/wooow_1.mp4"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         onEnded={handleDone}
         playsInline
-        autoPlay
-        muted
       />
 
       <Button
