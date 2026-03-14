@@ -47,6 +47,7 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onEnded={handleDone}
           playsInline
+          muted
         />
 
         <Button
