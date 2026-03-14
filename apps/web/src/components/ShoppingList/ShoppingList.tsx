@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { ArrowBack, ShoppingCart, ContentCopy, Check } from '@mui/icons-material'
 import { useAppSelector } from '../../hooks/redux'
-import { Ingredient, IngredientCategory } from '@what2eat/types'
+import { IngredientCategory } from '@what2eat/types'
 import { useT } from '../../i18n/useT'
 
 const STORAGE_KEY = 'what2eat_shopping_checked'
@@ -24,10 +24,18 @@ interface ShoppingListProps {
   plannerDishIds?: number[]
 }
 
+interface ShoppingItem {
+  name: string
+  quantity: string
+  unit: string
+  category: IngredientCategory | 'other'
+  key: string
+}
+
 export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListProps) {
   const { likedDishIds } = useAppSelector((state) => state.swipe)
-  const { dishes } = useAppSelector((state) => state.dishes)
-  const { selectedIngredients } = useAppSelector((state) => state.ingredients)
+  const { dishes, aiDishRecipes } = useAppSelector((state) => state.dishes)
+  const { ingredients: ingredientList, selectedIngredients } = useAppSelector((state) => state.ingredients)
   const t = useT()
   const catLabels: Record<IngredientCategory, string> = {
     meat: t.categoryMeat, cereals: t.categoryCereals, vegetables: t.categoryVegetables,
@@ -37,41 +45,78 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
 
   const sourceDishIds = plannerDishIds ?? likedDishIds
 
-  const [checked, setChecked] = useState<Set<number>>(() => {
+  const [checked, setChecked] = useState<Set<string>>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? new Set(JSON.parse(saved) as number[]) : new Set()
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set()
     } catch {
       return new Set()
     }
   })
 
-  // Собираем список покупок: missing_ingredients лайкнутых блюд
-  const shoppingItems = useMemo(() => {
-    const likedDishes = dishes.filter((d) => sourceDishIds.includes(d.id))
-    const byId = new Map<number, Ingredient>()
+  const inferCategory = useMemo(() => (name: string): IngredientCategory => {
+    const lower = name.toLowerCase()
+    const found = ingredientList.find((i) =>
+      i.name.toLowerCase().includes(lower) || lower.includes(i.name.toLowerCase())
+    )
+    return found?.category ?? 'other'
+  }, [ingredientList])
 
-    for (const dish of likedDishes) {
-      // Недостающие ингредиенты из режима "немного докупить"
-      for (const ing of dish.missing_ingredients ?? []) {
-        byId.set(ing.id, ing)
+  const shoppingItems = useMemo((): ShoppingItem[] => {
+    const byKey = new Map<string, ShoppingItem>()
+
+    const addOrMerge = (name: string, quantity: string, unit: string, category: IngredientCategory | 'other') => {
+      const key = name.toLowerCase().trim()
+      if (byKey.has(key)) {
+        const existing = byKey.get(key)!
+        if (quantity) {
+          if (existing.unit === unit && unit) {
+            const existQty = parseFloat(existing.quantity)
+            const newQty = parseFloat(quantity)
+            if (!isNaN(existQty) && !isNaN(newQty)) {
+              existing.quantity = String(Math.round((existQty + newQty) * 10) / 10)
+            } else {
+              existing.quantity = [existing.quantity, quantity].filter(Boolean).join(', ')
+            }
+          } else if (!existing.quantity) {
+            existing.quantity = quantity
+            existing.unit = unit
+          } else {
+            const suffix = unit ? `${quantity} ${unit}` : quantity
+            existing.quantity = [existing.quantity + (existing.unit ? ' ' + existing.unit : ''), suffix].join(' + ')
+            existing.unit = ''
+          }
+        }
+      } else {
+        byKey.set(key, { name, quantity, unit, category, key })
       }
-      // Все ингредиенты блюда, которых нет у пользователя
-      for (const ing of dish.ingredients ?? []) {
-        if (!selectedIngredients.includes(ing.id)) {
-          byId.set(ing.id, ing)
+    }
+
+    const sourceDishes = dishes.filter((d) => sourceDishIds.includes(d.id))
+
+    for (const dish of sourceDishes) {
+      const recipe = aiDishRecipes[dish.id]
+      if (recipe) {
+        for (const ing of recipe.ingredients) {
+          addOrMerge(ing.name, ing.quantity ?? '', ing.unit ?? '', inferCategory(ing.name))
+        }
+      } else {
+        for (const ing of dish.ingredients ?? []) {
+          if (!selectedIngredients.includes(ing.id)) {
+            addOrMerge(ing.name, '', '', ing.category)
+          }
         }
       }
     }
 
-    return Array.from(byId.values())
-  }, [dishes, sourceDishIds, selectedIngredients])
+    return Array.from(byKey.values())
+  }, [dishes, sourceDishIds, aiDishRecipes, selectedIngredients, inferCategory])
 
   const grouped = useMemo(() => {
-    const map = new Map<string, Ingredient[]>()
-    for (const ing of shoppingItems) {
-      if (!map.has(ing.category)) map.set(ing.category, [])
-      map.get(ing.category)!.push(ing)
+    const map = new Map<string, ShoppingItem[]>()
+    for (const item of shoppingItems) {
+      if (!map.has(item.category)) map.set(item.category, [])
+      map.get(item.category)!.push(item)
     }
     return map
   }, [shoppingItems])
@@ -80,19 +125,23 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...checked]))
   }, [checked])
 
-  const toggleCheck = (id: number) => {
+  const toggleCheck = (key: string) => {
     setChecked((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
 
   const clearChecked = () => {
-    const next = new Set<number>()
-    setChecked(next)
+    setChecked(new Set())
     localStorage.removeItem(STORAGE_KEY)
+  }
+
+  const formatQty = (item: ShoppingItem) => {
+    if (!item.quantity) return ''
+    return item.unit ? `${item.quantity} ${item.unit}` : item.quantity
   }
 
   const copyToClipboard = () => {
@@ -100,7 +149,10 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
     for (const [category, items] of grouped.entries()) {
       const label = catLabels[category as IngredientCategory] ?? category
       lines.push(`${label}:`)
-      items.forEach((ing) => lines.push(`  • ${ing.name}`))
+      items.forEach((item) => {
+        const qty = formatQty(item)
+        lines.push(`  • ${item.name}${qty ? ` — ${qty}` : ''}`)
+      })
       lines.push('')
     }
     navigator.clipboard.writeText(lines.join('\n')).then(() => {
@@ -155,21 +207,28 @@ export default function ShoppingList({ onBack, plannerDishIds }: ShoppingListPro
               </Box>
               <Divider />
               <List dense disablePadding>
-                {items.map((ing) => (
-                  <ListItem
-                    key={ing.id}
-                    dense
-                    sx={{ px: 2, textDecoration: checked.has(ing.id) ? 'line-through' : 'none', opacity: checked.has(ing.id) ? 0.5 : 1 }}
-                  >
-                    <Checkbox
-                      edge="start"
-                      checked={checked.has(ing.id)}
-                      onChange={() => toggleCheck(ing.id)}
-                      size="small"
-                    />
-                    <ListItemText primary={ing.name} />
-                  </ListItem>
-                ))}
+                {items.map((item) => {
+                  const qty = formatQty(item)
+                  return (
+                    <ListItem
+                      key={item.key}
+                      dense
+                      sx={{ px: 2, textDecoration: checked.has(item.key) ? 'line-through' : 'none', opacity: checked.has(item.key) ? 0.5 : 1 }}
+                    >
+                      <Checkbox
+                        edge="start"
+                        checked={checked.has(item.key)}
+                        onChange={() => toggleCheck(item.key)}
+                        size="small"
+                      />
+                      <ListItemText
+                        primary={item.name}
+                        secondary={qty || undefined}
+                        secondaryTypographyProps={{ sx: { fontSize: '0.78rem', color: 'var(--w2e-primary-deep)', fontWeight: 500 } }}
+                      />
+                    </ListItem>
+                  )
+                })}
               </List>
             </Paper>
           ))}
