@@ -36,9 +36,10 @@ interface SwipeDeckProps {
   onDishSelect: (dishId: number) => void
   onComplete: () => void
   onBack: () => void
+  onLoadMoreSearchResults?: () => void
 }
 
-export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack }: SwipeDeckProps) {
+export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack, onLoadMoreSearchResults }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes, loading: dishesLoading } = useAppSelector((state) => state.dishes)
@@ -81,6 +82,13 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
       dispatch(loadMoreWebDishes())
     }
   }, [aiRandomMode, remaining, loadingMore, dispatch])
+
+  // Auto-load next batch from ingredient search queue when ≤3 cards remain
+  useEffect(() => {
+    if (!aiRandomMode && remaining > 0 && remaining <= 3 && onLoadMoreSearchResults) {
+      onLoadMoreSearchResults()
+    }
+  }, [aiRandomMode, remaining, onLoadMoreSearchResults])
 
   const cardRefsStore = useRef<(CardAPI | null)[]>([])
   while (cardRefsStore.current.length < dishes.length) cardRefsStore.current.push(null)

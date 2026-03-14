@@ -7,7 +7,7 @@ const buildTheme = (mode: ThemeMode) => createTheme({
   palette: {
     mode,
     background: {
-      default: 'transparent',
+      default: mode === 'light' ? '#f0fdf8' : '#08121f',
       paper: mode === 'light' ? 'rgba(240,253,248,0.97)' : 'rgba(8,18,35,0.95)',
     },
     primary: {

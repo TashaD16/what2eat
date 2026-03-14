@@ -58,6 +58,8 @@ function App() {
   const searchRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
   const pendingResultsRef = useRef<CombinedSearchResult | null>(null)
+  const searchQueueRef = useRef<Array<{ recipe: Parameters<typeof addAIDishes>[0][number]['recipe']; missingIngredientNames?: string[]; index: number }>>([])
+  const searchQueueIndexRef = useRef(0)
   const [liveCount, setLiveCount] = useState<{ strict: number; additional: number } | null>(null)
   const { selectedIngredients, ingredients } = useAppSelector((state) => state.ingredients)
   const { dishes, loading: dishesLoading, loadingMore, loadingStep, aiDishRecipes, error: dishesError, strictSearchFailed } = useAppSelector((state) => state.dishes)
@@ -293,32 +295,30 @@ function App() {
     // If only additional found — show "missing ingredients" banner
     if (strict.length === 0) dispatch(setStrictSearchFailed(true))
 
-    // Helper: dispatch in chunks with 150ms stagger between chunks
-    type DishPayloadItem = Omit<Parameters<typeof addAIDishes>[0][number], 'index'>
-    const dispatchChunked = async (
-      payloads: DishPayloadItem[],
-      startIndex: number
-    ) => {
-      if (payloads.length === 0) return
-      const indexed = payloads.map((p, i) => ({ ...p, index: startIndex + i }))
-      dispatch(addAIDishes(indexed.slice(0, 5)))
-      dispatch(setLoading(false))
-      for (let i = 5; i < indexed.length; i += 5) {
-        await new Promise<void>((res) => setTimeout(res, 150))
-        dispatch(addAIDishes(indexed.slice(i, i + 5)))
-      }
-    }
+    const INITIAL_BATCH = 20
+    // Build full queue: strict first, then additional
+    const allItems = [
+      ...strict.map((recipe) => ({ recipe, missingIngredientNames: undefined as string[] | undefined, index: 0 })),
+      ...additional.map(({ recipe, missingNames }) => ({ recipe, missingIngredientNames: missingNames, index: 0 })),
+    ].map((item, i) => ({ ...item, index: i }))
 
-    await dispatchChunked(
-      strict.map((recipe) => ({ recipe, missingIngredientNames: undefined })),
-      0
-    )
-    await dispatchChunked(
-      additional.map(({ recipe, missingNames }) => ({ recipe, missingIngredientNames: missingNames })),
-      strict.length
-    )
+    // Dispatch initial batch immediately
+    dispatch(addAIDishes(allItems.slice(0, INITIAL_BATCH)))
     dispatch(setLoading(false))
+
+    // Store remainder in queue for progressive load
+    searchQueueRef.current = allItems.slice(INITIAL_BATCH)
+    searchQueueIndexRef.current = INITIAL_BATCH
   }
+
+  const handleLoadMoreSearchResults = useCallback(() => {
+    const LOAD_BATCH = 20
+    const queue = searchQueueRef.current
+    if (queue.length === 0) return
+    const batch = queue.splice(0, LOAD_BATCH)
+    searchQueueRef.current = queue
+    dispatch(addAIDishes(batch))
+  }, [dispatch])
 
   const handleRandomize = () => {
     dispatch(resetSwipe())
@@ -706,6 +706,7 @@ function App() {
               onDishSelect={(dishId) => handleDishSelect(dishId, 'dishes')}
               onComplete={() => setView('swipe_results')}
               onBack={() => setView('ingredients')}
+              onLoadMoreSearchResults={handleLoadMoreSearchResults}
             />
           </Box>
         )
