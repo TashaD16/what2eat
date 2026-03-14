@@ -11,8 +11,10 @@ import {
   useTheme,
 } from '@mui/material'
 import { Search } from '@mui/icons-material'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+
+const BATCH_SIZE = 20
 import { useAppSelector, useAppDispatch } from '../../hooks/redux'
 import { toggleIngredient } from '../../store/slices/ingredientsSlice'
 import { ingredientMatchesCuisine } from '../../services/ingredients'
@@ -30,6 +32,8 @@ export default function IngredientSelector() {
   const t = useT()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<IngredientCategory | 'all'>('all')
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const filteredIngredients = useMemo(() => {
     let filtered = ingredients
@@ -50,6 +54,29 @@ export default function IngredientSelector() {
 
     return filtered
   }, [ingredients, selectedCategory, searchQuery, selectedCuisine])
+
+  // Reset visible count when filter changes
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE)
+  }, [selectedCategory, searchQuery, selectedCuisine])
+
+  // Auto-load more when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, filteredIngredients.length))
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [filteredIngredients.length])
+
+  const visibleIngredients = filteredIngredients.slice(0, visibleCount)
 
   const handleToggle = (id: number) => {
     dispatch(toggleIngredient(id))
@@ -123,7 +150,7 @@ export default function IngredientSelector() {
       )}
 
       <Grid container spacing={1.5}>
-        {filteredIngredients.map((ingredient) => {
+        {visibleIngredients.map((ingredient) => {
           const isSelected = selectedIngredients.includes(ingredient.id)
           return (
             <Grid item xs={6} sm={4} md={3} key={ingredient.id}>
@@ -167,6 +194,9 @@ export default function IngredientSelector() {
           )
         })}
       </Grid>
+
+      {/* Sentinel — triggers next batch load when scrolled into view */}
+      <div ref={sentinelRef} style={{ height: 1 }} />
 
       {filteredIngredients.length === 0 && (
         <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', mt: 6 }}>
