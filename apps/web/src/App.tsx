@@ -76,7 +76,7 @@ function App() {
           return
         }
         dispatch(initAuth())
-        await dispatch(fetchIngredients()).unwrap()
+        await dispatch(fetchIngredients(lang)).unwrap()
         warmRecipeCache(lang)
         if (!cancelled) setAppReady(true)
       } catch (error) {
@@ -418,6 +418,7 @@ function App() {
       onLangToggle={() => {
         const newLang = lang === 'ru' ? 'en' : 'ru'
         dispatch(setLang(newLang))
+        dispatch(fetchIngredients(newLang))
         dispatch(reloadLikedDishesInLanguage(newLang))
         dispatch(reloadDishesInLanguage(newLang))
         if (user) dispatch(loadFavoritesFromSupabase({ userId: user.id, lang: newLang }))

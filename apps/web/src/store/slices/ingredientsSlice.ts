@@ -18,8 +18,8 @@ const initialState: IngredientsState = {
 
 export const fetchIngredients = createAsyncThunk(
   'ingredients/fetchAll',
-  async () => {
-    return await ingredientsService.getAllIngredients()
+  async (lang: 'ru' | 'en' = 'ru') => {
+    return await ingredientsService.getAllIngredients(lang)
   }
 )
 
