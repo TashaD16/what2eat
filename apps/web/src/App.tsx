@@ -37,7 +37,13 @@ function App() {
   const dispatch = useAppDispatch()
   const [view, setView] = useState<View>('ingredients')
   const [prevView, setPrevView] = useState<View>('swipe_results')
-  const [splashDone, setSplashDone] = useState(() => localStorage.getItem('w2e_show_intro') === 'false')
+  const [splashDone, setSplashDone] = useState(() => {
+    // Skip if user disabled intro in settings
+    if (localStorage.getItem('w2e_show_intro') === 'false') return true
+    // Skip if user is already logged in (set on sign-in, cleared on sign-out)
+    if (localStorage.getItem('w2e_user_logged_in') === 'true') return true
+    return false
+  })
   const [appReady, setAppReady] = useState(false)
   const [appError, setAppError] = useState<string | null>(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -85,6 +91,7 @@ function App() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        localStorage.setItem('w2e_user_logged_in', 'true')
         // Migrate local favorites then sync from Supabase
         const localIds = likedDishIds
         if (localIds.length > 0) {
@@ -100,6 +107,7 @@ function App() {
   }, [dispatch])
 
   const handleSignOut = () => {
+    localStorage.removeItem('w2e_user_logged_in')
     dispatch(signOut())
   }
 
