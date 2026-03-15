@@ -258,6 +258,7 @@ export const translations = {
     checkEmail: 'Проверьте почту для подтверждения регистрации',
     noAccount: 'Нет аккаунта? Зарегистрироваться',
     haveAccount: 'Уже есть аккаунт? Войти',
+    googleAuthUnavailable: 'Вход через Google временно недоступен. Используйте email и пароль.',
   },
   en: {
     // App
@@ -518,6 +519,7 @@ export const translations = {
     checkEmail: 'Check your email to confirm registration',
     noAccount: 'No account? Register',
     haveAccount: 'Already have an account? Sign in',
+    googleAuthUnavailable: 'Google sign-in is temporarily unavailable. Please use email and password.',
   },
 } as const
 

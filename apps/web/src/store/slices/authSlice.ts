@@ -18,8 +18,19 @@ const initialState: AuthState = {
   initialized: false,
 }
 
-export const initAuth = createAsyncThunk('auth/init', async () => {
-  if (!isSupabaseConfigured()) return { user: null, session: null }
+export const initAuth = createAsyncThunk('auth/init', async (_, { rejectWithValue }) => {
+  if (!isSupabaseConfigured()) return { user: null, session: null, oauthError: null }
+
+  // Detect OAuth error redirected back from provider (e.g. Google disabled_client)
+  const params = new URLSearchParams(window.location.search)
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', ''))
+  const oauthError = params.get('error_description') || hashParams.get('error_description') || null
+  if (oauthError) {
+    // Clean up URL so the error doesn't persist on refresh
+    window.history.replaceState({}, '', window.location.pathname)
+    return rejectWithValue(decodeURIComponent(oauthError.replace(/\+/g, ' ')))
+  }
+
   const { data } = await supabase.auth.getSession()
   return { user: data.session?.user ?? null, session: data.session }
 })
@@ -92,8 +103,9 @@ const authSlice = createSlice({
         state.session = action.payload.session
         state.initialized = true
       })
-      .addCase(initAuth.rejected, (state) => {
+      .addCase(initAuth.rejected, (state, action) => {
         state.initialized = true
+        state.error = action.payload as string ?? null
       })
       .addCase(signInWithEmail.pending, (state) => {
         state.loading = true

@@ -16,6 +16,10 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
+  const isGoogleError = error?.toLowerCase().includes('disabled') ||
+    error?.toLowerCase().includes('oauth') ||
+    error?.toLowerCase().includes('client')
+
   const handleGoogle = () => {
     dispatch(signInWithGoogle())
   }
@@ -81,7 +85,12 @@ export default function LoginScreen() {
             {mode === 'signin' ? t.signInTitle : t.registerTitle}
           </Typography>
 
-          {error && (
+          {error && isGoogleError && (
+            <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>
+              {t.googleAuthUnavailable}
+            </Alert>
+          )}
+          {error && !isGoogleError && (
             <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>
               {error}
             </Alert>
