@@ -1,23 +1,28 @@
 import {
   Box, Typography, Button, TextField, ToggleButtonGroup, ToggleButton,
   Select, MenuItem, FormControl, InputLabel, Chip, Divider, Paper, Tabs, Tab, List, ListItem, ListItemIcon, ListItemText,
-  Switch, FormControlLabel,
+  Switch, FormControlLabel, CircularProgress, Snackbar, Alert,
 } from '@mui/material'
-import { ArrowBack, CheckCircle, Lock } from '@mui/icons-material'
+import { ArrowBack, CheckCircle, Lock, OpenInNew } from '@mui/icons-material'
 import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { setProfile, clearSaved, persistUserProfile } from '../../store/slices/userProfileSlice'
 import { setCaloriesMax, setProteinMax, setFatMax, setCarbsMax } from '../../store/slices/filtersSlice'
 import { setLang } from '../../store/slices/langSlice'
 import { UserProfileData, calculateKBJU, getMealDistribution } from '../../services/userProfile'
+import { getSubscription, createCheckoutSession, isPro, Subscription } from '../../services/subscription'
 import { useT } from '../../i18n/useT'
 import { useThemeMode } from '../../contexts/ThemeContext'
 
+const STRIPE_PRICE_ID = import.meta.env.VITE_STRIPE_PRICE_ID as string | undefined
+const STRIPE_CUSTOMER_PORTAL_URL = import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL_URL as string | undefined
+
 interface UserProfileProps {
   onBack: () => void
+  initialTab?: number
 }
 
-export default function UserProfile({ onBack }: UserProfileProps) {
+export default function UserProfile({ onBack, initialTab = 0 }: UserProfileProps) {
   const dispatch = useAppDispatch()
   const t = useT()
   const { user } = useAppSelector((state) => state.auth)
@@ -25,7 +30,13 @@ export default function UserProfile({ onBack }: UserProfileProps) {
   const lang = useAppSelector((state) => state.lang.lang)
   const { mode, toggleMode, accent, toggleAccent } = useThemeMode()
 
-  const [tab, setTab] = useState(0)
+  const [tab, setTab] = useState(initialTab)
+
+  // Subscription state
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [subLoading, setSubLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [gender, setGender] = useState<'male' | 'female'>(profile?.gender ?? 'male')
   const [age, setAge] = useState<string>(String(profile?.age ?? 25))
   const [height, setHeight] = useState<string>(String(profile?.height ?? 170))
@@ -63,6 +74,28 @@ export default function UserProfile({ onBack }: UserProfileProps) {
       return () => clearTimeout(timer)
     }
   }, [saved, dispatch])
+
+  // Load subscription status when billing tab is active
+  useEffect(() => {
+    if (tab !== 2 || !user) return
+    setSubLoading(true)
+    getSubscription(user.id)
+      .then(setSubscription)
+      .finally(() => setSubLoading(false))
+  }, [tab, user])
+
+  // Detect return from Stripe Checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('stripe') === 'success') {
+      setPaymentSuccess(true)
+      window.history.replaceState({}, '', window.location.pathname)
+      // Refresh subscription after successful payment
+      if (user) {
+        getSubscription(user.id).then(setSubscription)
+      }
+    }
+  }, [user])
 
   const currentProfile: UserProfileData = {
     gender,
@@ -103,6 +136,20 @@ export default function UserProfile({ onBack }: UserProfileProps) {
 
   const FREE_FEATURES = [t.caloriesLabel, 'AI ' + t.aiRecipe, t.favorites]
   const PRO_FEATURES = [t.unlimitedAI, t.personalNutritionPlan, t.prioritySupport]
+
+  const handleUpgrade = async () => {
+    if (!STRIPE_PRICE_ID || !user) return
+    setCheckoutLoading(true)
+    try {
+      const successUrl = `${window.location.origin}/?stripe=success`
+      const cancelUrl = window.location.href
+      const url = await createCheckoutSession(STRIPE_PRICE_ID, successUrl, cancelUrl)
+      window.location.href = url
+    } catch (err) {
+      console.error('Checkout error:', err)
+      setCheckoutLoading(false)
+    }
+  }
 
   const intensityPct = {
     loss:        { light: '-10%', moderate: '-20%' },
@@ -437,51 +484,129 @@ export default function UserProfile({ onBack }: UserProfileProps) {
       {/* === Tab 2: Billing === */}
       {tab === 2 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Typography variant="body1" color="text.secondary">{t.currentPlan}:</Typography>
-            <Chip label={t.freePlan} variant="outlined" size="small" sx={{ borderColor: 'var(--w2e-primary)', color: 'var(--w2e-primary-deep)', fontWeight: 700 }} />
-          </Box>
-
-          {/* Free plan card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
-            <Typography variant="subtitle2" fontWeight={700} mb={1.5}>{t.planIncluded} — {t.freePlan}</Typography>
-            <List dense disablePadding>
-              {FREE_FEATURES.map((f) => (
-                <ListItem key={f} disableGutters sx={{ py: 0.25 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><CheckCircle sx={{ fontSize: 16, color: 'var(--w2e-primary)' }} /></ListItemIcon>
-                  <ListItemText primary={<Typography variant="body2">{f}</Typography>} />
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-
-          {/* Pro plan card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(99,102,241,0.45)', bgcolor: 'rgba(99,102,241,0.04)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <Typography variant="subtitle2" fontWeight={800}>{t.proPlan}</Typography>
-              <Chip label={t.comingSoon} size="small" sx={{ bgcolor: 'rgba(99,102,241,0.12)', color: '#4338CA', fontWeight: 600, fontSize: '0.7rem' }} />
+          {subLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={28} sx={{ color: 'var(--w2e-primary)' }} />
             </Box>
-            <List dense disablePadding sx={{ mb: 2 }}>
-              {PRO_FEATURES.map((f) => (
-                <ListItem key={f} disableGutters sx={{ py: 0.25 }}>
-                  <ListItemIcon sx={{ minWidth: 28 }}><Lock sx={{ fontSize: 16, color: 'rgba(99,102,241,0.55)' }} /></ListItemIcon>
-                  <ListItemText primary={<Typography variant="body2" color="text.secondary">{f}</Typography>} />
-                </ListItem>
-              ))}
-            </List>
-            <Button
-              variant="contained"
-              disabled
-              sx={{ bgcolor: 'rgba(99,102,241,0.7)', '&.Mui-disabled': { bgcolor: 'rgba(99,102,241,0.25)', color: 'rgba(99,102,241,0.55)' } }}
-            >
-              {t.upgradePlan}
-            </Button>
-            <Typography variant="caption" color="text.disabled" display="block" mt={1} fontSize="0.7rem">
-              {t.paymentUnavailable}
-            </Typography>
-          </Paper>
+          ) : (
+            <>
+              {/* Current plan badge */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Typography variant="body1" color="text.secondary">{t.currentPlan}:</Typography>
+                {isPro(subscription) ? (
+                  <Chip
+                    label={t.proActive}
+                    size="small"
+                    sx={{ bgcolor: 'rgba(99,102,241,0.15)', color: '#4338CA', border: '1px solid rgba(99,102,241,0.4)', fontWeight: 700 }}
+                  />
+                ) : (
+                  <Chip label={t.freePlan} variant="outlined" size="small" sx={{ borderColor: 'var(--w2e-primary)', color: 'var(--w2e-primary-deep)', fontWeight: 700 }} />
+                )}
+              </Box>
+
+              {/* Free plan card */}
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                <Typography variant="subtitle2" fontWeight={700} mb={1.5}>{t.planIncluded} — {t.freePlan}</Typography>
+                <List dense disablePadding>
+                  {FREE_FEATURES.map((f) => (
+                    <ListItem key={f} disableGutters sx={{ py: 0.25 }}>
+                      <ListItemIcon sx={{ minWidth: 28 }}><CheckCircle sx={{ fontSize: 16, color: 'var(--w2e-primary)' }} /></ListItemIcon>
+                      <ListItemText primary={<Typography variant="body2">{f}</Typography>} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+
+              {/* Pro plan card */}
+              <Paper
+                variant="outlined"
+                sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(99,102,241,0.45)', bgcolor: 'rgba(99,102,241,0.04)' }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <Typography variant="subtitle2" fontWeight={800}>{t.proPlan}</Typography>
+                  {isPro(subscription) && (
+                    <Chip label="✓" size="small" sx={{ bgcolor: 'rgba(99,102,241,0.15)', color: '#4338CA', fontWeight: 700, fontSize: '0.7rem' }} />
+                  )}
+                </Box>
+
+                <List dense disablePadding sx={{ mb: 2 }}>
+                  {PRO_FEATURES.map((f) => (
+                    <ListItem key={f} disableGutters sx={{ py: 0.25 }}>
+                      <ListItemIcon sx={{ minWidth: 28 }}>
+                        {isPro(subscription)
+                          ? <CheckCircle sx={{ fontSize: 16, color: 'rgba(99,102,241,0.8)' }} />
+                          : <Lock sx={{ fontSize: 16, color: 'rgba(99,102,241,0.55)' }} />
+                        }
+                      </ListItemIcon>
+                      <ListItemText primary={
+                        <Typography variant="body2" color={isPro(subscription) ? 'text.primary' : 'text.secondary'}>{f}</Typography>
+                      } />
+                    </ListItem>
+                  ))}
+                </List>
+
+                {isPro(subscription) ? (
+                  <Box>
+                    {subscription?.current_period_end && (
+                      <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                        {t.validUntil(new Date(subscription.current_period_end).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US'))}
+                      </Typography>
+                    )}
+                    {STRIPE_CUSTOMER_PORTAL_URL && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        endIcon={<OpenInNew sx={{ fontSize: 14 }} />}
+                        href={STRIPE_CUSTOMER_PORTAL_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ borderColor: 'rgba(99,102,241,0.5)', color: '#4338CA', '&:hover': { borderColor: '#4338CA', bgcolor: 'rgba(99,102,241,0.06)' } }}
+                      >
+                        {t.manageSubscription}
+                      </Button>
+                    )}
+                  </Box>
+                ) : (
+                  <Box>
+                    <Button
+                      variant="contained"
+                      disabled={checkoutLoading || !STRIPE_PRICE_ID}
+                      onClick={handleUpgrade}
+                      startIcon={checkoutLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : undefined}
+                      sx={{
+                        bgcolor: 'rgba(99,102,241,0.85)',
+                        '&:hover': { bgcolor: '#4338CA' },
+                        '&.Mui-disabled': {
+                          bgcolor: STRIPE_PRICE_ID ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.25)',
+                          color: 'rgba(99,102,241,0.55)',
+                        },
+                      }}
+                    >
+                      {t.upgradeToPro}
+                    </Button>
+                    {!STRIPE_PRICE_ID && (
+                      <Typography variant="caption" color="text.disabled" display="block" mt={1} fontSize="0.7rem">
+                        {t.paymentUnavailable}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+              </Paper>
+            </>
+          )}
         </Box>
       )}
+
+      <Snackbar
+        open={paymentSuccess}
+        autoHideDuration={6000}
+        onClose={() => setPaymentSuccess(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setPaymentSuccess(false)} sx={{ width: '100%' }}>
+          {t.paymentSuccess}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

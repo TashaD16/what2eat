@@ -35,8 +35,15 @@ type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_li
 
 function App() {
   const dispatch = useAppDispatch()
-  const [view, setView] = useState<View>('ingredients')
+  const [view, setView] = useState<View>(() => {
+    // Auto-open profile on return from Stripe Checkout
+    if (new URLSearchParams(window.location.search).get('stripe') === 'success') return 'profile'
+    return 'ingredients'
+  })
   const [prevView, setPrevView] = useState<View>('swipe_results')
+  const [profileInitialTab] = useState(() =>
+    new URLSearchParams(window.location.search).get('stripe') === 'success' ? 2 : 0
+  )
   const [splashDone, setSplashDone] = useState(() => {
     // Skip if user disabled intro in settings
     if (localStorage.getItem('w2e_show_intro') === 'false') return true
@@ -752,7 +759,7 @@ function App() {
       )}
 
       {view === 'profile' && (
-        <UserProfile onBack={() => setView(prevView)} />
+        <UserProfile onBack={() => setView(prevView)} initialTab={profileInitialTab} />
       )}
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />

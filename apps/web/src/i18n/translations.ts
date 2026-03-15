@@ -227,6 +227,11 @@ export const translations = {
     prioritySupport: 'Приоритетная поддержка',
     comingSoon: 'Скоро',
     paymentUnavailable: 'Оплата недоступна в текущей версии',
+    proActive: 'Pro (активен)',
+    upgradeToPro: 'Перейти на Pro',
+    manageSubscription: 'Управление подпиской',
+    paymentSuccess: 'Подписка активирована! Добро пожаловать в Pro 🎉',
+    validUntil: (date: string) => `Действует до ${date}`,
     interfaceLanguage: 'Язык интерфейса',
 
     // Macro abbreviations (meal distribution row)
@@ -482,6 +487,11 @@ export const translations = {
     prioritySupport: 'Priority support',
     comingSoon: 'Coming soon',
     paymentUnavailable: 'Payment not available in current version',
+    proActive: 'Pro (active)',
+    upgradeToPro: 'Upgrade to Pro',
+    manageSubscription: 'Manage subscription',
+    paymentSuccess: 'Subscription activated! Welcome to Pro 🎉',
+    validUntil: (date: string) => `Valid until ${date}`,
     interfaceLanguage: 'Interface language',
 
     // Macro abbreviations (meal distribution row)
