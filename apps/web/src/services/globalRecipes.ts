@@ -253,7 +253,7 @@ export async function searchByIngredients(
   if (allRows.length === 0) return { strict: [], additional: [] }
 
   const strictItems: Array<{ recipe: AIRecipe; score: number }> = []
-  const additionalItems: Array<{ recipe: AIRecipe; missingNames: string[]; missingCount: number }> = []
+  const additionalItems: Array<{ recipe: AIRecipe; missingNames: string[]; missingCount: number; tier: 1 | 2 | 3; score: number }> = []
 
   for (const r of allRows) {
     const rawIngs = r.ingredients
@@ -289,6 +289,13 @@ export async function searchByIngredients(
     if (matchCount === 0) continue
     const score = ingLower.length > 0 ? (matchCount / ingLower.length) * matchCount : 0
 
+    // Tier gate: exclude recipes matching <50% of selected ingredients
+    const selMatchRatio = matchCount / selLower.length
+    if (selMatchRatio < 0.5) continue
+
+    // Assign tier by coverage of user's selected ingredients
+    const tier: 1 | 2 | 3 = selMatchRatio === 1 ? 1 : selMatchRatio > 0.8 ? 2 : 3
+
     // Classify as strict or additional in one pass
     const missingNames: string[] = []
     for (let i = 0; i < ings.length; i++) {
@@ -301,15 +308,19 @@ export async function searchByIngredients(
     }
 
     const mapped = { ...mapRow(r), source_ingredients: ingredientNames }
-    if (missingNames.length === 0) {
+    if (tier === 1 && missingNames.length === 0) {
       strictItems.push({ recipe: mapped, score })
     } else {
-      additionalItems.push({ recipe: mapped, missingNames, missingCount: missingNames.length })
+      additionalItems.push({ recipe: mapped, missingNames, missingCount: missingNames.length, tier, score })
     }
   }
 
   strictItems.sort((a, b) => b.score - a.score)
-  additionalItems.sort((a, b) => a.missingCount - b.missingCount)
+  additionalItems.sort((a, b) =>
+    a.tier !== b.tier ? a.tier - b.tier :
+    a.missingCount !== b.missingCount ? a.missingCount - b.missingCount :
+    b.score - a.score
+  )
 
   return {
     strict: strictItems.map(({ recipe }) => recipe),
@@ -556,17 +567,12 @@ export async function getGlobalRecipesInLanguage(
   const withMealdbId = originals.filter((r) => r.mealdb_id)
   const mealdbIds = withMealdbId.map((r) => r.mealdb_id!)
 
-  const { data, error } = await supabase
-    .from('global_recipes')
-    .select('*')
-    .in('mealdb_id', mealdbIds)
-    .eq('language', lang)
-
+  // Use the in-memory recipe cache (populated by warmRecipeCache or a prior search in `lang`).
+  // This avoids an extra round-trip and makes the lookup instant when the cache is warm.
+  const allLangRows = await fetchAllRecipesForLang(lang)
   const translatedByMealdbId = new Map<string, AIRecipe>()
-  if (!error && data) {
-    for (const r of data as RawRecipeRow[]) {
-      if (r.mealdb_id) translatedByMealdbId.set(r.mealdb_id, mapRow(r))
-    }
+  for (const r of allLangRows) {
+    if (r.mealdb_id) translatedByMealdbId.set(r.mealdb_id, mapRow(r))
   }
 
   const missingMealdbIds = mealdbIds.filter((id) => !translatedByMealdbId.has(id))

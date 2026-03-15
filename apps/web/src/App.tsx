@@ -419,6 +419,7 @@ function App() {
         const newLang = lang === 'ru' ? 'en' : 'ru'
         dispatch(setLang(newLang))
         dispatch(fetchIngredients(newLang))
+        warmRecipeCache(newLang)
         dispatch(reloadLikedDishesInLanguage(newLang))
         dispatch(reloadDishesInLanguage(newLang))
         if (user) dispatch(loadFavoritesFromSupabase({ userId: user.id, lang: newLang }))
