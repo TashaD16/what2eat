@@ -260,11 +260,12 @@ export async function searchByIngredients(
     if (!Array.isArray(rawIngs) || rawIngs.length === 0) continue
     const ings = rawIngs as Array<{ name?: string }>
 
-    // Apply cheap numeric filters first — skip early to avoid ingredient parsing
-    if (caloriesMax != null && r.calories_per_serving != null && r.calories_per_serving > caloriesMax) continue
-    if (proteinMax != null && r.protein_per_serving != null && r.protein_per_serving > proteinMax) continue
-    if (fatMax != null && r.fat_per_serving != null && r.fat_per_serving > fatMax) continue
-    if (carbsMax != null && r.carbs_per_serving != null && r.carbs_per_serving > carbsMax) continue
+    // Apply cheap numeric filters first — skip early to avoid ingredient parsing.
+    // When a nutrition filter is active, recipes with NULL values are excluded (data unavailable).
+    if (caloriesMax != null && (r.calories_per_serving == null || r.calories_per_serving > caloriesMax)) continue
+    if (proteinMax != null && (r.protein_per_serving == null || r.protein_per_serving > proteinMax)) continue
+    if (fatMax != null && (r.fat_per_serving == null || r.fat_per_serving > fatMax)) continue
+    if (carbsMax != null && (r.carbs_per_serving == null || r.carbs_per_serving > carbsMax)) continue
     if (cookingTimeMax != null && r.cooking_time != null && r.cooking_time > cookingTimeMax) continue
 
     // Diet filters
@@ -409,19 +410,20 @@ export async function searchGlobalRecipesByIngredients(
     filtered = filtered.filter(({ r }) => recipeMatchesCuisine(r, cuisine.trim()))
   }
 
+  // When a nutrition filter is active, recipes with NULL values are excluded (data unavailable).
   if (caloriesMax != null) {
     filtered = filtered.filter(({ r }) =>
-      !r.calories_per_serving || r.calories_per_serving <= caloriesMax
+      r.calories_per_serving != null && r.calories_per_serving <= caloriesMax
     )
   }
   if (proteinMax != null) {
-    filtered = filtered.filter(({ r }) => r.protein_per_serving == null || r.protein_per_serving <= proteinMax!)
+    filtered = filtered.filter(({ r }) => r.protein_per_serving != null && r.protein_per_serving <= proteinMax!)
   }
   if (fatMax != null) {
-    filtered = filtered.filter(({ r }) => r.fat_per_serving == null || r.fat_per_serving <= fatMax!)
+    filtered = filtered.filter(({ r }) => r.fat_per_serving != null && r.fat_per_serving <= fatMax!)
   }
   if (carbsMax != null) {
-    filtered = filtered.filter(({ r }) => r.carbs_per_serving == null || r.carbs_per_serving <= carbsMax!)
+    filtered = filtered.filter(({ r }) => r.carbs_per_serving != null && r.carbs_per_serving <= carbsMax!)
   }
   if (cookingTimeMax != null) {
     filtered = filtered.filter(({ r }) => r.cooking_time == null || r.cooking_time <= cookingTimeMax!)

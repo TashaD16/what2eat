@@ -245,6 +245,17 @@ export const translations = {
     accentGreen: 'Зелёный',
     accentOrange: 'Оранжевый',
 
+    // BMI
+    bmiLabel: 'ИМТ',
+    bmiUnderweight: 'Недовес',
+    bmiNormal: 'Норма',
+    bmiOverweight: 'Избыточный',
+    bmiObese: 'Ожирение',
+
+    // Calorie safety warning & meal filter
+    caloriesTooLow: (min: number) => `Расчётная калорийность ниже безопасного минимума (${min} ккал). Пересмотрите цель или интенсивность.`,
+    mealForFilter: 'Норма для приёма пищи:',
+
     // LoginScreen
     appSubtitle: 'Планировщик блюд для двоих',
     signInTitle: 'Вход в аккаунт',
@@ -505,6 +516,17 @@ export const translations = {
     accentColor: 'Accent color',
     accentGreen: 'Green',
     accentOrange: 'Orange',
+
+    // BMI
+    bmiLabel: 'BMI',
+    bmiUnderweight: 'Underweight',
+    bmiNormal: 'Normal',
+    bmiOverweight: 'Overweight',
+    bmiObese: 'Obese',
+
+    // Calorie safety warning & meal filter
+    caloriesTooLow: (min: number) => `Calculated calories are below the safe minimum (${min} kcal). Reconsider your goal or intensity.`,
+    mealForFilter: 'Norm for meal:',
 
     // LoginScreen
     appSubtitle: 'Meal planner for two',

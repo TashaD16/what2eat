@@ -17,9 +17,9 @@ interface MacroRow {
 export default function CalorieCard({ estimate }: CalorieCardProps) {
   const t = useT()
   const macros: MacroRow[] = [
-    { label: t.proteinLabel, value: estimate.protein, unit: t.gUnit, color: '#1976d2', max: 60 },
-    { label: t.fatLabel, value: estimate.fat, unit: t.gUnit, color: '#ed6c02', max: 80 },
-    { label: t.carbsLabel, value: estimate.carbs, unit: t.gUnit, color: '#2e7d32', max: 120 },
+    { label: t.proteinLabel, value: estimate.protein, unit: t.gUnit, color: '#1976d2', max: Math.max(estimate.protein * 1.5, 60) },
+    { label: t.fatLabel, value: estimate.fat, unit: t.gUnit, color: '#ed6c02', max: Math.max(estimate.fat * 1.5, 80) },
+    { label: t.carbsLabel, value: estimate.carbs, unit: t.gUnit, color: '#2e7d32', max: Math.max(estimate.carbs * 1.5, 120) },
   ]
 
   return (

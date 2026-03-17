@@ -9,9 +9,12 @@ import {
   IconButton,
   Button,
   Tooltip,
+  Menu,
+  MenuItem,
 } from '@mui/material'
 import Close from '@mui/icons-material/Close'
 import PersonOutline from '@mui/icons-material/PersonOutline'
+import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import {
   toggleVegetarian,
@@ -26,7 +29,7 @@ import {
   setCarbsMax,
   setCookingTimeMax,
 } from '../../store/slices/filtersSlice'
-import { calculateKBJU } from '../../services/userProfile'
+import { calculateKBJU, getMealDistribution } from '../../services/userProfile'
 import { useT } from '../../i18n/useT'
 
 interface SearchFiltersProps {
@@ -36,6 +39,7 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
   const dispatch = useAppDispatch()
   const t = useT()
+  const [mealMenuAnchor, setMealMenuAnchor] = useState<HTMLElement | null>(null)
   const { profile, kbju } = useAppSelector((state) => state.userProfile)
   const { vegetarianOnly, veganOnly, allowMissing, budgetEnabled, budgetLimit, cuisine, caloriesMax, proteinMax, fatMax, carbsMax, cookingTimeMax } =
     useAppSelector((state) => state.filters)
@@ -214,18 +218,15 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {t.kbjuMax}
           </Typography>
-          <Tooltip title={!profile && !kbju ? t.goToProfile : t.loadFromProfile} placement="top">
+          <Tooltip title={!profile && !kbju ? t.goToProfile : t.mealForFilter} placement="top">
             <Button
               size="small"
               variant="outlined"
               startIcon={<PersonOutline sx={{ fontSize: '14px !important' }} />}
-              onClick={() => {
+              onClick={(e) => {
                 const src = kbju ?? (profile ? calculateKBJU(profile) : null)
                 if (src) {
-                  dispatch(setCaloriesMax(src.calories))
-                  dispatch(setProteinMax(src.protein))
-                  dispatch(setFatMax(src.fat))
-                  dispatch(setCarbsMax(src.carbs))
+                  setMealMenuAnchor(e.currentTarget)
                 } else {
                   onGoToProfile?.()
                 }
@@ -248,6 +249,52 @@ export default function SearchFilters({ onGoToProfile }: SearchFiltersProps) {
               {profile || kbju ? t.loadFromProfile : t.goToProfile}
             </Button>
           </Tooltip>
+
+          {/* Meal picker menu */}
+          {(() => {
+            const src = kbju ?? (profile ? calculateKBJU(profile) : null)
+            const mealsPerDay = profile?.mealsPerDay ?? 3
+            const meals = src ? getMealDistribution(src, mealsPerDay) : []
+            const mealNameMap: Record<string, string> = {
+              breakfast: t.mealBreakfast,
+              lunch: t.mealLunch,
+              snack: t.mealSnack,
+              snack2: t.mealSnack,
+              dinner: t.mealDinner,
+            }
+            return (
+              <Menu
+                anchorEl={mealMenuAnchor}
+                open={Boolean(mealMenuAnchor)}
+                onClose={() => setMealMenuAnchor(null)}
+                PaperProps={{ sx: { minWidth: 200 } }}
+              >
+                <Typography variant="caption" sx={{ px: 2, py: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}>
+                  {t.mealForFilter}
+                </Typography>
+                {meals.map((meal, i) => (
+                  <MenuItem
+                    key={i}
+                    onClick={() => {
+                      dispatch(setCaloriesMax(meal.calories))
+                      dispatch(setProteinMax(meal.protein))
+                      dispatch(setFatMax(meal.fat))
+                      dispatch(setCarbsMax(meal.carbs))
+                      setMealMenuAnchor(null)
+                    }}
+                    sx={{ fontSize: '0.85rem' }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 2 }}>
+                      <span>{mealNameMap[meal.name] ?? meal.name}</span>
+                      <Typography variant="caption" color="text.secondary">
+                        {meal.calories} {t.kcalUnit}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Menu>
+            )
+          })()}
         </Box>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>

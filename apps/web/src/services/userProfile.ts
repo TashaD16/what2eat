@@ -87,6 +87,11 @@ const MEAL_DISTRIBUTIONS: Record<3 | 4 | 5, { name: string; pct: number }[]> = {
   ],
 }
 
+/** Minimum safe daily calories per gender (below this → show warning). */
+export function getSafeCaloriesMin(gender: 'male' | 'female'): number {
+  return gender === 'male' ? 1500 : 1200
+}
+
 export function getMealDistribution(kbju: KBJUGoal, mealsPerDay: 3 | 4 | 5): MealDistribution[] {
   return MEAL_DISTRIBUTIONS[mealsPerDay].map((m) => ({
     name: m.name,

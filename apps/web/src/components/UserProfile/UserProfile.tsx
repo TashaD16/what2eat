@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { setProfile, clearSaved, persistUserProfile } from '../../store/slices/userProfileSlice'
 import { setCaloriesMax, setProteinMax, setFatMax, setCarbsMax } from '../../store/slices/filtersSlice'
 import { setLang } from '../../store/slices/langSlice'
-import { UserProfileData, calculateKBJU, getMealDistribution } from '../../services/userProfile'
+import { UserProfileData, calculateKBJU, getMealDistribution, getSafeCaloriesMin } from '../../services/userProfile'
 import { getSubscription, createCheckoutSession, isPro, Subscription } from '../../services/subscription'
 import { useT } from '../../i18n/useT'
 import { useThemeMode } from '../../contexts/ThemeContext'
@@ -108,6 +108,17 @@ export default function UserProfile({ onBack, initialTab = 0 }: UserProfileProps
     mealsPerDay,
   }
   const preview = calculateKBJU(currentProfile)
+  const safeMin = getSafeCaloriesMin(gender)
+  const hasCaloriesWarning = preview.calories < safeMin
+
+  const bmi = (() => {
+    const h = parseInt(height)
+    const w = parseInt(weight)
+    if (!h || !w) return null
+    return Math.round((w / Math.pow(h / 100, 2)) * 10) / 10
+  })()
+  const bmiCategory = bmi == null ? null : bmi < 18.5 ? t.bmiUnderweight : bmi < 25 ? t.bmiNormal : bmi < 30 ? t.bmiOverweight : t.bmiObese
+  const bmiColor = bmi == null ? 'text.secondary' : bmi < 18.5 ? '#1565C0' : bmi < 25 ? '#2e7d32' : bmi < 30 ? '#ed6c02' : '#c62828'
 
   // The displayed КБЖУ values (editable override or calculated)
   const displayKbju = kbjuEdit ?? preview
@@ -194,7 +205,7 @@ export default function UserProfile({ onBack, initialTab = 0 }: UserProfileProps
           </Box>
 
           {/* Numeric fields */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <TextField
               label={t.age} type="number" value={age}
               onChange={(e) => setAge(e.target.value)} size="small"
@@ -216,6 +227,14 @@ export default function UserProfile({ onBack, initialTab = 0 }: UserProfileProps
               InputProps={{ endAdornment: <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>kg</Typography> }}
               sx={{ width: 110 }}
             />
+            {bmi != null && (
+              <Box sx={{ pb: '6px' }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem', mb: 0.25 }}>{t.bmiLabel}</Typography>
+                <Typography variant="body2" fontWeight={700} sx={{ color: bmiColor }}>
+                  {bmi} <Typography component="span" variant="caption" sx={{ color: bmiColor, fontWeight: 400 }}>({bmiCategory})</Typography>
+                </Typography>
+              </Box>
+            )}
           </Box>
 
           {/* Activity */}
@@ -384,6 +403,13 @@ export default function UserProfile({ onBack, initialTab = 0 }: UserProfileProps
                 </Box>
               )}
             </Paper>
+
+            {/* Low-calorie safety warning */}
+            {hasCaloriesWarning && (
+              <Alert severity="warning" sx={{ mt: 1.5, py: 0.5, fontSize: '0.78rem' }}>
+                {t.caloriesTooLow(safeMin)}
+              </Alert>
+            )}
 
             {/* Side disclaimer */}
             <Typography variant="caption" sx={{ display: 'block', color: 'text.disabled', mt: 1.5, fontSize: '0.7rem', lineHeight: 1.45, fontStyle: 'italic', borderLeft: '2px solid rgba(0,0,0,0.12)', pl: 1 }}>
