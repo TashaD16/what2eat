@@ -329,7 +329,7 @@ function App() {
 
   const handleRandomize = () => {
     dispatch(resetSwipe())
-    dispatch(generateAIRandomDishes(filters.cuisine))
+    dispatch(generateAIRandomDishes())
     setView('dishes')
   }
 

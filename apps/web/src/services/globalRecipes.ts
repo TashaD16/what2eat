@@ -49,14 +49,28 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Loads all global recipe IDs for the given language and returns them shuffled. Only returns recipes with an image. */
-export async function getShuffledGlobalRecipeIds(lang: 'ru' | 'en' = 'ru', cookingTimeMax?: number | null): Promise<string[]> {
+export async function getShuffledGlobalRecipeIds(
+  lang: 'ru' | 'en' = 'ru',
+  options: {
+    cookingTimeMax?: number | null
+    caloriesMax?: number | null
+    proteinMax?: number | null
+    fatMax?: number | null
+    carbsMax?: number | null
+  } = {}
+): Promise<string[]> {
   if (!isSupabaseConfigured()) return []
+  const { cookingTimeMax, caloriesMax, proteinMax, fatMax, carbsMax } = options
   let q = supabase
     .from('global_recipes')
     .select('id')
     .eq('language', lang)
     .not('image_url', 'is', null)
   if (cookingTimeMax != null) q = q.lte('cooking_time', cookingTimeMax)
+  if (caloriesMax != null) q = q.not('calories_per_serving', 'is', null).lte('calories_per_serving', caloriesMax)
+  if (proteinMax != null) q = q.not('protein_per_serving', 'is', null).lte('protein_per_serving', proteinMax)
+  if (fatMax != null) q = q.not('fat_per_serving', 'is', null).lte('fat_per_serving', fatMax)
+  if (carbsMax != null) q = q.not('carbs_per_serving', 'is', null).lte('carbs_per_serving', carbsMax)
   const { data, error } = await q
   if (error || !data) return []
   return shuffle(data.map((r: { id: string }) => r.id))
@@ -153,19 +167,19 @@ export interface SearchGlobalRecipesOptions {
 }
 
 // Ключевые слова мяса/рыбы для фильтра вегетарианства (ru + en). Только целые слова, чтобы не отсекать "eggplant".
-const MEAT_FISH_KEYWORDS = new Set([
+export const MEAT_FISH_KEYWORDS = new Set([
   'мясо', 'говядина', 'свинина', 'баранина', 'курица', 'индейка', 'утка', 'фарш', 'бекон', 'колбаса', 'сосиски',
   'рыба', 'лосось', 'треска', 'сельдь', 'тунец', 'креветки', 'кальмар', 'мидии', 'моллюск',
   'meat', 'beef', 'pork', 'lamb', 'chicken', 'turkey', 'duck', 'minced', 'bacon', 'sausage', 'fish',
   'salmon', 'cod', 'herring', 'tuna', 'shrimp', 'prawn', 'squid', 'mussel', 'seafood',
 ])
-const VEGAN_EXCLUDE_KEYWORDS = new Set([
+export const VEGAN_EXCLUDE_KEYWORDS = new Set([
   ...MEAT_FISH_KEYWORDS,
   'молоко', 'сливки', 'сыр', 'творог', 'сметана', 'яйцо', 'яйца', 'мёд', 'яичный',
   'milk', 'cream', 'cheese', 'butter', 'egg', 'eggs', 'honey', 'yogurt', 'yoghurt',
 ])
 // Многословные фразы (проверяем как подстроку)
-const VEGAN_EXCLUDE_PHRASES = ['масло сливочное', 'сливочное масло', 'butter']
+export const VEGAN_EXCLUDE_PHRASES = ['масло сливочное', 'сливочное масло', 'butter']
 
 /** Always-available kitchen staples — treated like spices, never counted as missing. */
 const PANTRY_STAPLES: string[] = [
@@ -185,7 +199,7 @@ function getWords(text: string): string[] {
     .filter(Boolean)
 }
 
-function recipeHasIngredientKeyword(
+export function recipeHasIngredientKeyword(
   ingredients: Array<{ name?: string }>,
   wordKeywords: Set<string>,
   phraseKeywords: string[]
@@ -198,7 +212,7 @@ function recipeHasIngredientKeyword(
   return [...wordKeywords].some((kw) => words.has(kw))
 }
 
-function recipeMatchesCuisine(recipe: { name: string; description?: string }, cuisine: string): boolean {
+export function recipeMatchesCuisine(recipe: { name: string; description?: string }, cuisine: string): boolean {
   const c = cuisine.toLowerCase()
   const name = (recipe.name ?? '').toLowerCase()
   const desc = (recipe.description ?? '').toLowerCase()

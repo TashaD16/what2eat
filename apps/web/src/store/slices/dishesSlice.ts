@@ -20,6 +20,11 @@ import {
   getGlobalRecipesInLanguage,
   saveGlobalRecipe,
   searchGlobalRecipesByNames,
+  recipeHasIngredientKeyword,
+  recipeMatchesCuisine,
+  MEAT_FISH_KEYWORDS,
+  VEGAN_EXCLUDE_KEYWORDS,
+  VEGAN_EXCLUDE_PHRASES,
 } from '../../services/globalRecipes'
 
 // Max dishes shown in ingredient search results
@@ -489,6 +494,27 @@ async function batchPreloadAndDispatch(
   return ready.length
 }
 
+// ─── Diet/cuisine client-side filter ──────────────────────────────────────────
+
+function applyDietFilter(
+  recipes: AIRecipe[],
+  opts: { vegetarianOnly?: boolean; veganOnly?: boolean; cuisine?: string | null }
+): AIRecipe[] {
+  let result = recipes
+  const { vegetarianOnly, veganOnly, cuisine } = opts
+  if (vegetarianOnly || veganOnly) {
+    const wordKw = veganOnly ? VEGAN_EXCLUDE_KEYWORDS : MEAT_FISH_KEYWORDS
+    const phraseKw = veganOnly ? VEGAN_EXCLUDE_PHRASES : []
+    result = result.filter(
+      (r) => !recipeHasIngredientKeyword(r.ingredients as Array<{ name?: string }>, wordKw, phraseKw)
+    )
+  }
+  if (cuisine?.trim()) {
+    result = result.filter((r) => recipeMatchesCuisine(r, cuisine.trim()))
+  }
+  return result
+}
+
 // ─── Progressive AI randomizer thunk ──────────────────────────────────────────
 
 /**
@@ -505,17 +531,37 @@ async function batchPreloadAndDispatch(
  *
  * When ≤3 cards remain, SwipeDeck auto-dispatches loadMoreWebDishes.
  */
-export const generateAIRandomDishes = (cuisine?: string | null) => async (
+export const generateAIRandomDishes = () => async (
   dispatch: (action: unknown) => void,
-  getState: () => { lang?: { lang: 'ru' | 'en' }; filters?: { cookingTimeMax: number | null } }
+  getState: () => {
+    lang?: { lang: 'ru' | 'en' }
+    filters?: {
+      cookingTimeMax: number | null
+      caloriesMax: number | null
+      proteinMax: number | null
+      fatMax: number | null
+      carbsMax: number | null
+      vegetarianOnly: boolean
+      veganOnly: boolean
+      cuisine: string | null
+    }
+  }
 ) => {
   dispatch(startAIRandom())
   const lang = getState().lang?.lang ?? 'ru'
-  const cookingTimeMax = getState().filters?.cookingTimeMax ?? null
+  const f = getState().filters
+  const cookingTimeMax = f?.cookingTimeMax ?? null
+  const caloriesMax = f?.caloriesMax ?? null
+  const proteinMax = f?.proteinMax ?? null
+  const fatMax = f?.fatMax ?? null
+  const carbsMax = f?.carbsMax ?? null
+  const vegetarianOnly = f?.vegetarianOnly ?? false
+  const veganOnly = f?.veganOnly ?? false
+  const cuisine = f?.cuisine ?? null
 
   if (isSupabaseConfigured()) {
     // ── Scenario A: Supabase global_recipes (no OpenAI cost) ───────────────
-    const ids = await getShuffledGlobalRecipeIds(lang, cookingTimeMax)
+    const ids = await getShuffledGlobalRecipeIds(lang, { cookingTimeMax, caloriesMax, proteinMax, fatMax, carbsMax })
     dispatch(setGlobalRecipeQueue(ids))
 
     if (ids.length === 0) {
@@ -525,7 +571,10 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
 
     const firstBatch = ids.slice(0, 10)
     dispatch(consumeFromGlobalQueue(10))
-    const recipes = await getGlobalRecipesByIds(firstBatch)
+    let recipes = await getGlobalRecipesByIds(firstBatch)
+
+    // Client-side diet/cuisine filter (veg/vegan/cuisine not in DB)
+    recipes = applyDietFilter(recipes, { vegetarianOnly, veganOnly, cuisine })
 
     if (recipes.length === 0) {
       dispatch(finishAIRandom('Не удалось загрузить рецепты из базы.'))
@@ -549,10 +598,15 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
 
     if (cached.length > 0) {
       dispatch(setLoadingStep('photos'))
-      await dispatchWithPreload(cached[0], 0, dispatch)
-      if (cached.length > 1) {
+      const filtered = applyDietFilter(
+        cached.filter((r) => cookingTimeMax == null || r.cooking_time <= cookingTimeMax),
+        { vegetarianOnly, veganOnly, cuisine }
+      )
+      const toShow = filtered.length > 0 ? filtered : cached
+      await dispatchWithPreload(toShow[0], 0, dispatch)
+      if (toShow.length > 1) {
         dispatch(setLoadingMore(true))
-        await batchPreloadAndDispatch(cached.slice(1), dispatch, 1)
+        await batchPreloadAndDispatch(toShow.slice(1), dispatch, 1)
         // setLoadingMore(false) handled inside addAIDishes reducer
       }
       dispatch(finishAIRandom(null))
@@ -574,6 +628,7 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
         return
       }
       if (cookingTimeMax != null) successful = successful.filter((r) => r.cooking_time <= cookingTimeMax)
+      successful = applyDietFilter(successful, { vegetarianOnly, veganOnly, cuisine })
       if (successful.length > 0) saveSeedToCache(successful)
       dispatch(finishAIRandom(
         successful.length === 0
@@ -596,11 +651,24 @@ export const generateAIRandomDishes = (cuisine?: string | null) => async (
  */
 export const loadMoreWebDishes = () => async (
   dispatch: (action: unknown) => void,
-  getState: () => { dishes: DishesState; lang?: { lang: 'ru' | 'en' }; filters?: { cookingTimeMax: number | null } }
+  getState: () => {
+    dishes: DishesState
+    lang?: { lang: 'ru' | 'en' }
+    filters?: {
+      cookingTimeMax: number | null
+      vegetarianOnly: boolean
+      veganOnly: boolean
+      cuisine: string | null
+    }
+  }
 ) => {
   const { globalRecipeQueue, globalRecipesExhausted } = getState().dishes
   const lang = getState().lang?.lang ?? 'ru'
-  const cookingTimeMax = getState().filters?.cookingTimeMax ?? null
+  const f = getState().filters
+  const cookingTimeMax = f?.cookingTimeMax ?? null
+  const vegetarianOnly = f?.vegetarianOnly ?? false
+  const veganOnly = f?.veganOnly ?? false
+  const cuisine = f?.cuisine ?? null
   const currentCount = getState().dishes.dishes.length
   dispatch(setLoadingMore(true))
 
@@ -609,12 +677,14 @@ export const loadMoreWebDishes = () => async (
       // ── Next 5 from Supabase (no OpenAI) ───────────────────────────────
       const nextIds = globalRecipeQueue.slice(0, 5)
       dispatch(consumeFromGlobalQueue(5))
-      const recipes = await getGlobalRecipesByIds(nextIds)
+      let recipes = await getGlobalRecipesByIds(nextIds)
+      recipes = applyDietFilter(recipes, { vegetarianOnly, veganOnly, cuisine })
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     } else if (globalRecipesExhausted || !isSupabaseConfigured()) {
       // ── Fallback: TheMealDB + GPT → save back to grow the pool ─────────
       let recipes = await fetchRecipesFromWeb(5, lang)
       if (cookingTimeMax != null) recipes = recipes.filter((r) => r.cooking_time <= cookingTimeMax)
+      recipes = applyDietFilter(recipes, { vegetarianOnly, veganOnly, cuisine })
       await Promise.allSettled(recipes.map((r) => saveGlobalRecipe(r)))
       await batchPreloadAndDispatch(recipes, dispatch, currentCount)
     }
