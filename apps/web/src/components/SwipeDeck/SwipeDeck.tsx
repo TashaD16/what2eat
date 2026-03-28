@@ -13,12 +13,12 @@ import {
 import {
   Close, Favorite, ArrowBack, Info, Restaurant,
   ExpandMore, ExpandLess, OpenInNew, AccessTime, People,
-  FiberManualRecord, MenuBook,
+  FiberManualRecord, MenuBook, WorkspacePremium,
 } from '@mui/icons-material'
 import { Dish } from '@what2eat/types'
 import { useAppDispatch, useAppSelector } from '../../hooks/redux'
 import { swipeDish, markSessionComplete, resetSwipe, StoredDish } from '../../store/slices/swipeSlice'
-import { fetchSuggestedDishes, loadMoreWebDishes, loadSuggestedRecipesByNames, generateSuggestedRecipesByAI } from '../../store/slices/dishesSlice'
+import { fetchSuggestedDishes, loadMoreWebDishes, loadSuggestedRecipesByNames, generateSuggestedRecipesByAI, FREE_TIER_LIMIT } from '../../store/slices/dishesSlice'
 import SwipeCard from './SwipeCard'
 import { useT } from '../../i18n/useT'
 const btnContainerVariants = {
@@ -37,9 +37,10 @@ interface SwipeDeckProps {
   onComplete: () => void
   onBack: () => void
   onLoadMoreSearchResults?: () => void
+  onShowProfile?: () => void
 }
 
-export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack, onLoadMoreSearchResults }: SwipeDeckProps) {
+export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, onComplete, onBack, onLoadMoreSearchResults, onShowProfile }: SwipeDeckProps) {
   const dispatch = useAppDispatch()
   const { currentIndex } = useAppSelector((state) => state.swipe)
   const { suggestedDishNames, popularSuggestions, aiRandomMode, aiDishRecipes, loading: dishesLoading } = useAppSelector((state) => state.dishes)
@@ -116,6 +117,10 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
             estimated_cost: currentDish.estimated_cost,
             is_vegetarian: currentDish.is_vegetarian,
             is_vegan: currentDish.is_vegan,
+            calories_per_serving: aiRecipe?.calories_per_serving,
+            protein_per_serving: aiRecipe?.protein_per_serving,
+            fat_per_serving: aiRecipe?.fat_per_serving,
+            carbs_per_serving: aiRecipe?.carbs_per_serving,
           }
         : undefined
       dispatch(swipeDish({ dishId, direction: dir, userId, dish: storedDish }))
@@ -346,6 +351,7 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
                     <SwipeCard
                       dish={dish}
                       swipeDirection={swipeDirection[dish.id] ?? null}
+                      caloriesPerServing={aiDishRecipes[dish.id]?.calories_per_serving}
                     />
                   </Box>
                 </TinderCard>
@@ -433,6 +439,36 @@ export default function SwipeDeck({ dishes, loadingMore = false, onDishSelect, o
         </motion.div>
       )}
       </AnimatePresence>
+
+      {/* Free tier banner */}
+      {!aiRandomMode && dishes.length >= FREE_TIER_LIMIT && onShowProfile && (
+        <Box
+          sx={{
+            mt: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+            borderRadius: 2,
+            bgcolor: 'rgba(var(--w2e-primary-rgb),0.07)',
+            border: '1px solid rgba(var(--w2e-primary-rgb),0.18)',
+          }}
+        >
+          <WorkspacePremium sx={{ fontSize: 16, color: 'var(--w2e-primary-deep)' }} />
+          <Typography variant="caption" sx={{ color: 'text.secondary', flex: 1 }}>
+            {t.freeTierBanner}
+          </Typography>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={onShowProfile}
+            sx={{ fontSize: '0.68rem', py: 0.25, px: 1, borderColor: 'rgba(var(--w2e-primary-rgb),0.45)', color: 'var(--w2e-primary-deep)', minWidth: 0 }}
+          >
+            {t.unlockMoreWithPro}
+          </Button>
+        </Box>
+      )}
 
       {/* Dish info dialog */}
       <Dialog

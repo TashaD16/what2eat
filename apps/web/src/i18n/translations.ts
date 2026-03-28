@@ -58,9 +58,20 @@ export const translations = {
     openFullRecipe: 'Открыть полный рецепт',
     popularInternetRecipes: 'Популярные рецепты из интернета',
     findRecipe: 'Найти рецепт',
+    freeTierBanner: 'Показано 5 блюд — лимит Free',
+    unlockMoreWithPro: 'Больше с Pro',
     yes: 'ДА!',
     no: 'НЕТ',
     toBuy: (names: string) => `Докупить: ${names}`,
+
+    // Gamification
+    markCookedToday: 'Готовили сегодня?',
+    markCookedBtn: 'Отметить',
+    cookedMarked: 'Отмечено! 🔥',
+    alreadyCookedToday: 'Уже отмечено сегодня',
+    streakDays: (n: number) => `${n} ${n === 1 ? 'день' : n < 5 ? 'дня' : 'дней'} подряд`,
+    newBadgeToast: (name: string) => `Новый бейдж: ${name}`,
+    totalCookedDays: (n: number) => `Всего: ${n} дн.`,
 
     // SwipeResults
     likedDishes: 'Понравившиеся блюда',
@@ -89,6 +100,13 @@ export const translations = {
     cooking: 'Приготовление',
     noInstructions: 'Инструкции для этого рецепта недоступны.',
     nazad: 'Назад',
+    cookingModeBtn: 'Режим готовки',
+    stepOf: (current: number, total: number) => `Шаг ${current} из ${total}`,
+    nextStep: 'Далее',
+    cookingDone: 'Приятного аппетита!',
+    finishCooking: 'Готово!',
+    voiceControl: 'Голос',
+    voiceHint: 'Скажите «следующий» или «назад»',
 
     // PhotoDropZone
     analyzingPhoto: 'Анализирую фото...',
@@ -256,6 +274,43 @@ export const translations = {
     caloriesTooLow: (min: number) => `Расчётная калорийность ниже безопасного минимума (${min} ккал). Пересмотрите цель или интенсивность.`,
     mealForFilter: 'Норма для приёма пищи:',
 
+    // Import recipe
+    importRecipeTitle: 'Импортировать рецепт',
+    importRecipeHint: 'Вставьте ссылку на YouTube, сайт с рецептом или скопированный текст рецепта.',
+    importRecipePlaceholder: 'https://youtube.com/watch?v=... или текст рецепта',
+    importRecipeBtn: 'Импортировать',
+    importRecipeLoading: 'Извлекаем рецепт...',
+    importError: 'Не удалось извлечь рецепт. Попробуйте вставить текст рецепта.',
+    importRecipeNav: 'Импорт рецепта',
+    cancel: 'Отмена',
+
+    // Partner voting
+    partnerVoteBtn: 'Передать партнёру',
+    partnerVoteTitle: 'Выбор партнёра',
+    partnerVoteHint: 'Выберите блюда которые нравятся вам',
+    partnerLike: 'Хочу!',
+    partnerDislike: 'Нет',
+    partnerDone: 'Готово',
+    partnerMatches: 'Оба хотят 🤝',
+    partnerNoMatches: 'Совпадений нет — попробуйте ещё раз',
+    partnerReset: 'Начать заново',
+    partnerOf: (current: number, total: number) => `${current} из ${total}`,
+
+    // Pantry
+    pantryTitle: 'Моя кладовая',
+    pantryEmpty: 'Кладовая пуста. Добавьте продукты!',
+    pantryAddItem: 'Добавить продукт',
+    pantrySelectIngredient: 'Выбрать из списка',
+    pantryCustomName: 'Или введите название',
+    pantryExpiresAt: 'Срок годности',
+    pantryAddBtn: 'Добавить',
+    pantryAdded: 'Добавлено в кладовую',
+    pantryExpired: 'Истёк',
+    pantryExpiresSoon: 'Истекает',
+    pantryExpiringWarning: (n: number) => `${n} ${n === 1 ? 'продукт истекает' : 'продукта истекают'} в ближайшее время`,
+    pantryFindRecipes: (n: number) => `Найти рецепты из кладовой (${n} ингр.)`,
+    pantryNav: 'Кладовая',
+
     // LoginScreen
     appSubtitle: 'Планировщик блюд для двоих',
     signInTitle: 'Вход в аккаунт',
@@ -330,9 +385,20 @@ export const translations = {
     openFullRecipe: 'Open full recipe',
     popularInternetRecipes: 'Popular internet recipes',
     findRecipe: 'Find recipe',
+    freeTierBanner: 'Showing 5 dishes — Free limit',
+    unlockMoreWithPro: 'More with Pro',
     yes: 'YES!',
     no: 'NO',
     toBuy: (names: string) => `To buy: ${names}`,
+
+    // Gamification
+    markCookedToday: 'Cooked today?',
+    markCookedBtn: 'Mark',
+    cookedMarked: 'Marked! 🔥',
+    alreadyCookedToday: 'Already marked today',
+    streakDays: (n: number) => `${n} day${n === 1 ? '' : 's'} in a row`,
+    newBadgeToast: (name: string) => `New badge: ${name}`,
+    totalCookedDays: (n: number) => `Total: ${n} days`,
 
     // SwipeResults
     likedDishes: 'Liked dishes',
@@ -361,6 +427,13 @@ export const translations = {
     cooking: 'Instructions',
     noInstructions: 'Instructions for this recipe are unavailable.',
     nazad: 'Back',
+    cookingModeBtn: 'Cooking Mode',
+    stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+    nextStep: 'Next',
+    cookingDone: 'Enjoy your meal!',
+    finishCooking: 'Done!',
+    voiceControl: 'Voice',
+    voiceHint: 'Say "next" or "back"',
 
     // PhotoDropZone
     analyzingPhoto: 'Analysing photo...',
@@ -527,6 +600,43 @@ export const translations = {
     // Calorie safety warning & meal filter
     caloriesTooLow: (min: number) => `Calculated calories are below the safe minimum (${min} kcal). Reconsider your goal or intensity.`,
     mealForFilter: 'Norm for meal:',
+
+    // Import recipe
+    importRecipeTitle: 'Import recipe',
+    importRecipeHint: 'Paste a YouTube link, recipe site URL, or copied recipe text.',
+    importRecipePlaceholder: 'https://youtube.com/watch?v=... or recipe text',
+    importRecipeBtn: 'Import',
+    importRecipeLoading: 'Extracting recipe...',
+    importError: 'Could not extract recipe. Try pasting the recipe text.',
+    importRecipeNav: 'Import recipe',
+    cancel: 'Cancel',
+
+    // Partner voting
+    partnerVoteBtn: 'Pass to partner',
+    partnerVoteTitle: 'Partner\'s choice',
+    partnerVoteHint: 'Pick the dishes you like',
+    partnerLike: 'Want it!',
+    partnerDislike: 'No',
+    partnerDone: 'Done',
+    partnerMatches: 'Both want 🤝',
+    partnerNoMatches: 'No matches — try again',
+    partnerReset: 'Start over',
+    partnerOf: (current: number, total: number) => `${current} of ${total}`,
+
+    // Pantry
+    pantryTitle: 'My Pantry',
+    pantryEmpty: 'Pantry is empty. Add some products!',
+    pantryAddItem: 'Add product',
+    pantrySelectIngredient: 'Select from list',
+    pantryCustomName: 'Or type a name',
+    pantryExpiresAt: 'Expiry date',
+    pantryAddBtn: 'Add',
+    pantryAdded: 'Added to pantry',
+    pantryExpired: 'Expired',
+    pantryExpiresSoon: 'Expires',
+    pantryExpiringWarning: (n: number) => `${n} item${n === 1 ? '' : 's'} expiring soon`,
+    pantryFindRecipes: (n: number) => `Find recipes from pantry (${n} ingr.)`,
+    pantryNav: 'Pantry',
 
     // LoginScreen
     appSubtitle: 'Meal planner for two',

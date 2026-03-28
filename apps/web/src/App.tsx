@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Box, Button, CircularProgress, Alert, Typography, TextField, Paper, InputAdornment, List, ListItemButton, ListItemText, Badge, Chip, Collapse, IconButton } from '@mui/material'
-import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt } from '@mui/icons-material'
+import { Casino, AutoAwesome, Search, Close, Tune, Add, Edit, RestartAlt, Link } from '@mui/icons-material'
 import { useAppDispatch, useAppSelector } from './hooks/redux'
 import { fetchIngredients, toggleIngredient, setSelectedIngredients } from './store/slices/ingredientsSlice'
 import { clearPhoto } from './store/slices/photoSlice'
@@ -28,10 +28,13 @@ import LoginScreen from './components/Auth/LoginScreen'
 import AIRecipeView from './components/AIRecipeView'
 import UserProfile from './components/UserProfile'
 import SplashScreen from './components/SplashScreen/SplashScreen'
+import PantryView from './components/PantryView'
+import ImportRecipeDialog from './components/ImportRecipeDialog'
 import { useT } from './i18n/useT'
 import { fetchUserProfile } from './store/slices/userProfileSlice'
+import { getExpiringCount } from './services/pantry'
 
-type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe' | 'profile'
+type View = 'ingredients' | 'dishes' | 'swipe_results' | 'recipe' | 'shopping_list' | 'weekly_planner' | 'ai_recipe' | 'profile' | 'pantry'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -41,6 +44,8 @@ function App() {
     return 'ingredients'
   })
   const [prevView, setPrevView] = useState<View>('swipe_results')
+  const [pantryExpiringCount, setPantryExpiringCount] = useState(() => getExpiringCount())
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [profileInitialTab] = useState(() =>
     new URLSearchParams(window.location.search).get('stripe') === 'success' ? 2 : 0
   )
@@ -415,6 +420,8 @@ function App() {
   return (
     <Layout
       onHomeClick={() => setView('ingredients')}
+      onPantryClick={() => setView('pantry')}
+      pantryExpiringCount={pantryExpiringCount}
       onPlannerClick={() => setView('weekly_planner')}
       likedCount={likedDishes.length}
       onFavoritesClick={() => setView('swipe_results')}
@@ -524,7 +531,7 @@ function App() {
               onDetected={handlePhotoDetected}
               onPhotoSelected={handlePhotoSelected}
             />
-            {!photoActive && <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+            {!photoActive && <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, gridTemplateRows: 'auto auto' }}>
               <Button
                 variant="outlined"
                 size="large"
@@ -555,6 +562,22 @@ function App() {
                 }}
               >
                 {t.aiRecipe}
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={() => setImportDialogOpen(true)}
+                startIcon={<Link />}
+                sx={{
+                  py: 1.25,
+                  gridColumn: 'span 2',
+                  borderColor: 'rgba(var(--w2e-primary-rgb),0.30)',
+                  color: 'text.secondary',
+                  '&:hover': { borderColor: 'rgba(var(--w2e-primary-rgb),0.55)', color: 'text.primary', bgcolor: 'rgba(var(--w2e-tint-rgb),0.50)' },
+                }}
+              >
+                {t.importRecipeNav}
               </Button>
             </Box>}
           </Box>
@@ -715,6 +738,7 @@ function App() {
               onComplete={() => setView('swipe_results')}
               onBack={() => setView('ingredients')}
               onLoadMoreSearchResults={handleLoadMoreSearchResults}
+              onShowProfile={() => setView('profile')}
             />
           </Box>
         )
@@ -762,7 +786,28 @@ function App() {
         <UserProfile onBack={() => setView(prevView)} initialTab={profileInitialTab} />
       )}
 
+      {view === 'pantry' && (
+        <PantryView
+          onBack={() => setView('ingredients')}
+          onFindRecipes={(ingredientIds) => {
+            dispatch(setSelectedIngredients(ingredientIds))
+            setPantryExpiringCount(getExpiringCount())
+            setView('ingredients')
+          }}
+        />
+      )}
+
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+
+      <ImportRecipeDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onImported={(recipe) => {
+          dispatch(setGeneratedRecipe(recipe))
+          setPrevView(view)
+          setView('ai_recipe')
+        }}
+      />
     </Layout>
   )
 }

@@ -504,3 +504,79 @@ export async function saveAIRecipe(userId: string, recipe: AIRecipe): Promise<st
   }
   return data.id as string
 }
+
+/**
+ * Extracts or generates a structured recipe from a URL or raw recipe text.
+ * Works best with YouTube URLs (GPT knows many cooking videos) and pasted recipe text.
+ */
+export async function importRecipeFromText(source: string, lang: 'ru' | 'en' = 'ru'): Promise<AIRecipe> {
+  const isRu = lang === 'ru'
+  const prompt = isRu
+    ? `Пользователь вставил ссылку или текст рецепта. Извлеки (или придумай на основе URL) подробный рецепт.
+
+Источник:
+${source}
+
+Верни ТОЛЬКО JSON без markdown-обёрток:
+{
+  "name": "название блюда",
+  "description": "2-3 предложения описания",
+  "cooking_time": <целое число, минуты>,
+  "difficulty": "easy"|"medium"|"hard",
+  "ingredients": [{"name": "...","quantity": "...","unit": "..."}],
+  "instructions": [{"step": 1,"description": "..."},{"step": 2,"description": "..."}],
+  "calories_per_serving": <число или null>,
+  "protein_per_serving": <число или null>,
+  "fat_per_serving": <число или null>,
+  "carbs_per_serving": <число или null>
+}`
+    : `The user provided a recipe URL or text. Extract (or generate based on the URL) a detailed recipe.
+
+Source:
+${source}
+
+Return ONLY valid JSON without markdown wrappers:
+{
+  "name": "dish name",
+  "description": "2-3 sentence description",
+  "cooking_time": <integer minutes>,
+  "difficulty": "easy"|"medium"|"hard",
+  "ingredients": [{"name": "...","quantity": "...","unit": "..."}],
+  "instructions": [{"step": 1,"description": "..."},{"step": 2,"description": "..."}],
+  "calories_per_serving": <number or null>,
+  "protein_per_serving": <number or null>,
+  "fat_per_serving": <number or null>,
+  "carbs_per_serving": <number or null>
+}`
+
+  const raw = await callOpenAIMini(prompt)
+  const jsonMatch = raw.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new Error(isRu ? 'Не удалось извлечь рецепт из источника' : 'Could not extract recipe from source')
+  const parsed = JSON.parse(jsonMatch[0]) as {
+    name: string
+    description: string
+    cooking_time: number
+    difficulty: 'easy' | 'medium' | 'hard'
+    ingredients: Array<{ name: string; quantity: string; unit: string }>
+    instructions: Array<{ step: number; description: string }>
+    calories_per_serving?: number | null
+    protein_per_serving?: number | null
+    fat_per_serving?: number | null
+    carbs_per_serving?: number | null
+  }
+
+  return {
+    name: parsed.name,
+    description: parsed.description,
+    cooking_time: Number(parsed.cooking_time) || 30,
+    difficulty: ['easy', 'medium', 'hard'].includes(parsed.difficulty) ? parsed.difficulty : 'medium',
+    ingredients: Array.isArray(parsed.ingredients) ? parsed.ingredients : [],
+    instructions: Array.isArray(parsed.instructions) ? parsed.instructions : [],
+    source_ingredients: [],
+    language: lang,
+    calories_per_serving: parsed.calories_per_serving ?? undefined,
+    protein_per_serving: parsed.protein_per_serving ?? undefined,
+    fat_per_serving: parsed.fat_per_serving ?? undefined,
+    carbs_per_serving: parsed.carbs_per_serving ?? undefined,
+  }
+}
